@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<!--
+  Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17
+  https://github.com/heino17/Rezepte-Sammlung
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="Julia's Rezepte-Sammlung bearbeiten">Julia's Rezepte-Sammlung bearbeiten</title>
+<style>
+  :root {
+    --gruen: #8a6a48;
+    --gruen-hell: #f1eade;
+    --gruen-hover: #6d5539;
+    --rot: #c62828;
+    --grau: #8d7a63;
+    --grau-hell: #f4efe7;
+    --linie: #e2d8c9;
+    --text: #3d3227;
+    --creme: #e9e2d7;
+    --kopf-h: 62px;
+    --status-h: 34px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow-x: clip; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #efe9de url("assets/Kueche_Hintergrund_hell.jpg") no-repeat center center fixed;
+    background-size: 100% 100%;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  a:link {
+  color: var(--text);
+  }
+
+  a:visited {
+  color: var(--text);
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    min-height: 40px;
+    z-index: 20;
+    background:
+      repeating-linear-gradient(135deg, rgba(0,0,0,.025) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #f3ede1 0%, #e9e2d7 55%, #ddd1be 100%);
+    color: var(--text);
+    padding: 2px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+  header h1 { margin: -5px 0 -5px 0; font-size: 20px; font-weight: 700; }
+  #titelSammlung {
+    cursor: pointer; border-radius: 8px; padding: 2px 8px; margin-left: -8px;
+    transition: background .15s;
+  }
+  #titelSammlung:hover { background: var(--gruen-hell); }
+  header p { margin: 2px 0 0; font-size: 12.5px; opacity: .9; }
+
+  /* Custom Sprachumschalter (ersetzt natives <select>, da Browser das Styling
+     der aufklappenden Optionsliste bei <select> nicht bzw. kaum zulassen). */
+  #sprachWahl {
+    position: relative; display: inline-block;
+  }
+  #sprachWahlBtn {
+    font: inherit; font-size: 11.5px; padding: 4px 8px;
+    border: 1px solid currentColor; border-radius: 6px;
+    background: transparent; color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  #sprachWahlBtn::after { content: "▾"; font-size: 9px; opacity: .7; }
+  html[data-theme="dunkel"] #sprachWahlBtn { color: #e9e2d7; background: transparent); }
+
+  #sprachWahlListe {
+    position: absolute; top: calc(100% + 4px); right: -2px; z-index: 40;
+    min-width: 100%; list-style: none; margin: 0; padding: 4px;
+    border: 1px solid currentColor; border-radius: 8px;
+    /* Eigene, frei einstellbare Popup-Hintergrundfarbe: */
+    background: var(--sprach-popup-bg, #F4EFE7);
+    color: var(--text);
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    max-height: 260px; overflow-y: auto;
+  }
+  html[data-theme="dunkel"] #sprachWahlListe {
+    background: var(--sprach-popup-bg-dunkel, #3a332d); color: #e9e2d7;
+  }
+  #sprachWahlListe[hidden] { display: none; }
+  #sprachWahlListe li {
+    font-size: 11.5px; padding: 5px 10px; border-radius: 6px;
+    cursor: pointer; white-space: nowrap;
+  }
+  #sprachWahlListe li:hover,
+  #sprachWahlListe li.aktiv { background: #E2D8C9; text-shadow: 0px 0px 1px #000000; }
+  html[data-theme="dunkel"] #sprachWahlListe li:hover,
+  html[data-theme="dunkel"] #sprachWahlListe li.aktiv { background: var(--gruen-hover); color: #000; text-shadow: 0px 0px 1px #000000; }
+  #dbQuelleAnzeige { font-size: 13px; }
+  #dbQuelleAnzeige code { font-size: 12px; }
+  #dbQuelleAnzeige.nebendb { color: var(--rot); font-weight: 600; }
+  #dbQuelleAnzeige.nebendb code { color: var(--rot); font-weight: 600; }
+  #dbQuelleAnzeige .dbHinweis {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  footer {
+    position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
+    background: linear-gradient(180deg, #ddd1be 0%, #d4c6b0 100%);
+    color: var(--text); padding: 1px 22px; z-index: 25;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 10px; box-shadow: 0 -2px 6px rgba(0,0,0,.12);
+  }
+  footer .fuss-links { text-align: left; }
+  footer .fuss-links a { text-align: left; color: var(--text); }
+  footer .fuss-links a:hover { text-align: left; color: var(--text); }
+  footer .fuss-rechts { text-align: right; }
+  footer .credits-link {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted currentColor;
+  }
+  footer .credits-link:focus-visible {
+    outline: 2px solid var(--gruen);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  footer .credits-link .credits-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 36px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(92vw, 640px);
+    background: var(--gruen-hell);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    z-index: 300;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease, visibility .18s;
+    pointer-events: none;
+  }
+  footer .credits-link .credits-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #2b2620;
+  }
+  footer .credits-link:hover .credits-tip,
+  footer .credits-link.sichtbar .credits-tip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .actions button { padding: 4px 9px 3px 9px; font-size: 11.5px; border-radius: 6px; }
+  button {
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    background: #f4efe7;
+    color: var(--gruen);
+    font-weight: 600;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: var(--gruen-hell); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--gruen); color: #fff; }
+  button.primary:hover { background: var(--gruen-hover); color: #fff; }
+  button.danger { color: var(--rot); }
+  button.danger:hover { background: #fdecea; }
+  button.ghost { background: var(--gruen); color: #fff; font-size: 12px; }
+  button.ghost:hover { background: var(--gruen-hover); color: #fff; }
+  button.small { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+  button.hilfe {
+    position: fixed;
+    top: 0;
+    right: 0;
+    font: inherit; font-weight: 700; font-size: 10px;
+    width: 19px; height: 19px; padding: 0;
+    border: 1px solid currentColor; border-radius: 50%;
+    background: transparent; color: var(--text);
+    cursor: pointer; transition: background .15s;
+  }
+  button.hilfe:hover { background: var(--gruen); color: #fff; }
+  .btn-link {
+    font: inherit; font-weight: 600; font-size: 11.5px;
+    text-decoration: none; color: var(--text);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 6px; padding: 4px 9px;
+    transition: background .15s;
+  }
+  .btn-link:hover { background: var(--gruen-hover); color: #fff; }
+
+  .export-menu { position: relative; }
+  .export-toggle { display: inline-flex; align-items: center; gap: 6px; }
+  .export-toggle::after { content: "▾"; font-size: 10px; opacity: .8; }
+  .export-menu.offen .export-toggle::after { content: "▴"; }
+  .export-dropdown {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    min-width: max-content; background: var(--creme);
+    border: 1px solid var(--linie); border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.22); padding: 6px;
+    display: none; z-index: 60;
+  }
+  .export-menu.offen .export-dropdown { display: block; }
+  .export-dropdown .menu-gruppe {
+    margin: 8px 6px 4px; font-size: 11px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--grau);
+  }
+  .export-dropdown .menu-gruppe:first-child { margin-top: 2px; }
+  .export-dropdown button {
+    display: block; width: 100%; text-align: left;
+    background: transparent; border: none; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; font-weight: 600;
+  }
+  .export-dropdown .menu-titel { display: block; }
+  .export-dropdown .menu-unter {
+    display: block; margin-top: 1px;
+    font-size: 11px; font-weight: 400; color: var(--grau-hell);
+  }
+  .export-dropdown button:hover .menu-unter { color: inherit; opacity: .85; }
+  .export-dropdown button:hover { background: var(--gruen-hell); color: var(--gruen-hover); }
+  .export-dropdown button.alarm { background: var(--rot); color: #fff; }
+  .export-dropdown button.alarm:hover { background: var(--rot); color: #fff; }
+
+  #btnExportToggle.alarm {
+    border-color: var(--rot);
+    color: var(--rot);
+    animation: exportAlarm 1.4s ease-in-out infinite;
+  }
+  #btnExportToggle.alarm:hover { background: var(--rot); color: #fff; }
+  html[data-theme="dunkel"] #btnExportToggle.alarm:hover { color: #3a3226; }
+  @keyframes exportAlarm {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(198, 40, 40, .18); }
+    50% { box-shadow: 0 0 0 9px rgba(198, 40, 40, .32); }
+  }
+
+  /* 💾-Knöpfe alarmieren, solange Formular-Eingaben ungespeichert sind */
+  #btnSpeichern.alarm, #btnObenSpeichern.alarm {
+    background: var(--rot);
+    animation: exportAlarm 1.4s ease-in-out infinite;
+  }
+  #btnSpeichern.alarm:hover, #btnObenSpeichern.alarm:hover {
+    background: var(--rot);
+    filter: brightness(.9);
+  }
+
+  #status {
+    background: var(--gruen-hell);
+    border-bottom: 1px solid var(--linie);
+    padding: 7px 22px;
+    font-size: 13.5px;
+    color: var(--gruen-hover);
+    position: sticky;
+    top: var(--kopf-h);
+    z-index: 19;
+  }
+  #status.error { background: #fdecea; color: var(--rot); border-color: #ffcdd2; }
+
+  .layout { display: flex; min-height: calc(100vh - var(--kopf-h) - var(--status-h)); }
+  aside {
+    width: 280px;
+    min-width: 280px;
+    background: rgba(233,226,215,.94);
+    border-right: 1px solid var(--linie);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: calc(var(--kopf-h) + var(--status-h));
+    height: calc(98.5vh - var(--kopf-h) - var(--status-h));
+  }
+  .liste-kopf { padding: 12px 12px 6px; display: flex; flex-direction: column; gap: 8px; }
+  .suche-wrap { position: relative; }
+  .suche-wrap input[type="search"] { padding-right: 32px; }
+  .suche-wrap input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  .suche-x {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: var(--grau);
+    font-size: 13px; line-height: 1; padding: 0; cursor: pointer;
+  }
+  .suche-x:hover, .suche-x:active { background: transparent; color: var(--gruen-hover); transform: none; }
+  .liste-kopf input[type="search"], .liste-kopf select {
+    font: inherit; padding: 7px 10px; border: 1px solid var(--linie); border-radius: 8px; width: 100%;
+    background: #f4efe7; color: var(--text);
+  }
+  .zahlenzeile { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--grau); padding: 0 4px; cursor: pointer; user-select: none; }
+  .zahlenzeile:hover { color: var(--gruen-hover); }
+  .zahlenzeile:focus-visible { outline: 2px solid var(--gruen); outline-offset: 2px; border-radius: 4px; }
+  .zahlenzeile .auswahl-symbol { font-size: 13px; opacity: .45; transition: opacity .15s; }
+  aside.auswahl-sichtbar .zahlenzeile .auswahl-symbol { opacity: 1; }
+  #rezeptliste { list-style: none; margin: 0; padding: 6px 10px 14px; overflow-y: auto; flex: 1; }
+  #rezeptliste li {
+    padding: 2px 5px;
+    border-radius: 8px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    margin-bottom: 1px;
+  }
+  #rezeptliste li:hover { background: var(--grau-hell); }
+  #rezeptliste li.aktiv { background: var(--gruen-hell); border-color: var(--gruen); }
+  #rezeptliste li.zieht { opacity: .45; cursor: grabbing; border-style: dashed; }
+  #rezeptliste li.drueber-oben { box-shadow: 0 -3px 0 var(--gruen); }
+  #rezeptliste li.drueber-unten { box-shadow: 0 3px 0 var(--gruen); }
+  #rezeptliste li .name { flex: 1; min-width: 0; }
+  #rezeptliste li .name small { display: block; color: var(--grau); font-size: 12px; }
+  #rezeptliste li .verschieben { display: flex; flex-direction: column; }
+  #rezeptliste li .verschieben button { padding: 0 4px; font-size: 11px; line-height: 1.1; }
+  #rezeptliste li .auswahl-wrap { display: none; align-items: center; }
+  aside.auswahl-sichtbar #rezeptliste li .auswahl-wrap { display: flex; }
+  #rezeptliste li .auswahl-kb { width: 16px; height: 16px; accent-color: var(--gruen); cursor: pointer; margin: 0; }
+  .auswahlzeile { display: none; align-items: center; gap: 6px; font-size: 12px; color: var(--grau); padding: 0 4px; }
+  aside.auswahl-sichtbar .auswahlzeile { display: flex; }
+  .auswahlzeile button { padding: 2px 7px; font-size: 11px; }
+  .auswahlzeile span { flex: 1; text-align: right; white-space: nowrap; }
+  .kat-move-menu {
+    position: fixed; z-index: 70;
+    min-width: 170px; max-width: 260px; max-height: 280px; overflow-y: auto;
+    background: var(--creme); border: 1px solid var(--linie); border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.22); padding: 6px;
+  }
+  .kat-move-menu .kat-titel {
+    font-size: 11px; font-weight: 700; color: var(--grau);
+    padding: 2px 10px 4px; letter-spacing: .3px; text-transform: uppercase;
+  }
+  .kat-move-menu button {
+    display: block; width: 100%; text-align: left;
+    background: transparent; border: none; border-radius: 6px;
+    padding: 7px 10px; font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .kat-move-menu button:hover { background: var(--gruen-hell); color: var(--gruen-hover); }
+  .kat-move-menu button.aktuell { color: var(--grau); font-weight: 400; cursor: default; }
+  .kat-move-menu .trenner { height: 1px; background: var(--linie); margin: 5px 4px; }
+  .leer { color: var(--grau); text-align: center; padding: 30px 12px; font-size: 13.5px; }
+
+  main { flex: 1; padding: 22px; max-width: 1015px; margin: 0 auto; min-width: 0; }
+  .formular { background: rgba(233,226,215,.93); border: 1px solid var(--linie); border-radius: 12px; padding: 22px 24px; min-width: 0; }
+  .formular h2 { margin: 0 0 4px; font-size: 22px; color: var(--gruen-hover); }
+  .untertitel { color: var(--grau); font-size: 13.5px; margin: 0 0 18px; }
+
+  .feld { margin-bottom: 16px; }
+  .feld label { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 5px; }
+  .feld input[type="text"], .feld input[type="number"], .feld textarea {
+    font: inherit; width: 100%; padding: 4px 10px;
+    border: 1px solid var(--linie); border-radius: 8px; background: #f4efe7; color: var(--text);
+  }
+  .feld input:focus, .feld textarea:focus, .feld select:focus {
+    outline: 2px solid #d9c4a4; border-color: var(--gruen);
+  }
+  .zeile { display: flex; gap: 14px; flex-wrap: wrap; }
+  .zeile .feld { flex: 1; min-width: 160px; }
+
+  .kat-combo { position: relative; }
+  .kat-combo input[type="text"] { padding-right: 34px; }
+  .kat-knopf {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; padding: 0; border: none; background: transparent;
+    color: var(--grau); font-size: 12px; line-height: 1; cursor: pointer; border-radius: 6px;
+  }
+  .kat-knopf:hover { background: var(--grau-hell); color: var(--text); }
+  .kat-liste {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 60;
+    background: #fbf8f2; border: 1px solid var(--linie); border-radius: 8px;
+    max-height: 240px; overflow-y: auto; padding: 4px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  }
+  .kat-liste button {
+    display: block; width: 100%; text-align: left; padding: 7px 10px;
+    border: none; background: transparent; color: var(--text);
+    font: inherit; font-size: 13.5px; cursor: pointer; border-radius: 6px;
+  }
+  .kat-liste button.treffer { font-weight: 600; background: var(--gruen-hell); }
+  .kat-liste button:hover, .kat-liste button.aktiv { background: var(--gruen); color: #fff; }
+  html[data-theme="dunkel"] .kat-liste { background: #383228; }
+
+  .einheit-combo { position: relative; width: 100%; }
+  .einheit-combo input[type="text"] { padding-right: 24px; }
+  .einheit-knopf {
+    position: absolute; right: 3px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; padding: 0; border: none; background: transparent;
+    color: var(--grau); font-size: 11px; line-height: 1; cursor: pointer; border-radius: 6px;
+  }
+  .einheit-knopf:hover { background: var(--grau-hell); color: var(--text); }
+  .einheit-liste {
+    position: fixed; z-index: 60;
+    width: max-content; min-width: 130px; max-width: 240px;
+    background: #fbf8f2; border: 1px solid var(--linie); border-radius: 8px;
+    max-height: 220px; overflow-y: auto; padding: 4px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  }
+  .einheit-liste button {
+    display: block; width: 100%; text-align: left; padding: 6px 10px;
+    border: none; background: transparent; color: var(--text);
+    font: inherit; font-size: 13px; cursor: pointer; border-radius: 6px;
+  }
+  .einheit-liste button.treffer { font-weight: 600; background: var(--gruen-hell); }
+  .einheit-liste button:hover, .einheit-liste button.aktiv { background: var(--gruen); color: #fff; }
+  html[data-theme="dunkel"] .einheit-liste { background: #383228; }
+
+  .bereich { margin-top: 22px; }
+  .bereich > h3 {
+    font-size: 15px; font-weight: 700; color: var(--gruen-hover);
+    border-bottom: 2px solid var(--gruen-hell); padding-bottom: 6px; margin: 0 0 12px;
+  }
+
+  .zutaten-kopf, .zutaten-zeile {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .zutaten-zeile { flex-wrap: wrap; }
+  .zutaten-liste { overflow-x: auto; -webkit-overflow-scrolling: touch; min-width: 0; width: 100%; }
+  .zutaten-kopf {
+    color: var(--grau); font-size: 12.5px; font-weight: 600;
+    padding: 4px 8px 4px 0; border-bottom: 0px solid var(--linie);
+  }
+  .zutaten-kopf .nr, .zutaten-zeile .nr { width: 15px; text-align: right; flex: none; color: var(--grau); font-size: 13px; }
+  .zutaten-kopf .menge, .zutaten-zeile .menge { width: 100px; flex: none; }
+  .zutaten-kopf .einheit, .zutaten-zeile .einheit { width: 120px; flex: none; }
+  .zutaten-kopf .zutat, .zutaten-zeile .zutat { flex: 1; min-width: 0; }
+  .zutaten-zeile { padding: 2px 8px 2px 0; border-bottom: 0px solid #ece4d6; }
+  .zutaten-zeile input { font: inherit; width: 100%; padding: 3px 8px; border: 1px solid var(--linie); border-radius: 6px; background: #f4efe7; color: var(--text); }
+  .zutaten-kopf .aktionen { width: 50px; flex: none; }
+  .zutaten-zeile .aktionen { white-space: nowrap; flex: none; }
+  .zutaten-zeile button.zutat-umschalten { font-size: 12px; }
+  .zutaten-zeile .zutat-aktionen { display: none; }
+  .zutaten-zeile.offen .zutat-aktionen { display: inline; }
+
+  /* TCM-Quick-Picker pro Zutatenzeile (erscheint beim Öffnen mit ⚙️) */
+  .zutaten-zeile .zutat-tcm { border-bottom: 1px solid green; border-left: 1px solid green; border-right: 1px solid green;
+    display: none; flex: 1 0 100%; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+    padding: 0 0 5px 0; margin-top: -5px; margin-top: -5px;color: var(--grau); font-size: 12.5px;
+  }
+  .zutaten-zeile.offen .zutat-tcm { display: flex; }
+  .zutat-tcm .tcm-kopf { font-weight: 700; color: var(--gruen-hover); }
+  .zutat-tcm label { display: inline-flex; align-items: center; gap: 4px; }
+  .zutat-tcm select {
+    font: inherit; font-size: 12.5px; padding: 3px 8px;
+    border: 1px solid var(--linie); border-radius: 6px;
+    background: #f4efe7; color: var(--text);
+  }
+  .zutat-tcm select.tcm-geaendert { background: var(--gruen-hell); border-color: var(--gruen); }
+  .zutat-tcm .tcm-reset { font-size: 12px; padding: 3px 9px; border-radius: 6px; }
+  .zutat-tcm .tcm-status { font-size: 12px; font-style: italic; color: var(--grau); }
+  .zutat-tcm .tcm-status.tcm-status-eigen { font-weight: 700; color: var(--gruen); font-style: normal; }
+  .zutat-tcm .tcm-status.tcm-status-basis { color: var(--gruen-hover); font-style: normal; }
+
+  .schritt {
+    display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;
+  }
+  #schritteListe { overflow-x: auto; -webkit-overflow-scrolling: touch; min-width: 0; }
+  .schritt .num {
+    background: var(--gruen-hell); color: var(--gruen-hover); font-weight: 700;
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 4px;
+  }
+  .schritt textarea { width: 100%; min-height: 32px; resize: none; overflow: hidden; font: inherit; padding: 4px 10px; border: 1px solid var(--linie); border-radius: 8px; background: #f4efe7; color: var(--text); }
+  .schritt .knopfleiste { display: flex; align-items: center; gap: 4px; padding-top: 5px; }
+  .schritt .knopfleiste button.schritt-umschalten { font-size: 12px; }
+  .schritt .schritt-aktionen { display: none; align-items: center; gap: 4px; }
+  .schritt.offen .schritt-aktionen { display: flex; }
+  .schritt .wecker-min { width: 62px; padding: 3px 6px; font: inherit; border: 1px solid var(--linie); border-radius: 8px; background: #f4efe7; color: var(--text); }
+  html[data-theme="dunkel"] .schritt .wecker-min { background: #3a352c; color: var(--text); border-color: var(--linie); }
+
+  .hinzufuegen { margin-top: 10px; }
+
+  .bild-eintrag { position: relative; margin: 0 0 14px; }
+  .rezept-bilder { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .rezept-bild-wrap { position: relative; display: inline-block; }
+  .rezept-bild {
+    width: 300px; height: 150px; max-width: 100%;
+    object-fit: cover; border-radius: 10px; border: 1px solid var(--linie);
+    box-shadow: 0 2px 6px rgba(0,0,0,.14);
+    background: #fff; display: block;
+  }
+  .rezept-bild:hover { border-color: var(--gruen); }
+  .rezept-bild-wrap .bild-aktionen {
+    position: absolute; top: 6px; right: 6px;
+    display: flex; gap: 4px;
+  }
+  .rezept-bild-wrap .bild-aktionen button {
+    background: rgba(60,40,20,.6); color: #fff; border-radius: 6px;
+    padding: 3px 7px; font-size: 12px; line-height: 1;
+  }
+  .rezept-bild-wrap .bild-aktionen button.bild-verschieben:hover { background: var(--gruen-hover); color: #fff; }
+  .rezept-bild-wrap .bild-aktionen button.bild-weg:hover { background: var(--rot); color: #fff; }
+  .rezept-bild-wrap .bild-aktionen button:disabled { opacity: .45; cursor: default; }
+  .rezept-bild-wrap .bild-aktionen button:disabled:hover { background: rgba(60,40,20,.6); color: #fff; }
+
+  .bild-eintrag .bild-weg {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(60,40,20,.55); color: #fff; border-radius: 6px;
+  }
+  .bild-eintrag .bild-weg:hover { background: var(--rot); color: #fff; }
+  .bild-eintrag .bild-pfad { display: block; color: var(--grau); font-size: 12px; margin-top: 4px; word-break: break-all; }
+  .bild-hinzu { display: flex; gap: 6px; margin-top: 8px; }
+  .bild-hinzu button { flex-shrink: 0; }
+  .bild-hinzu input {
+    font: inherit; flex: 1; min-width: 0; padding: 8px 10px;
+    border: 1px solid var(--linie); border-radius: 8px; background: #f4efe7; color: var(--text);
+  }
+
+  .formular-fuss { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--linie); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .formular-fuss button { padding: 3px 7px; font-size: 11.5px; border-radius: 5px; }
+  .formular-fuss.oben { margin-top: 0; padding: 5px 0px 4px 10px; border-top: none; border-bottom: 0px solid var(--linie); border-radius: 6px; margin-bottom: 16px; position: sticky; top: 46px; z-index: 19; background: rgba(242, 236, 224, 0); }
+  @media (max-width: 910px) { .formular-fuss.oben { display: none; } }
+  .rezept-bilder { justify-content: center; }
+  .formular-fuss .spacer { flex: 1; }
+  .leerzustand { text-align: center; font-size: 25px; color: #FFFFFF; text-shadow: -1px -1px 2px black, 0 0 25px black, 2px 2px 5px black; padding: 60px 20px; }
+  .leerzustand .gross { font-size: 44px; }
+
+  .import-hinweis { font-size: 12.5px; color: var(--grau); margin-top: 6px; }
+  html[data-theme="dunkel"] {
+    --gruen: #c9a879;
+    --gruen-hell: #4a4235;
+    --gruen-hover: #e0d2bc;
+    --rot: #ff8a80;
+    --grau: #b3a48d;
+    --grau-hell: #3a352c;
+    --linie: #4c4437;
+    --text: #e9e2d7;
+    --creme: #5a4f3e;
+  }
+  html[data-theme="dunkel"] body {
+    background-color: #322c22;
+    background-image: url("assets/Kueche_Hintergrund_dunkel.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+  }
+  html[data-theme="dunkel"] header {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #635844 0%, #5a4f3e 55%, #4f4535 100%);
+  }
+  html[data-theme="dunkel"] footer { background: linear-gradient(180deg, #4f4535 0%, #463d2e 100%); }
+  html[data-theme="dunkel"] #status { background: #6d5539; }
+  html[data-theme="dunkel"] #status.error { background: #b71c1c; color: #fff; }
+  html[data-theme="dunkel"] aside { background: rgba(90, 79, 62, .94); }
+  html[data-theme="dunkel"] .liste-kopf input, html[data-theme="dunkel"] .liste-kopf select {
+    background: #3a352c; color: var(--text); border-color: var(--linie);
+  }
+  html[data-theme="dunkel"] .suche-x { background: transparent; color: var(--grau); }
+  html[data-theme="dunkel"] .suche-x:hover { background: transparent; color: var(--text); }
+  html[data-theme="dunkel"] #rezeptliste li.aktiv { border-color: var(--gruen); }
+  html[data-theme="dunkel"] .formular { background: rgba(90, 79, 62, .93); }
+  html[data-theme="dunkel"] .feld input, html[data-theme="dunkel"] .feld textarea,
+  html[data-theme="dunkel"] .zutaten-zeile input, html[data-theme="dunkel"] .schritt textarea,
+  html[data-theme="dunkel"] .bild-hinzu input {
+    background: #3a352c; color: var(--text); border-color: var(--linie);
+  }
+  html[data-theme="dunkel"] .feld input:focus, html[data-theme="dunkel"] .feld textarea:focus,
+  html[data-theme="dunkel"] .feld select:focus {
+    outline-color: rgba(233,226,215,.35);
+  }
+  html[data-theme="dunkel"] .zutaten-zeile { border-color: #4c4437; }
+  html[data-theme="dunkel"] .btn-link:hover { background: var(--gruen-hover); color: #3a3226; }
+  html[data-theme="dunkel"] .export-dropdown { background: #4f4535; border-color: #635844; }
+  html[data-theme="dunkel"] .export-dropdown button { background: transparent; color: var(--gruen); }
+  html[data-theme="dunkel"] .export-dropdown button:hover { background: var(--gruen-hell); color: var(--text); }
+  html[data-theme="dunkel"] .export-dropdown button.alarm { background: var(--rot); color: #fff; }
+  html[data-theme="dunkel"] .export-dropdown button.alarm:hover { background: var(--rot); color: #fff; }
+  html[data-theme="dunkel"] .zutat-tcm select { background: #3a352c; color: var(--text); border-color: var(--linie); }
+  html[data-theme="dunkel"] .zutat-tcm select.tcm-geaendert { background: var(--gruen-hell); border-color: var(--gruen); }
+  html[data-theme="dunkel"] .kat-move-menu { background: #4f4535; border-color: #635844; }
+  html[data-theme="dunkel"] .kat-move-menu button { background: transparent; color: var(--gruen); }
+  html[data-theme="dunkel"] .kat-move-menu button:hover { background: var(--gruen-hell); color: var(--text); }
+  html[data-theme="dunkel"] .kat-move-menu .trenner { background: #635844; }
+  html[data-theme="dunkel"] button { background: #3a352c; color: var(--gruen); }
+  html[data-theme="dunkel"] button:hover { background: var(--gruen-hell); }
+  html[data-theme="dunkel"] button.primary { background: var(--gruen); color: #3a3226; }
+  html[data-theme="dunkel"] button.primary:hover { background: var(--gruen-hover); color: #3a3226; }
+  html[data-theme="dunkel"] button.danger { color: var(--rot); }
+  html[data-theme="dunkel"] button.danger:hover { background: #2b1818; }
+  html[data-theme="dunkel"] button.ghost { background: var(--gruen); color: #3a3226; }
+  html[data-theme="dunkel"] button.ghost:hover { background: var(--gruen-hover); color: #3a3226; }
+  @media (max-width: 800px) {
+    header h1 { margin: -5px 0 -5px 0; font-size: 16px; font-weight: 700; }
+    #dbQuelleAnzeige { font-size: 11px; }
+    #dbQuelleAnzeige code { font-size: 10px; }
+    .layout { flex-direction: column; }
+    aside { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--linie); max-height: 360px; }
+    main { padding: 12px; }
+    .formular { padding: 14px; }
+    .zutaten-kopf .menge, .zutaten-zeile .menge { width: 65px; }
+    .zutaten-kopf .einheit, .zutaten-zeile .einheit { width: 75px; }
+    .zutaten-kopf .aktionen { width: 40px; }
+    .export-dropdown { left: 0; right: auto; min-width: max-content; max-width: calc(100vw - 24px); }
+  }
+  /* Bei breiten Fenstern stößt das ganze Layout proportional vom linken Rand
+   * ab und pendelt sich mittig ein (statt <aside> links kleben zu lassen). */
+  @media (min-width: 1400px) {
+    .layout { max-width: 1400px; margin: 0 auto; }
+  }
+
+  /* Kollisions-Modal beim Import */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 80; padding: 20px;
+  }
+  .modal-box {
+    background: #fbf8f2; border-radius: 12px; max-width: 480px; width: 100%;
+    padding: 22px 24px; box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  }
+  .modal-box h3 { margin: 0 0 10px; font-size: 17px; }
+  .modal-box p { margin: 0 0 6px; color: var(--text); }
+  .modal-vergleich {
+    display: flex; flex-direction: column; gap: 6px; margin: 14px 0 18px;
+    padding: 12px 14px; background: var(--grau-hell); border-radius: 8px; font-size: 14px;
+  }
+  .modal-vergleich div span { color: var(--grau); }
+  .modal-aktionen { display: flex; flex-direction: column; gap: 8px; }
+  .modal-aktionen button { width: 100%; padding: 10px 14px; font-size: 14px; text-align: center; }
+  .modal-aktionen small { display: block; font-weight: normal; opacity: .8; margin-top: 2px; }
+  .modal-fuss { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; }
+  .modal-fuss button { width: auto; padding: 8px 16px; font-size: 14px; }
+  .modal-alle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
+  .modal-alle input { width: auto; margin: 0; }
+  .modal-hinweis { margin: 10px 0 0; font-size: 13px; color: var(--gruen); }
+  html[data-theme="dunkel"] .modal-box { background: #383228; }
+  html[data-theme="dunkel"] .modal-vergleich { background: #4a4235; }
+
+  /* Hilfe-Modal: exakt so groß wie sein Inhalt */
+  .modal-box.hilfe { width: max-content; min-width: 300px; max-width: min(90vw, 560px); }
+  .modal-box.hilfe .hilfe-text { white-space: pre-wrap; margin: 0 0 16px; font-size: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="titelSammlung" data-i18n-title="Titel anklicken, um zu wechseln">🍲 Julia's Rezepte-Sammlung bearbeiten ⚙️</h1>
+    <p style="margin-left: 40px;" id="dbQuelleAnzeige"></p>
+  </div>
+  <div class="actions">
+    <div class="export-menu">
+      <button id="btnExportToggle" class="export-toggle" data-i18n="💾 Speichern & Laden" data-i18n-title="Nach dem Bearbeiten muß hiermit die Datenbank im Ordner assets überschrieben werden!">💾 Speichern & Laden</button>
+      <div class="export-dropdown">
+        <div class="menu-gruppe" data-i18n="Speichern – aus der App heraus">Speichern – aus der App heraus</div>
+        <button id="btnExportJS" data-i18n-title="Nach dem Bearbeiten muß hiermit die Datenbank im Ordner assets überschrieben werden!">
+          <span class="menu-titel" data-i18n="💾 Rezepte speichern">💾 Rezepte speichern</span>
+          <small class="menu-unter" data-i18n="App-Datei rezepte.js im Ordner assets erneuern">App-Datei rezepte.js im Ordner assets erneuern</small>
+        </button>
+        <button id="btnExportJSON" data-i18n-title="Hier die Rezepte als Daten-Liste exportieren, (.json)">
+          <span class="menu-titel" data-i18n="💾 Rezepte als Kopie sichern">💾 Rezepte als Kopie sichern</span>
+          <small class="menu-unter" data-i18n="Datensicherung .json – zum Austauschen und Mitnehmen">Datensicherung .json – zum Austauschen und Mitnehmen</small>
+        </button>
+        <button id="btnExportTCM" data-i18n-title="Erzeugt die App-Datendatei assets/zutaten-tcm.js mit allen TCM-Zuordnungen (5 Elemente) – Datei im Ordner assets/ überschreiben!">
+          <span class="menu-titel" data-i18n="💾 5 Elemente speichern">💾 5 Elemente speichern</span>
+          <small class="menu-unter" data-i18n="App-Datei zutaten-tcm.js im Ordner assets erneuern">App-Datei zutaten-tcm.js im Ordner assets erneuern</small>
+        </button>
+        <div class="menu-gruppe" data-i18n="Laden – in die App hinein">Laden – in die App hinein</div>
+        <button id="btnImportJSON" data-i18n-title="Hier Rezepte einer Daten-Liste importieren, (.json)">
+          <span class="menu-titel" data-i18n="📂 Rezepte dazuladen">📂 Rezepte dazuladen</span>
+          <small class="menu-unter" data-i18n="fügt hinzu – fragt bei identischen Rezepten">fügt hinzu – fragt bei identischen Rezepten</small>
+        </button>
+        <button id="btnImportDB" data-i18n-title="Lädt eine andere Rezept-Datenbank (.json/.js) als Arbeits-Datenbank – die aktuelle wird ersetzt">
+          <span class="menu-titel" data-i18n="📂 Andere Sammlung öffnen">📂 Andere Sammlung öffnen</span>
+          <small class="menu-unter" data-i18n="ersetzt ALLE aktuellen Rezepte!">ersetzt ALLE aktuellen Rezepte!</small>
+        </button>
+        <button id="btnImportTCM" data-i18n-title="Lädt eine andere zutaten-tcm.json (Mutter/Vorlage) als Zutaten-Zuordnung (5 Elemente) – ersetzt die aktuellen Basisdaten für diese Sitzung">
+          <span class="menu-titel" data-i18n="📂 Andere 5-Elemente-Liste laden">📂 Andere 5-Elemente-Liste laden</span>
+          <small class="menu-unter" data-i18n="gilt nur für diese Sitzung">gilt nur für diese Sitzung</small>
+        </button>
+      </div>
+    </div>
+    <input type="file" id="fileImport" accept=".json,.js" hidden>
+    <input type="file" id="tcmFileImport" accept=".json" hidden>
+    <input type="file" id="fileImportDB" accept=".json,.js" hidden>
+    <button id="btnReset" class="danger" data-i18n-title="Verwirft alle Änderungen (Browser-Speicher) und lädt den Stand von rezepte.js neu">🗘</button>
+    <button id="btnHilfe" title="Anleitung zum speichern öffnen" data-i18n-title="Anleitung zum speichern öffnen" data-i18n-aria="Anleitung zum speichern öffnen" class="hilfe">❓</button>
+    <button id="btnTheme" class="btn-link" data-i18n-title="Helles/Dunkles Design umschalten">🌙 Dunkel</button>
+    <div id="sprachWahl">
+      <button type="button" id="sprachWahlBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Sprache wechseln"></button>
+      <ul id="sprachWahlListe" role="listbox" hidden></ul>
+    </div>
+  </div>
+</header>
+
+<div id="status">Wird geladen …</div>
+
+<div id="modalContainer"></div>
+
+<div class="layout">
+  <aside>
+    <div class="liste-kopf">
+      <div class="suche-wrap">
+        <input type="search" id="suche" data-i18n-ph="Rezept suchen …" placeholder="Rezept suchen …" autocomplete="off">
+        <button id="sucheLeeren" class="suche-x" data-i18n-title="Suche leeren" title="Suche leeren" hidden>✕</button>
+      </div>
+      <select id="filterKat"></select>
+      <div class="zahlenzeile" role="button" tabindex="0" data-i18n-title="Auswahl ein-/ausblenden" title="Auswahl ein-/ausblenden"><span id="anzahl"></span><span class="auswahl-symbol" aria-hidden="true">☑</span></div>
+      <div class="auswahlzeile">
+        <button id="btnAuswahlAlle" class="small" data-i18n="Alle wählen">Alle wählen</button>
+        <button id="btnAuswahlKeine" class="small" data-i18n="Auswahl aufheben">Auswahl aufheben</button>
+        <span id="auswahlZaehler"></span>
+      </div>
+    </div>
+    <ul id="rezeptliste"></ul>
+    <div id="katMoveMenu" class="kat-move-menu" hidden></div>
+  </aside>
+
+  <main id="formbereich">
+    <div class="leerzustand">
+      <div class="gross">📖</div>
+      <p><span data-i18n="Wähle links ein Rezept aus, um es zu bearbeiten,">Wähle links ein Rezept aus, um es zu bearbeiten,</span><br><span data-i18n="oder lege ein neues Rezept an.">oder lege ein neues Rezept an.</span></p>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.0.0</small></div>
+  <div>❤️</div>
+  <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
+</footer>
+
+<script src="assets/sprachen.js"></script>
+<script src="assets/rezepte.js"></script>
+<script src="assets/zutaten-tcm.js"></script>
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------
+ * Datenhaltung
+ * --------------------------------------------------------------- */
+var STORAGE_KEY = "rezept_db_v1";
+var THEME_KEY = "rezept_theme_v1";
+var DB = [];
+var aktuellerId = null;
+var dragId = null;   /* Rezept, das gerade per Drag&Drop verschoben wird */
+var exportStand = null;   /* Stand der Daten beim letzten Export von rezepte.js */
+var unexportiert = false; /* true, solange unexportierte Änderungen vorliegen */
+var exportTitel = null;   /* Original-Title des Import/Export-Toggle aus dem HTML */
+var DB_QUELLE_KEY = "rezept_db_quelle_v1";
+var dbQuelle = "rezepte.js";   /* Name der aktuellen Arbeits-Datenbank (Datei) */
+var auswahl = {};   /* id -> true: für den Export markierte Rezepte */
+var kollisionsAuto = null;   /* "ersetzen"|"neu"|"ueberspringen": beim Import diese Entscheidung für alle weiteren Kollisionen übernehmen */
+
+/* ---------------------------------------------------------------
+ * TCM – 5 Elemente (Pflege-Modul)
+ * Hier werden die Zutaten-Zuordnungen gepflegt; per
+ * "💾 assets/zutaten-tcm.js exportieren" landen sie in der
+ * App-Datendatei assets/zutaten-tcm.js, die von allen Seiten geladen
+ * wird – niemals in den Rezepten selbst. Eine andere Stammdatei
+ * zutaten-tcm.json kann über "📂 Andere zutaten-tcm.json importieren"
+ * als Basis geladen werden.
+ * --------------------------------------------------------------- */
+var TCM_OVERLAY_KEY = "zutaten_tcm_v1";
+var TCM_NAMEN_KEY = "zutaten_tcm_namen_v1";   /* normalisiert -> Original-Schreibweise (für Alias-Export) */
+var tcmOverlay = {};   /* normalisierter Zutatname -> { element, geschmack:[...], thermik } (nur eigene Änderungen) */
+var tcmNamen = {};     /* normalisierter Zutatname -> zuletzt verwendete Schreibweise */
+var tcmQuelle = "zutaten-tcm.js";   /* Name der aktuellen TCM-App-Datendatei (Ziel: Ordner assets/); folgt beim Import der gewählten Mutterdatei */
+var tcmIndexBasis = null;   /* normalisierter Zutatname -> Basiszuteilung aus assets/zutaten-tcm.js */
+
+function tcmNorm(s) {
+  return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/* Eigene (im Editor gepflegte) Werte einer Zutat, sonst null. */
+function tcmEigen(name) {
+  return tcmOverlay[tcmNorm(name)] || null;
+}
+
+/* Normalisierter Index über die Basiskarte (Schlüssel dort sind die
+ * original geschriebenen Zutatennamen, daher hier lowercase-Nachschlag).
+ * Namens-Varianten ("namen": weitere Sprachen) zeigen auf denselben Eintrag. */
+function tcmIndexAufbauen() {
+  tcmIndexBasis = {};
+  if (typeof ZUTATEN_TCM !== "undefined") {
+    Object.keys(ZUTATEN_TCM).forEach(function (k) {
+      var e = ZUTATEN_TCM[k];
+      tcmIndexBasis[tcmNorm(k)] = e;
+      ((e && e.namen) || []).forEach(function (v) {
+        var nv = tcmNorm(v);
+        if (nv && !tcmIndexBasis[nv]) tcmIndexBasis[nv] = e;
+      });
+    });
+  }
+}
+
+/* Effektive Zuordnung: eigene Werte haben Vorrang, sonst Basis aus
+ * assets/zutaten-tcm.js. */
+function tcmBasis(name) {
+  var eigen = tcmEigen(name);
+  if (eigen) return eigen;
+  var n = tcmNorm(name);
+  if (!n) return null;
+  if (tcmIndexBasis === null) tcmIndexAufbauen();
+  return tcmIndexBasis[n] || null;
+}
+
+function tcmSpeichern() {
+  try { localStorage.setItem(TCM_OVERLAY_KEY, JSON.stringify(tcmOverlay)); } catch (e) { /* ignorieren */ }
+  try { localStorage.setItem(TCM_NAMEN_KEY, JSON.stringify(tcmNamen)); } catch (e) { /* ignorieren */ }
+}
+
+function tcmSetze(name, daten) {
+  if (!name || !(name = String(name).trim())) return;
+  tcmOverlay[tcmNorm(name)] = daten;
+  tcmNamen[tcmNorm(name)] = name;
+  tcmSpeichern();
+}
+
+function tcmLoeschen(name) {
+  delete tcmOverlay[tcmNorm(name)];
+  tcmSpeichern();
+}
+
+/* Erzeugt den Inhalt der App-Datendatei assets/zutaten-tcm.js:
+ * Basis aus ZUTATEN_TCM + eigene Änderungen (tcmOverlay), als
+ * "var ZUTATEN_TCM = { … }" inkl. Kopfkommentar – wird von allen
+ * Seiten per <script> geladen (kein fetch, funktioniert unter file://).
+ * Alias-Logik: Trifft eine eigene Änderung einen Eintrag über eine seiner
+ * Namens-Varianten ("namen"), landen die Werte im kanonischen Eintrag und die
+ * neue Schreibweise wird automatisch als Variante aufgenommen. */
+function tcmBundleJs() {
+  var karte = {};
+  var ziel = {};   /* normalisierte Namens-Variante -> kanonischer Schlüssel */
+  if (typeof ZUTATEN_TCM !== "undefined") {
+    Object.keys(ZUTATEN_TCM).forEach(function (k) {
+      var e = ZUTATEN_TCM[k] || {};
+      var varianten = [];
+      var gesehen = {};
+      function pushVariante(v) {
+        v = String(v == null ? "" : v).trim();
+        var nv = tcmNorm(v);
+        if (!nv || gesehen[nv]) return;
+        gesehen[nv] = true;
+        varianten.push(v);
+      }
+      pushVariante(k);
+      ((e && e.namen) || []).forEach(pushVariante);
+      var eigen = tcmOverlay[tcmNorm(k)];
+      var neu = {
+        element: (eigen && eigen.element) || e.element || "",
+        geschmack: (eigen && eigen.geschmack) || e.geschmack || [],
+        thermik: (eigen && eigen.thermik) || e.thermik || ""
+      };
+      if (varianten.length > 1) neu.namen = varianten.slice(1);
+      karte[k] = neu;
+      varianten.forEach(function (v) {
+        var nv = tcmNorm(v);
+        if (!ziel[nv]) ziel[nv] = k;
+      });
+    });
+  }
+  Object.keys(tcmOverlay).forEach(function (n) {
+    var w = tcmOverlay[n];
+    var original = tcmNamen[n] || n;
+    var kanonisch = ziel[n];
+    if (!kanonisch) {
+      /* Neue Zutat (kein Treffer in der Basis) */
+      karte[original] = {
+        element: w.element || "",
+        geschmack: w.geschmack || [],
+        thermik: w.thermik || ""
+      };
+      ziel[n] = original;
+      return;
+    }
+    /* Alias eines bestehenden Eintrags: Werte übernehmen, Schreibweise merken */
+    var e = karte[kanonisch];
+    e.element = w.element || "";
+    e.geschmack = w.geschmack || [];
+    e.thermik = w.thermik || "";
+    if (tcmNorm(kanonisch) !== n &&
+        !(e.namen || []).some(function (v) { return tcmNorm(v) === n; })) {
+      if (!e.namen) e.namen = [];
+      e.namen.push(original);
+    }
+  });
+  var durch = "Exportiert aus rezepte_bearbeiten.html am " + new Date().toLocaleDateString("de-DE");
+  return (
+    "/* ---------------------------------------------------------------------------\n" +
+    " * Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17\n" +
+    " * https://github.com/heino17/Rezepte-Sammlung\n" +
+    " *\n" +
+    " * Zutaten nach den 5 Elementen (Traditionelle Chinesische Medizin, TCM)\n" +
+    " * " + durch + " (" + Object.keys(karte).length + " Zutaten)\n" +
+    " * Quelle: zutaten-tcm.json (gepflegte Stammdaten im Projektordner).\n" +
+    " * Werte:\n" +
+    " *   element    \"\" | holz | feuer | erde | metall | wasser\n" +
+    " *   geschmack  [] | [\"sauer\",\"bitter\",\"suess\",\"scharf\",\"salzig\"]\n" +
+    " *   thermik    \"\" | heiss | warm | neutral | kuehl | kalt\n" +
+    " *   namen      [] | weitere Schreibweisen des Namens (z. B. andere\n" +
+    " *                 Sprachen); alle Seiten suchen auch über diese Varianten.\n" +
+    " * WICHTIG: ohne Therapie-Anspruch – nur zur Orientierung.\n" +
+    " * Leere Werte (z. B. Wasser nur \"thermik\": \"neutral\") sind Absicht.\n" +
+    " * ------------------------------------------------------------------------- */\n" +
+    "var ZUTATEN_TCM = " + JSON.stringify(karte, null, 2) + ";\n"
+  );
+}
+
+/* Mengeneinheiten für das Einheit-Dropdown (aus den aktuellen Rezeptdaten) */
+var EINHEITEN = [
+  "g", "kg", "ml", "Liter", "EL", "TL", "Pck.", "St.", "Stk.",
+  "Prise", "Prisen", "Glas", "Gläser", "Becher", "Würfel", "Bund",
+  "Tasse", "Tropfen", "Zehe", "Zehen", "Scheiben", "Stange", "Stangen",
+  "Schale", "Rolle", "Kapseln", "cm"
+];
+
+/* Zerlegt eine alte Mengenangabe ("200 g") in die getrennten Felder
+ * { menge, einheit } und übernimmt Qualifizierer ("Zitronensaft",
+ * "gehacktes", "(à 150 g)", …) in das Zutaten-Feld. */
+function normEinheit(u) {
+  return u.toLowerCase() === "l" ? "Liter" : u;
+}
+
+function trenneMengeEinheit(s, name) {
+  s = String(s == null ? "" : s).trim();
+  if (!s) return { menge: "", einheit: "", name: name || "" };
+  if (s === "?") return { menge: "?", einheit: "", name: name || "" };
+  var q = s.match(/^\?\s+(.+)$/);
+  if (q) return { menge: "?", einheit: q[1].trim(), name: name || "" };
+  var ca = s.match(/^ca\.?\s+(.+)$/i);
+  if (ca) {
+    var t = trenneMengeEinheit(ca[1], name);
+    t.menge = "ca. " + t.menge;
+    return t;
+  }
+  var mi = s.match(/^mind\.?\s+(.+)$/i);
+  if (mi) {
+    var t = trenneMengeEinheit(mi[1], name);
+    t.menge = "mind. " + t.menge;
+    return t;
+  }
+  var m = s.match(/^(\d+(?:\s+\d+\s*\/\s*\d+)?(?:[.,]\d+)?(?:\s*\/\s*\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?(?:\s*\/\s*\d+)?)?)(?:\s+)(.+)$/);
+  if (!m) return { menge: s, einheit: "", name: name || "" };
+  var num = m[1], rest = m[2].trim();
+  var u = rest.match(/^(g|kg|ml|liter|l|el|tl|pck\.?|st\.?|stk\.?|prise|prisen|glas|gläser|becher|würfel|bund|tasse|tropfen|zehe|zehen|scheibe|scheiben|stange|stangen|schale|rolle|kapseln|cm)(?: (.*))?$/i);
+  if (u) {
+    var unit = normEinheit(u[1]), extra = (u[2] || "").trim();
+    if (!extra) return { menge: num, einheit: unit, name: name || "" };
+    if (extra.charAt(0) === "+") return { menge: num, einheit: rest, name: name || "" };
+    if (extra.charAt(0) === "à") return { menge: num, einheit: unit, name: (name || "") + " (" + extra + ")" };
+    if (extra.charAt(0) === "(") return { menge: num, einheit: unit, name: (name || "") + " " + extra };
+    if (extra === "Zitronensaft" && name === "Zitrone") return { menge: num, einheit: unit, name: "Zitronensaft" };
+    return { menge: num, einheit: unit, name: extra + " " + (name || "") };
+  }
+  var ue = rest.match(/^(.+?)\s+(g|kg|ml|liter|l|el|tl|pck\.?|st\.?|stk\.?|prise|prisen|glas|gläser|becher|würfel|bund|tasse|tropfen|zehe|zehen|scheibe|scheiben|stange|stangen|schale|rolle|kapseln|cm)$/i);
+  if (ue) return { menge: num + " " + ue[1].trim(), einheit: normEinheit(ue[2]), name: name || "" };
+  return { menge: s, einheit: "", name: name || "" };
+}
+
+/* Bringt eine Zutat ins neue Format { menge, einheit, name }. */
+function normalisiereZutat(z) {
+  if (!z || typeof z !== "object") return z;
+  if (z.einheit === undefined) {
+    var t = trenneMengeEinheit(z.menge, z.name);
+    z.menge = t.menge;
+    z.einheit = t.einheit;
+    z.name = t.name;
+  } else {
+    z.menge = z.menge == null ? "" : String(z.menge);
+    z.einheit = z.einheit == null ? "" : String(z.einheit);
+  }
+  return z;
+}
+
+function normalisiereZutaten(r) {
+  if (r && Array.isArray(r.zutaten)) r.zutaten.forEach(normalisiereZutat);
+}
+
+/* Markiert Toggle und Menüpunkt "rezepte.js exportieren" als "alarm",
+ * solange unexportierte Änderungen in der Datenbank liegen. */
+function markiereUnexportiert() {
+  if (exportStand !== null && JSON.stringify(DB) === exportStand) return;
+  unexportiert = true;
+  var btn = document.getElementById("btnExportToggle");
+  if (btn) {
+    btn.classList.add("alarm");
+    btn.title = exportTitel + tr(" – Änderungen sind noch nicht exportiert!");
+  }
+  var punkt = document.getElementById("btnExportJS");
+  if (punkt) punkt.classList.add("alarm");
+}
+
+function exportiert() {
+  exportStand = JSON.stringify(DB);
+  unexportiert = false;
+  var btn = document.getElementById("btnExportToggle");
+  if (btn) {
+    btn.classList.remove("alarm");
+    btn.title = exportTitel;
+  }
+  var punkt = document.getElementById("btnExportJS");
+  if (punkt) punkt.classList.remove("alarm");
+}
+
+/* Ungespeicherte Formular-Eingaben: Die 💾-Knöpfe alarmieren (analog zum
+ * Export-Toggle), bis gesichert wird, das Formular neu aufgebaut oder das
+ * Rezept gelöscht wird. Einige Eingaben landen erst beim Sichern im Rezept
+ * (Name, Kategorie, Portionen, Nährwerte, Notiz) - darauf soll der Knopf
+ * rechtzeitig hinweisen. */
+var formularGeaendert = false;
+
+function markiereFormularGeaendert() {
+  if (!aktuellerId || formularGeaendert) return;
+  formularGeaendert = true;
+  ["btnSpeichern", "btnObenSpeichern"].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) {
+      b.classList.add("alarm");
+      b.title = tr("Änderungen noch nicht gespeichert!");
+    }
+  });
+}
+
+function vergissFormularAenderung() {
+  formularGeaendert = false;
+  ["btnSpeichern", "btnObenSpeichern"].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) {
+      b.classList.remove("alarm");
+      b.removeAttribute("title");
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+ * Datenbank-Quelle & Export-Auswahl
+ * --------------------------------------------------------------- */
+function anzahlAusgewaehlt() {
+  return DB.filter(function (r) { return auswahl[r.id]; }).length;
+}
+
+/* Zeigt im Kopf den Namen der aktuellen Arbeits-Datenbank an. Bei einer
+ * importierten Nebendatenbank wird der Hinweis rot hervorgehoben und um eine
+ * zweite, dunkle Zeile ergänzt: Speichern schreibt zurück in rezepte.js. */
+function aktualisiereQuellAnzeige() {
+  var p = document.getElementById("dbQuelleAnzeige");
+  if (!p) return;
+  var istHaupt = dbQuelle === "rezepte.js";
+  p.classList.toggle("nebendb", !istHaupt);
+  p.innerHTML = (istHaupt ? tr("Hauptdatenbank – ") : tr("Nebendatenbank in Bearbeitung – ")) +
+    "<code>" + escapeHtml(dbQuelle) + "</code>" +
+    (istHaupt ? "" : "<span class=\"dbHinweis\">" +
+      escapeHtml(tr("💾 Speichere die Datei als „rezepte.js“, dass sie zur Hauptdatenbank wird")) + "</span>");
+}
+
+/* Zeigt den Auswahl-Zähler an (nur wenn etwas ausgewählt ist). */
+function aktualisiereAuswahlAnzeige() {
+  var zaehler = document.getElementById("auswahlZaehler");
+  if (zaehler) {
+    var n = anzahlAusgewaehlt();
+    zaehler.textContent = n > 0 ? tr("Auswahl: {anzahl}", { anzahl: n }) : "";
+  }
+}
+
+/* Dateiname für Exporte: Grundlage ist die aktuelle Datenbank-Datei;
+ * bei aktiver Auswahl wird "_auswahl" angehängt. */
+function exportDateiname(ext) {
+  var basis = dbQuelle.replace(/\.[a-z0-9]+$/i, "");
+  if (anzahlAusgewaehlt() > 0) basis += "_auswahl";
+  return basis + ext;
+}
+
+/* Liefert die zu exportierenden Rezepte: bei aktiver Auswahl nur die
+ * markierten, sonst die ganze Datenbank. */
+function exportDaten() {
+  if (anzahlAusgewaehlt() > 0) {
+    return DB.filter(function (r) { return auswahl[r.id]; }).map(kopieren);
+  }
+  return ladeAktuellesSauber();
+}
+
+/* Fragt beim Verlassen der Seite nach, solange unexportierte Änderungen
+ * in der Datenbank liegen. */
+window.addEventListener("beforeunload", function (ev) {
+  if (!unexportiert) return;
+  ev.preventDefault();
+  ev.returnValue = "";
+});
+
+/* Kopieren, damit wir die Quelle (rezepte.js) nie verändern */
+function kopieren(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function slugify(name) {
+  return (name || "")
+    .toLowerCase()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function neuerId(name) {
+  var base = slugify(name) || "rezept";
+  var zaehler = 1;
+  var id = base;
+  while (DB.some(function (r) { return r.id === id; })) {
+    zaehler++;
+    id = base + "-" + zaehler;
+  }
+  return id;
+}
+
+function speichernLocal() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  } catch (e) {
+    melden(tr("Fehler beim Speichern im Browser: {message}", { message: e.message }), true);
+  }
+}
+
+function laden() {
+  var quelle = null;
+  try {
+    quelle = localStorage.getItem(STORAGE_KEY);
+  } catch (e) { /* keine localStorage – nutze rezepte.js */ }
+  if (quelle) {
+    try {
+      DB = JSON.parse(quelle);
+    } catch (e) {
+      DB = [];
+    }
+  }
+  if (!DB.length && typeof REZEPTE !== "undefined") {
+    DB = kopieren(REZEPTE);
+  }
+  if (!DB.length) {
+    DB = [];
+  }
+  DB.forEach(normalisiereZutaten);
+  try { dbQuelle = localStorage.getItem(DB_QUELLE_KEY) || "rezepte.js"; } catch (e) { /* ignorieren */ }
+  try {
+    var o = JSON.parse(localStorage.getItem(TCM_OVERLAY_KEY) || "{}");
+    tcmOverlay = o && typeof o === "object" && !Array.isArray(o) ? o : {};
+  } catch (e) { tcmOverlay = {}; }
+  try {
+    var nm = JSON.parse(localStorage.getItem(TCM_NAMEN_KEY) || "{}");
+    tcmNamen = nm && typeof nm === "object" && !Array.isArray(nm) ? nm : {};
+  } catch (e) { tcmNamen = {}; }
+}
+
+/* ---------------------------------------------------------------
+ * Hell-/Dunkelmodus
+ * --------------------------------------------------------------- */
+function anfangsThema() {
+  var urlThema = new URLSearchParams(location.search).get("theme");
+  if (urlThema === "dunkel" || urlThema === "hell") return urlThema;
+  try {
+    var gespeichert = localStorage.getItem(THEME_KEY);
+    if (gespeichert === "dunkel" || gespeichert === "hell") return gespeichert;
+  } catch (e) { /* ignorieren */ }
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dunkel";
+  return "hell";
+}
+
+function setzeThema(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignorieren */ }
+  document.getElementById("btnTheme").textContent =
+    t === "dunkel" ? "☀️" : "🌗";
+}
+
+function toggleThema() {
+  setzeThema(document.documentElement.getAttribute("data-theme") === "dunkel" ? "hell" : "dunkel");
+}
+
+/* ---------------------------------------------------------------
+ * Titel-Spielerei: Überschrift beim Anklicken umschalten
+ * --------------------------------------------------------------- */
+var TITEL_KEY = "rezept_titel_v1";
+var titelVariationen = [
+  "Julia's Rezepte-Sammlung bearbeiten ⚙️",
+  "Meine Rezepte-Sammlung bearbeiten ⚙️",
+  "Unsere Rezepte-Sammlung bearbeiten ⚙️"
+];
+function setzeTitel(i) {
+  var h = document.getElementById("titelSammlung");
+  if (!h) return;
+  i = i % titelVariationen.length;
+  if (i < 0) i += titelVariationen.length;
+  h.textContent = "🍲 " + tr(titelVariationen[i]);
+  try { localStorage.setItem(TITEL_KEY, String(i)); } catch (e) { /* ignorieren */ }
+}
+function titelIndex() {
+  try {
+    var v = parseInt(localStorage.getItem(TITEL_KEY), 10);
+    if (v >= 0 && v < titelVariationen.length) return v;
+  } catch (e) { /* ignorieren */ }
+  return 0;
+}
+document.getElementById("titelSammlung").onclick = function () {
+  setzeTitel((titelIndex() + 1) % titelVariationen.length);
+};
+
+/* ---------------------------------------------------------------
+ * Statusmeldungen
+ * --------------------------------------------------------------- */
+var statusTimer = null;
+
+/* Misst die Höhe von fixiertem Kopf und Statusleiste, damit die linke
+ * Liste darunter klebt und intern scrollt. */
+function messeKopfHoehe() {
+  var h = document.querySelector("header").offsetHeight;
+  var s = document.getElementById("status").offsetHeight;
+  document.documentElement.style.setProperty("--kopf-h", h + "px");
+  document.documentElement.style.setProperty("--status-h", s + "px");
+}
+
+function melden(text, fehler) {
+  var el = document.getElementById("status");
+  el.textContent = text;
+  el.className = fehler ? "error" : "";
+  if (statusTimer) clearTimeout(statusTimer);
+  statusTimer = setTimeout(function () { el.textContent = ""; messeKopfHoehe(); }, 6000);
+  messeKopfHoehe();
+}
+
+/* ---------------------------------------------------------------
+ * Rezeptliste
+ * --------------------------------------------------------------- */
+function kategorien() {
+  var set = {};
+  DB.forEach(function (r) { if (r.kategorie) set[r.kategorie] = true; });
+  return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "de"); });
+}
+
+function filterListe() {
+  var suche = (document.getElementById("suche").value || "").toLowerCase();
+  var kat = document.getElementById("filterKat").value;
+  return DB.filter(function (r) {
+    var text = (r.name + " " + r.kategorie + " " + (r.zutaten || []).map(function (z) { return z.name; }).join(" ")).toLowerCase();
+    var matchText = !suche || text.indexOf(suche) !== -1;
+    var matchKat = !kat || r.kategorie === kat;
+    return matchText && matchKat;
+  });
+}
+
+function rendereListe() {
+  var ul = document.getElementById("rezeptliste");
+  var liste = filterListe();
+  var katSel = document.getElementById("filterKat");
+  var aktuelleKat = katSel.value;
+  katSel.innerHTML = '<option value="">' + tr("Alle Kategorien") + '</option>' +
+    kategorien().map(function (k) {
+      return '<option value="' + escapeHtml(k) + '">' + escapeHtml(k) + '</option>';
+    }).join("");
+  katSel.value = aktuelleKat;
+
+  document.getElementById("anzahl").textContent = trPlural(DB.length, "{anzahl} Rezept", "{anzahl} Rezepte");
+  if (!liste.length) {
+    ul.innerHTML = '<div class="leer">' + tr("Keine Rezepte gefunden.") + '</div>';
+    return;
+  }
+  ul.innerHTML = liste.map(function (r) {
+    var aktiv = r.id === aktuellerId ? " aktiv" : "";
+    return (
+      '<li data-id="' + escapeHtml(r.id) + '" class="' + aktiv + '" draggable="true" title="' + tr("Ziehen zum Verschieben") + '">' +
+        '<span class="auswahl-wrap">' +
+          '<input type="checkbox" class="auswahl-kb" data-id="' + escapeHtml(r.id) + '"' + (auswahl[r.id] ? ' checked' : '') +
+            ' aria-label="' + tr("Für Export auswählen") + '" title="' + tr("Für Export auswählen") + '">' +
+        "</span>" +
+        '<span class="name" title="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) +
+          '<small>' + escapeHtml(r.kategorie || tr("ohne Kategorie")) + "</small>" +
+        "</span>" +
+        '<span class="verschieben">' +
+          '<button class="small" data-aktion="hoch" title="' + tr("Nach oben") + '">▲</button>' +
+          '<button class="small" data-aktion="runter" title="' + tr("Nach unten") + '">▼</button>' +
+          '<button class="small" data-aktion="kat" title="' + tr("Kategorie ändern") + '">🏷</button>' +
+        "</span>" +
+      "</li>"
+    );
+  }).join("");
+  aktualisiereAuswahlAnzeige();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function verschieben(id, richtung) {
+  var idx = DB.findIndex(function (r) { return r.id === id; });
+  if (idx < 0) return;
+  var ziel = richtung === "hoch" ? idx - 1 : idx + 1;
+  if (ziel < 0 || ziel >= DB.length) return;
+  var t = DB[idx]; DB[idx] = DB[ziel]; DB[ziel] = t;
+  speichernLocal();
+  markiereUnexportiert();   /* Reihenfolge steht im Export -> umsortieren zählt als Änderung */
+  rendereListe();
+}
+
+/* ---------------------------------------------------------------
+ * Formular
+ * --------------------------------------------------------------- */
+function leerRezept() {
+  return {
+    id: neuerId("neues-rezept"),
+    name: tr("Neues Rezept"),
+    kategorie: "",
+    portionen: 1,
+    bilder: [],
+    zutaten: [{ menge: "", einheit: "", name: "" }],
+    zubereitung: [""],
+    nahrwerte: {}
+    /* kein notiz-Feld: leere Notizen bleiben komplett außen vor (siehe
+     * leseAktuelles) - so bleibt ein frisches, unberührtes Rezept
+     * byte-stabil und löst keinen vorzeitigen Export-Alarm aus */
+  };
+}
+
+function waehle(id) {
+  var r = DB.find(function (x) { return x.id === id; });
+  if (!r) return;
+  aktuellerId = id;
+  rendereListe();
+  rendereFormular(r);
+}
+
+/* Vor „＋ Neu“ und „⧉ Duplizieren“: Ungespeicherte Formular-Eingaben gingen
+ * sonst stillschweigend verloren (Neu) bzw. wanderten nur in die Kopie, nicht
+ * ins Original (Duplizieren). Rückfrage mit Speicheroption - gilt für beide
+ * Button-Leisten, da sie dieselben Handler nutzen.
+ * Rückgabe true = weitermachen (nichts zu sichern oder gesichert). */
+function uebernehmeUngespeicherte() {
+  if (!formularGeaendert) return true;
+  if (!confirm(tr("Es gibt ungespeicherte Änderungen. Zuerst speichern?"))) return false;
+  speichereAktuelles(false);
+  if (formularGeaendert) {
+    /* Sichern fehlgeschlagen (z.B. leerer Name) -> Aktion abbrechen */
+    return false;
+  }
+  return true;
+}
+
+function neuesRezept() {
+  if (!uebernehmeUngespeicherte()) return;
+  var r = leerRezept();
+  DB.push(r);
+  speichernLocal();
+  /* Bewusst KEIN markiereUnexportiert(): Ein frisch angelegtes Rezept ist
+   * Arbeitsstand, noch keine "fertige" Änderung - der Export-Alarm kommt
+   * erst, wenn es per 💾 gesichert wird (oder echte Eingaben gesichert
+   * werden). */
+  rendereListe();
+  waehle(r.id);
+  melden(tr("Neues Rezept angelegt."));
+}
+
+function fussKnopfLeiste(pr, extra) {
+  return (
+    '<div class="formular-fuss' + (extra ? " " + extra : "") + '">' +
+      '<button class="primary" id="' + pr + 'Speichern">💾 ' + tr("Speichern") + '</button>' +
+      '<button id="' + pr + 'Duplikat">⧉ ' + tr("Duplizieren") + '</button>' +
+      '<button class="danger" id="' + pr + 'Loeschen">🗑 ' + tr("Rezept löschen") + '</button>' +
+      '<button class="primary" id="' + pr + 'Neu">＋ ' + tr("Neues Rezept") + '</button>' +
+      '<span class="spacer"></span>' +
+    "</div>"
+  );
+}
+
+function rendereFormular(r) {
+  vergissFormularAenderung();   /* frisches Formular = keine ungespeicherten Eingaben */
+  var main = document.getElementById("formbereich");
+  /* Anzeige-Defaults nur lokal: Das bloße Ansehen darf die Datenbank nicht
+   * verändern (sonst zündet der Export-Alarm beim nächsten Rezeptwechsel,
+   * obwohl nichts geändert wurde). Echte Werte schreibt leseAktuelles beim
+   * Speichern zurück - dort ist eine Änderung legitim und alarmwürdig. */
+  var nw = r.nahrwerte || {};
+
+  main.innerHTML =
+    '<div class="formular">' +
+      fussKnopfLeiste("btnOben", "oben") +
+      '<h2>✏️ ' + escapeHtml(r.name) + "</h2>" +
+      '<p class="untertitel">' + tr("Rezept-ID: ") + escapeHtml(r.id) + "</p>" +
+
+      '<div class="zeile">' +
+        '<div class="feld"><label for="fName">' + tr("Name des Rezepts") + '</label>' +
+          '<input type="text" id="fName" value="' + escapeHtml(r.name) + '"></div>' +
+        '<div class="feld"><label for="fKat">' + tr("Kategorie") + '</label>' +
+          '<div class="kat-combo">' +
+            '<input type="text" id="fKat" value="' + escapeHtml(r.kategorie || "") + '" placeholder="' + escapeHtml(tr("z. B. Sandwich & Wraps")) + '">' +
+            '<button type="button" id="fKatKnopf" class="kat-knopf" tabindex="-1" title="' + tr("Kategorien anzeigen") + '" aria-label="' + tr("Kategorien anzeigen") + '">▾</button>' +
+            '<div class="kat-liste" id="fKatListe" role="listbox" hidden></div>' +
+          "</div></div>" +
+        '<div class="feld"><label for="fPortionen">' + tr("Portionen") + '</label>' +
+          '<input type="number" id="fPortionen" min="1" value="' + (r.portionen || 1) + '"></div>' +
+      "</div>" +
+
+      '<div class="bereich">' +
+        '<h3>' + tr("Bilder") + '</h3>' +
+        '<div id="bilderListe"></div>' +
+        '<div class="bild-hinzu">' +
+          '<button id="btnBildDatei" class="ghost" title="' + tr("Bild aus einem Ordner auswählen") + '">🖼 ' + tr("Ein Bild einfügen") + '</button>' +
+        "</div>" +
+        '<input type="file" id="bildDatei" accept="image/*" hidden>' +
+        '<p class="import-hinweis">' + tr("Mehrere Bilder möglich – Reihenfolge mit ◀/▶ ändern, ✕ entfernt ein Bild.") + '</p>' +
+      "</div>" +
+
+      '<div class="bereich">' +
+        '<h3>' + tr("Nährwerte (pro Portion)") + '</h3>' +
+        '<div class="zeile">' +
+          nahrfeld("nKcal", tr("Kalorien (kcal)"), nw.kcal) +
+          nahrfeld("nKh", tr("Kohlenhydrate (g)"), nw.kohlenhydrate) +
+          nahrfeld("nEw", tr("Eiweiß (g)"), nw.eiweiss) +
+          nahrfeld("nBal", tr("Ballaststoffe (g)"), nw.ballaststoffe) +
+          nahrfeld("nFett", tr("Fette (g)"), nw.fette) +
+        "</div>" +
+      "</div>" +
+
+      '<div class="bereich">' +
+        '<h3>' + tr("Zutaten") + '</h3>' +
+        '<p class="import-hinweis">' + tr("🌿 TCM-Zuordnung: Zutatenzeile mit ⚙️ öffnen – die Werte werden getrennt gepflegt und landen per Export nur in assets/zutaten-tcm.js, nie im Rezept selbst.") + '</p>' +
+        '<div class="zutaten-liste">' +
+          '<div class="zutaten-kopf">' +
+            '<span class="nr"></span><span class="menge">' + tr("Menge") + '</span><span class="einheit">' + tr("Einheit") + '</span><span class="zutat">' + tr("Zutat") + '</span><span class="aktionen"></span>' +
+          '</div>' +
+          '<div id="zutatenKoerper"></div>' +
+        '</div>' +
+        '<datalist id="zutatDaten">' + zutatenNamen().map(function (n) {
+          return '<option value="' + escapeHtml(n) + '"></option>';
+        }).join("") + '</datalist>' +
+        '<button class="hinzufuegen" id="btnZutatHinzu">＋ ' + tr("Zutat hinzufügen") + '</button>' +
+      "</div>" +
+
+      '<div class="bereich">' +
+        '<h3>' + tr("Zubereitung") + '</h3>' +
+        '<div id="schritteListe"></div>' +
+        '<button class="hinzufuegen" id="btnSchrittHinzu">＋ ' + tr("Schritt hinzufügen") + '</button>' +
+      "</div>" +
+
+      '<div class="bereich">' +
+        '<h3>' + tr("📝 Eigene Notizen") + '</h3>' +
+        '<div class="feld"><textarea id="fNotiz" rows="4" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '">' +
+          escapeHtml(r.notiz || "") + "</textarea></div>" +
+      "</div>" +
+
+      fussKnopfLeiste("btn") +
+    "</div>";
+
+  rendereZutaten(r);
+  rendereSchritte(r);
+  rendereBilder(r);
+
+  document.getElementById("btnBildDatei").onclick = function () {
+    document.getElementById("bildDatei").click();
+  };
+  document.getElementById("bildDatei").addEventListener("change", function () {
+    var file = this.files[0];
+    this.value = "";
+    if (!file) return;
+    liesBildDatei(file, function (url) {
+      if (!url) { melden(tr("Bild konnte nicht gelesen werden."), true); return; }
+      if (!r.bilder) r.bilder = [];
+      if (r.bilder.indexOf(url) !== -1) { melden(tr("Dieses Bild ist bereits hinterlegt.")); return; }
+      r.bilder.push(url);
+      rendereBilder(r);
+      markiereFormularGeaendert();
+      melden(tr("Bild hinzugefügt."));
+    });
+  });
+
+  ["btn", "btnOben"].forEach(function (pr) {
+    document.getElementById(pr + "Speichern").onclick = function () { speichereAktuelles(true); };
+    document.getElementById(pr + "Duplikat").onclick = function () { dupliziereAktuelles(); };
+    document.getElementById(pr + "Loeschen").onclick = function () { loescheAktuelles(); };
+    document.getElementById(pr + "Neu").onclick = neuesRezept;
+  });
+  document.getElementById("btnZutatHinzu").onclick = function () {
+    var z = { menge: "", einheit: "", name: "" };
+    (r.zutaten || (r.zutaten = [])).push(z);
+    markiereFormularGeaendert();
+    fuegeZutatenZeile(r, z, true);
+  };
+  document.getElementById("btnSchrittHinzu").onclick = function () {
+    var s = "";
+    (r.zubereitung || (r.zubereitung = [])).push(s);
+    markiereFormularGeaendert();
+    fuegeSchrittZeile(r, s);
+  };
+  initKatCombo();
+}
+
+/* Kategorien-Klappmenü: ersetzt das native datalist durch ein
+ * eigenständiges, frei eintippbares Combobox-Dropdown. */
+var katComboAktiv = null;   /* aktuell geöffnetes Kategorien-Menü */
+
+function initKatCombo() {
+  var input = document.getElementById("fKat");
+  var knopf = document.getElementById("fKatKnopf");
+  var liste = document.getElementById("fKatListe");
+  if (!input || !knopf || !liste) return;
+  var optionen = kategorien();
+  var markierter = -1;
+
+  function zeigeOptionen() {
+    var filter = (input.value || "").toLowerCase();
+    liste.innerHTML = "";
+    optionen.forEach(function (k, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.dataset.kat = k;
+      b.textContent = k;
+      if (filter && k.toLowerCase().indexOf(filter) !== -1) b.classList.add("treffer");
+      if (i === markierter) b.classList.add("aktiv");
+      b.addEventListener("click", function () {
+        input.value = b.dataset.kat;
+        /* Auswahl ist eine echte Eingabe: wie die Einheiten-Combo selbst ein
+         * input-Event feuern lassen (markiert u.a. den Speichern-Knopf). */
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        schliesse();
+      });
+      liste.appendChild(b);
+    });
+    liste.hidden = false;
+  }
+
+  function markiere(buttons) {
+    buttons.forEach(function (b, i) { b.classList.toggle("aktiv", i === markierter); });
+    var akt = buttons[markierter];
+    if (akt && akt.scrollIntoView) akt.scrollIntoView({ block: "nearest" });
+  }
+
+  function schliesse() {
+    liste.hidden = true;
+    if (katComboAktiv && katComboAktiv.liste === liste) katComboAktiv = null;
+  }
+
+  function oeffne() {
+    if (katComboAktiv && katComboAktiv.liste !== liste) katComboAktiv.schliesse();
+    markierter = -1;
+    zeigeOptionen();
+    katComboAktiv = { liste: liste, schliesse: schliesse };
+  }
+
+  function istOffen() { return katComboAktiv && katComboAktiv.liste === liste; }
+
+  knopf.onclick = function (ev) {
+    ev.stopPropagation();
+    if (istOffen()) schliesse(); else oeffne();
+  };
+  input.onclick = function () { if (!istOffen()) oeffne(); };
+  input.oninput = function () {
+    if (!istOffen()) return;
+    markierter = -1;
+    zeigeOptionen();
+  };
+  input.onkeydown = function (ev) {
+    if (!istOffen()) {
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); oeffne(); }
+      return;
+    }
+    var buttons = liste.querySelectorAll("button");
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      schliesse();
+    } else if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      markierter = Math.min(markierter + 1, buttons.length - 1);
+      markiere(buttons);
+    } else if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      markierter = Math.max(markierter - 1, 0);
+      markiere(buttons);
+    } else if (ev.key === "Enter") {
+      ev.preventDefault();
+      if (buttons.length && markierter >= 0) input.value = buttons[markierter].dataset.kat;
+      schliesse();
+    }
+  };
+}
+
+/* Einheiten-Kombobox: zeigt beim Klick ins Feld die vollständige Liste aller
+ * Einheiten. Frei eintippbare Sonderfälle bleiben möglich. */
+var einheitComboAktiv = null;   /* aktuell geöffnetes Einheiten-Dropdown */
+
+function macheEinheitCombo(input) {
+  if (!input) return;
+  var wrap = input.closest(".einheit-combo");
+  var knopf = wrap ? wrap.querySelector(".einheit-knopf") : null;
+  var liste = wrap ? wrap.querySelector(".einheit-liste") : null;
+  if (!liste) return;
+  var optionen = EINHEITEN;
+  var markierter = -1;
+
+  function setzeWert(w) {
+    /* Kanonischen Wert mitliefern, damit der input-Handler nicht durch den
+     * verlustbehafteten Rückscan die Auswahl stillschweigend ändert
+     * (z. B. "Stk." wählen -> "St." gespeichert). */
+    input.dataset.kanonisch = w;
+    input.value = einheitAnzeige(w);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function zeigeOptionen() {
+    var filter = (input.value || "").toLowerCase();
+    liste.innerHTML = "";
+    optionen.forEach(function (e) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.dataset.wert = e;
+      var text = einheitAnzeige(e);
+      b.textContent = text;
+      if (filter && text.toLowerCase().indexOf(filter) !== -1) b.classList.add("treffer");
+      b.addEventListener("click", function () {
+        setzeWert(b.dataset.wert);
+        schliesse();
+      });
+      liste.appendChild(b);
+    });
+    liste.hidden = false;
+  }
+
+  function markiere(buttons) {
+    buttons.forEach(function (b, i) { b.classList.toggle("aktiv", i === markierter); });
+    var akt = buttons[markierter];
+    if (akt && akt.scrollIntoView) akt.scrollIntoView({ block: "nearest" });
+  }
+
+  function schliesse() {
+    liste.hidden = true;
+    if (einheitComboAktiv && einheitComboAktiv.liste === liste) einheitComboAktiv = null;
+  }
+
+  /* Positioniert das Dropdown an der Feld-Unterkante. Wegen position:fixed
+   * (außerhalb der scrollenden .zutaten-liste) am Viewport berechnen, damit
+   * es auch bei den unteren Zeilen sichtbar bleibt – und bei Platzmangel
+   * über dem Feld bzw. am Seitenrand einrücken. */
+  function positioniere() {
+    var rect = input.getBoundingClientRect();
+    var links = rect.left;
+    var oben = rect.bottom + 4;
+    if (links + liste.offsetWidth > window.innerWidth - 8) links = Math.max(8, window.innerWidth - liste.offsetWidth - 8);
+    else if (links < 8) links = 8;
+    if (oben + liste.offsetHeight > window.innerHeight - 8) {
+      oben = rect.top - 4 - liste.offsetHeight;
+      if (oben < 8) oben = 8;
+    }
+    liste.style.left = links + "px";
+    liste.style.top = oben + "px";
+  }
+
+  function oeffne() {
+    if (einheitComboAktiv && einheitComboAktiv.liste !== liste) einheitComboAktiv.schliesse();
+    markierter = -1;
+    zeigeOptionen();
+    positioniere();
+    einheitComboAktiv = { liste: liste, schliesse: schliesse };
+  }
+
+  function istOffen() { return einheitComboAktiv && einheitComboAktiv.liste === liste; }
+
+  if (knopf) {
+    knopf.onclick = function (ev) {
+      ev.stopPropagation();
+      if (istOffen()) schliesse(); else oeffne();
+    };
+  }
+  input.onclick = function () { if (!istOffen()) oeffne(); };
+  input.oninput = function () {
+    if (!istOffen()) return;
+    markierter = -1;
+    zeigeOptionen();
+  };
+  input.onkeydown = function (ev) {
+    if (!istOffen()) {
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); oeffne(); }
+      return;
+    }
+    var buttons = liste.querySelectorAll("button");
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      schliesse();
+    } else if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      markierter = Math.min(markierter + 1, buttons.length - 1);
+      markiere(buttons);
+    } else if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      markierter = Math.max(markierter - 1, 0);
+      markiere(buttons);
+    } else if (ev.key === "Enter") {
+      ev.preventDefault();
+      if (buttons.length && markierter >= 0) setzeWert(buttons[markierter].dataset.wert);
+      schliesse();
+    }
+  };
+}
+
+function nahrfeld(id, label, wert) {
+  var v = wert == null || isNaN(wert) ? "" : wert;
+  return '<div class="feld"><label for="' + id + '">' + label + "</label>" +
+    '<input type="number" id="' + id + '" min="0" value="' + escapeHtml(String(v)) + '"></div>';
+}
+
+/* Bilder */
+function rendereBilder(r) {
+  var el = document.getElementById("bilderListe");
+  if (!el) return;
+  el.innerHTML = "";
+  var bilder = r.bilder || [];
+  if (bilder.length) {
+    var thumbs = document.createElement("div");
+    thumbs.className = "rezept-bilder";
+    bilder.forEach(function (src, i) {
+      var wrap = document.createElement("div");
+      wrap.className = "rezept-bild-wrap";
+      var img = document.createElement("img");
+      img.className = "rezept-bild";
+      img.alt = tr("Rezeptbild");
+      img.src = src;
+      img.addEventListener("error", function () { img.style.display = "none"; });
+
+      var aktionen = document.createElement("span");
+      aktionen.className = "bild-aktionen";
+      var btnHoch = document.createElement("button");
+      btnHoch.className = "small bild-verschieben";
+      btnHoch.title = tr("Nach links");
+      btnHoch.textContent = "◀";
+      btnHoch.disabled = i === 0;
+      btnHoch.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        verschiebeBild(r, i, -1);
+      });
+      var btnRunter = document.createElement("button");
+      btnRunter.className = "small bild-verschieben";
+      btnRunter.title = tr("Nach rechts");
+      btnRunter.textContent = "▶";
+      btnRunter.disabled = i === bilder.length - 1;
+      btnRunter.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        verschiebeBild(r, i, 1);
+      });
+      var btn = document.createElement("button");
+      btn.className = "small bild-weg";
+      btn.title = tr("Bild entfernen");
+      btn.textContent = "✕";
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        r.bilder.splice(i, 1);
+        markiereFormularGeaendert();
+        rendereBilder(r);
+      });
+      wrap.appendChild(img);
+      aktionen.appendChild(btnHoch);
+      aktionen.appendChild(btnRunter);
+      aktionen.appendChild(btn);
+      wrap.appendChild(aktionen);
+      thumbs.appendChild(wrap);
+    });
+    el.appendChild(thumbs);
+  }
+  if (!bilder.length) {
+    el.innerHTML = '<p class="leer">' + tr("Noch keine Bilder hinterlegt.") + '</p>';
+  }
+}
+
+function verschiebeBild(r, i, richtung) {
+  var bilder = r.bilder || [];
+  var ziel = i + richtung;
+  if (ziel < 0 || ziel >= bilder.length) return;
+  var tmp = bilder[i];
+  bilder[i] = bilder[ziel];
+  bilder[ziel] = tmp;
+  markiereFormularGeaendert();   /* Bildreihenfolge geändert */
+  rendereBilder(r);
+}
+
+/* Liest eine Bilddatei und bettet sie als Data-URL ein. Große Bilder werden
+ * auf max. 300 px verkleinert und als JPEG (85%) gespeichert, damit die
+ * Datenbank kompakt bleibt. SVG bleibt unangetastet. */
+function liesBildDatei(file, cb) {
+  var leser = new FileReader();
+  leser.onerror = function () { cb(null); };
+  leser.onload = function () {
+    var dataUrl = leser.result;
+    if (/svg/i.test(file.type)) { cb(dataUrl); return; }
+    var img = new Image();
+    img.onerror = function () { cb(null); };
+    img.onload = function () {
+      var max = 300;
+      var skala = Math.min(1, max / Math.max(img.width, img.height));
+      var w = Math.round(img.width * skala);
+      var h = Math.round(img.height * skala);
+      var canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.src = dataUrl;
+  };
+  leser.readAsDataURL(file);
+}
+
+/* Alle in der Datenbank verwendeten Zutaten-Namen, eindeutig (ohne Beachtung
+ * der Groß-/Kleinschreibung) und aufsteigend sortiert – als Vorschläge für
+ * das Eingabefeld der Zutat (native <datalist>). */
+function zutatenNamen() {
+  var gesehen = {};
+  var namen = [];
+  DB.forEach(function (r) {
+    (r.zutaten || []).forEach(function (z) {
+      var name = String(z && z.name || "").trim();
+      if (!name) return;
+      var schluessel = name.toLowerCase();
+      if (gesehen[schluessel]) return;
+      gesehen[schluessel] = true;
+      namen.push(name);
+    });
+  });
+  namen.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+  return namen;
+}
+
+/* Zutaten-Zeilen */
+
+/* Optionen des TCM-Quick-Pickers: Wert -> Anzeige-Schlüssel (tr-übersetzt). */
+var TCM_GRUPPEN = {
+  element:   [["holz", "Holz"], ["feuer", "Feuer"], ["erde", "Erde"], ["metall", "Metall"], ["wasser", "Wasser"]],
+  geschmack: [["sauer", "sauer"], ["bitter", "bitter"], ["suess", "süß"], ["scharf", "scharf"], ["salzig", "salzig"]],
+  thermik:   [["heiss", "heiß"], ["warm", "warm"], ["neutral", "neutral"], ["kuehl", "kühl"], ["kalt", "kalt"]]
+};
+
+function tcmSelectHtml(klasse, gruppe, aktiv) {
+  var html = '<select class="' + klasse + '" data-gruppe="' + gruppe + '"><option value="">–</option>';
+  TCM_GRUPPEN[gruppe].forEach(function (o) {
+    html += '<option value="' + o[0] + '"' + (o[0] === aktiv ? " selected" : "") + ">" + escapeHtml(tr(o[1])) + "</option>";
+  });
+  return html + "</select>";
+}
+
+/* Array-Stand des letzten rendereZutaten-Durchlaufs - noetig, weil das
+ * Modell-Array beim ▲▼ schon VOR dem Neu-Rendern verschoben wird und die
+ * DOM-Reihen deshalb zur alten Ordnung gehoeren. */
+var zuletztGerenderteZutaten = [];
+
+function rendereZutaten(r) {
+  var tb = document.getElementById("zutatenKoerper");
+  /* Geöffnete ⚙️-Aktionen überleben das Neu-Aufbauen: Jede offene Reihe
+   * wird über ihren Platz beim LETZten Rendern (row.dataset.key) auf ihr
+   * Zutat-Objekt gemappt - so wandert das Panel beim ▲▼ MIT seiner Reihe
+   * mit, statt in der darunterliegenden Zeile stehen zu bleiben. */
+  var offenZs = [];
+  Array.prototype.forEach.call(tb.children, function (row) {
+    if (row.classList.contains("offen")) {
+      var z = zuletztGerenderteZutaten[row.dataset.key];
+      if (z) offenZs.push(z);
+    }
+  });
+  tb.innerHTML = "";
+  (r.zutaten || []).forEach(function (z) { fuegeZutatenZeile(r, z, true); });
+  zuletztGerenderteZutaten = (r.zutaten || []).slice();
+  Array.prototype.forEach.call(tb.children, function (row, i) {
+    if (offenZs.indexOf(zuletztGerenderteZutaten[i]) !== -1) row.classList.add("offen");
+  });
+}
+
+function fuegeZutatenZeile(r, z, amEnde) {
+  var tb = document.getElementById("zutatenKoerper");
+  if (!tb) return;
+  var zZeile = document.createElement("div");
+  zZeile.className = "zutaten-zeile";
+  zZeile.dataset.key = r.zutaten.indexOf(z);
+  zZeile.innerHTML =
+    '<span class="nr"></span>' +
+    '<div class="menge"><input type="text" class="zMenge" placeholder="' + tr("z. B. 200") + '" value="' + escapeHtml(z.menge == null ? "" : z.menge) + '"></div>' +
+    '<div class="einheit"><div class="einheit-combo">' +
+      '<input type="text" class="zEinheit" placeholder="g" value="' + escapeHtml(einheitAnzeige(z.einheit == null ? "" : z.einheit)) + '" data-orig="' + escapeHtml(z.einheit == null ? "" : z.einheit) + '" aria-label="' + tr("Einheit") + '">' +
+      '<button type="button" class="einheit-knopf" tabindex="-1" title="' + tr("Einheiten anzeigen") + '" aria-label="' + tr("Einheiten anzeigen") + '">▾</button>' +
+      '<div class="einheit-liste" role="listbox" hidden></div>' +
+    '</div></div>' +
+    '<div class="zutat"><input type="text" class="zName" list="zutatDaten" placeholder="' + tr("z. B. Mehl") + '" value="' + escapeHtml(z.name || "") + '"></div>' +
+    '<div class="aktionen">' +
+      '<span class="zutat-aktionen">' +
+        '<button class="small danger" data-z="loeschen" title="' + tr("Zeile löschen") + '">✕</button> ' +
+        '<button class="small" data-z="hoch" title="' + tr("Nach oben") + '">▲</button> ' +
+        '<button class="small" data-z="runter" title="' + tr("Nach unten") + '">▼</button> ' +
+      "</span>" +
+      '<button class="small zutat-umschalten" data-z="umschalten" title="' + tr("Aktionen anzeigen") + '">⚙️</button>' +
+    "</td>" +
+    "</div>" +
+    '<div class="zutat-tcm">' +
+      '<span class="tcm-kopf" title="' + escapeHtml(tr("Werte werden nur in assets/zutaten-tcm.js gespeichert – nie im Rezept selbst.")) + '">🌿 ' + escapeHtml(tr("TCM")) + "</span>" +
+      '<span class="tcm-status"></span>' +
+      '<label>' + escapeHtml(tr("Element")) + " " + tcmSelectHtml("tcmEl", "element", "") + "</label>" +
+      '<label>' + escapeHtml(tr("Geschmack")) + " " + tcmSelectHtml("tcmGe", "geschmack", "") + "</label>" +
+      '<label>' + escapeHtml(tr("Thermik")) + " " + tcmSelectHtml("tcmTh", "thermik", "") + "</label>" +
+      '<button type="button" class="small tcm-reset" title="' + escapeHtml(tr("TCM-Zuordnung zurücksetzen")) + '">⭮</button>' +
+    "</div>";
+  zZeile.querySelector(".zMenge").addEventListener("input", function () { z.menge = this.value; });
+  zZeile.querySelector(".zEinheit").addEventListener("input", function () {
+    /* 1) Dropdown-Auswahl: kanonischer Wert wurde mitgeliefert -> exakt übernehmen */
+    if (this.dataset.kanonisch != null && this.dataset.kanonisch !== "") {
+      z.einheit = this.dataset.kanonisch;
+      delete this.dataset.kanonisch;
+      return;
+    }
+    /* 2) Feld enthält unverändert nur die Anzeige des Ursprungswerts -> Original behalten */
+    var orig = this.dataset.orig || "";
+    if (orig && this.value === einheitAnzeige(orig)) { z.einheit = orig; return; }
+    /* 3) Echte Neueingabe: Anzeige-Text kanonisieren (Ersttreffer gewinnt) */
+    z.einheit = einheitKanonisch(this.value);
+  });
+  zZeile.querySelector(".zName").addEventListener("input", function () { z.name = this.value; zeigeTcmWerte(); markiereTcm(); });
+
+  var tcmEl = zZeile.querySelector(".tcmEl");
+  var tcmGe = zZeile.querySelector(".tcmGe");
+  var tcmTh = zZeile.querySelector(".tcmTh");
+  var tcmReset = zZeile.querySelector(".tcm-reset");
+  var tcmStatus = zZeile.querySelector(".tcm-status");
+
+  function tcmWertAktuell() {
+    return { element: tcmEl.value, geschmack: tcmGe.value ? [tcmGe.value] : [], thermik: tcmTh.value };
+  }
+
+  function tcmStatusSetzen() {
+    if (tcmEigen(z.name)) {
+      tcmStatus.textContent = tr("Eigene Änderung");
+      tcmStatus.title = tr("Nur lokal gespeichert – mit 💾 assets/zutaten-tcm.js exportieren in die App-Datendatei übernehmen.");
+      tcmStatus.className = "tcm-status tcm-status-eigen";
+    } else if (z.name && tcmBasis(z.name)) {
+      tcmStatus.textContent = tr("Aus der Datenbank");
+      tcmStatus.title = tr("Wert stammt aus der Datei assets/zutaten-tcm.js und wird beim Export unverändert übernommen.");
+      tcmStatus.className = "tcm-status tcm-status-basis";
+    } else {
+      tcmStatus.textContent = tr("Keine TCM-Daten");
+      tcmStatus.title = tr("Für diese Zutat ist noch keine Zuordnung hinterlegt – hier ergänzen.");
+      tcmStatus.className = "tcm-status tcm-status-leer";
+    }
+  }
+
+  function zeigeTcmWerte() {
+    var w = tcmBasis(z.name) || {};
+    tcmEl.value = w.element || "";
+    tcmGe.value = (w.geschmack && w.geschmack[0]) || "";
+    tcmTh.value = w.thermik || "";
+    tcmStatusSetzen();
+  }
+
+  function markiereTcm() {
+    var eigen = tcmEigen(z.name);
+    [tcmEl, tcmGe, tcmTh].forEach(function (s) { s.classList.toggle("tcm-geaendert", !!eigen); });
+    tcmStatusSetzen();
+  }
+
+  function uebernehmeTcm() {
+    var w = tcmWertAktuell();
+    if (w.element || w.geschmack.length || w.thermik) tcmSetze(z.name, w);
+    else tcmLoeschen(z.name);
+    markiereTcm();
+  }
+
+  [tcmEl, tcmGe, tcmTh].forEach(function (s) { s.addEventListener("change", uebernehmeTcm); });
+  tcmReset.addEventListener("click", function () {
+    tcmLoeschen(z.name);
+    zeigeTcmWerte();
+    markiereTcm();
+  });
+  zeigeTcmWerte();
+  markiereTcm();
+  zZeile.querySelectorAll("button[data-z]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (btn.dataset.z === "umschalten") {
+        zZeile.classList.toggle("offen");   /* nur anzeigen/verstecken, ohne Neu-Rendern */
+        return;
+      }
+      markiereFormularGeaendert();   /* ▲▼✕ verändern die Zutatenliste */
+      var idx = r.zutaten.indexOf(z);
+      if (idx < 0) { rendereZutaten(r); return; }   /* Zeile hängt nicht mehr am Modell -> neu rendern statt falsches Element zu löschen */
+      if (btn.dataset.z === "hoch" && idx > 0) {
+        r.zutaten.splice(idx, 1); r.zutaten.splice(idx - 1, 0, z);
+        rendereZutaten(r);
+      } else if (btn.dataset.z === "runter" && idx < r.zutaten.length - 1) {
+        r.zutaten.splice(idx, 1); r.zutaten.splice(idx + 1, 0, z);
+        rendereZutaten(r);
+      } else if (btn.dataset.z === "loeschen") {
+        r.zutaten.splice(idx, 1);
+        rendereZutaten(r);
+      }
+    });
+  });
+  if (amEnde) tb.appendChild(zZeile);
+  else tb.insertBefore(zZeile, tb.firstChild);
+  aktualisiereNr(r);
+  macheEinheitCombo(zZeile.querySelector(".zEinheit"));
+}
+
+function aktualisiereNr(r) {
+  var tb = document.getElementById("zutatenKoerper");
+  if (!tb) return;
+    Array.prototype.forEach.call(tb.children, function (row, i) {
+    row.querySelector(".nr").textContent = (i + 1) + ".";
+  });
+}
+
+/* Schritt-Zeilen */
+/* Lässt ein Schritt-Textfeld vertikal mitwachsen, sobald der Text umbricht. */
+function schrittAutoHoehe(t) {
+  t.style.height = "auto";
+  t.style.height = t.scrollHeight + "px";
+}
+
+function rendereSchritte(r) {
+  var liste = document.getElementById("schritteListe");
+  liste.innerHTML = "";
+  (r.zubereitung || []).forEach(function (s) { fuegeSchrittZeile(r, s); });
+}
+
+function fuegeSchrittZeile(r, s) {
+  var liste = document.getElementById("schritteListe");
+  if (!liste) return;
+  var idx = r.zubereitung.indexOf(s);
+  var div = document.createElement("div");
+  div.className = "schritt";
+  div.dataset.idx = idx;
+  div.innerHTML =
+    '<span class="num">' + (idx + 1) + "</span>" +
+    '<textarea rows="1" placeholder="' + tr("Zubereitungsschritt …") + '">' + escapeHtml(s || "") + "</textarea>" +
+    '<span class="knopfleiste">' +
+      '<span class="schritt-aktionen">' +
+        '<button class="small danger" data-s="loeschen" title="' + tr("Schritt löschen") + '">✕</button> ' +
+        '<button class="small" data-s="hoch" title="' + tr("Nach oben") + '">▲</button> ' +
+        '<button class="small" data-s="runter" title="' + tr("Nach unten") + '">▼</button> ' +
+        '<button class="small" data-s="wecker" title="' + tr("Wecker für diesen Schritt setzen/entfernen") + '">⏰</button>' +
+        '<input type="number" class="wecker-min" min="1" max="180" placeholder="' + tr("min") + '" hidden> ' +
+      "</span>" +
+      '<button class="small schritt-umschalten" data-s="umschalten" title="' + tr("Aktionen anzeigen") + '">⚙️</button>' +
+    "</span>";
+  var ta = div.querySelector("textarea");
+  var feld = div.querySelector(".wecker-min");
+  ta.addEventListener("input", function () {
+    r.zubereitung[Number(div.dataset.idx)] = this.value;
+    schrittAutoHoehe(this);
+  });
+  /* Wecker-Eingabe: Wert -> [⏰N]-Marker im Schritttext; leer -> Marker weg.
+   * Wir übernehmen den Wert bewusst SELBST (bei Eingabe UND beim Verlassen
+   * des Feldes) statt auf das native change-Event zu warten: Dieses feuert
+   * nämlich nicht, wenn der Wert seit dem Fokus unverändert ist - genau das
+   * passiert aber, wenn man nur den vorbelegten Vorschlagswert bestätigt. */
+  function weckerUebernehmen() {
+    var i = Number(div.dataset.idx);
+    var v = parseInt(feld.value, 10);
+    r.zubereitung[i] = setzeWeckerMarker(r.zubereitung[i], isNaN(v) ? null : v);
+    var neu = leseWeckerMinuten(r.zubereitung[i]);
+    feld.value = neu != null ? neu : "";
+    ta.value = r.zubereitung[i];
+    schrittAutoHoehe(ta);
+  }
+  feld.addEventListener("input", weckerUebernehmen);
+  feld.addEventListener("blur", weckerUebernehmen);
+  div.querySelectorAll("button[data-s]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var i = Number(div.dataset.idx);
+      if (btn.dataset.s === "umschalten") {
+        div.classList.toggle("offen");   /* nur anzeigen/verstecken, ohne Neu-Rendern */
+        return;
+      }
+      if (btn.dataset.s === "wecker") {
+        var feld = div.querySelector(".wecker-min");
+        if (feld.hidden) {
+          /* Vorbelegung: gesetzter Wecker, sonst Zeiterkennung im Text,
+           * sonst leer ("Bei 150 °C ca. 15-20 min backen." -> Mittelwert). */
+          var vor = leseWeckerMinuten(r.zubereitung[i]);
+          if (vor == null) vor = minutenAusSchrittText(r.zubereitung[i]);
+          feld.value = vor != null ? vor : "";
+          feld.hidden = false;
+          feld.focus();
+        } else {
+          feld.hidden = true;
+        }
+        return;
+      }
+      markiereFormularGeaendert();   /* ▲▼✕ verändern die Schritteliste */
+      if (btn.dataset.s === "hoch" && i > 0) {
+        var tmp = r.zubereitung[i];
+        r.zubereitung[i] = r.zubereitung[i - 1];
+        r.zubereitung[i - 1] = tmp;
+      } else if (btn.dataset.s === "runter" && i < r.zubereitung.length - 1) {
+        var tmp = r.zubereitung[i];
+        r.zubereitung[i] = r.zubereitung[i + 1];
+        r.zubereitung[i + 1] = tmp;
+      } else if (btn.dataset.s === "loeschen") {
+        r.zubereitung.splice(i, 1);
+      }
+      rendereSchritte(r);
+    });
+  });
+  liste.appendChild(div);
+  /* Erst NACH dem DOM-Einbau messen: ausgehängte Elemente haben kein
+   * Layout, scrollHeight würde zu klein liefern und Text abgeschnitten. */
+  schrittAutoHoehe(ta);
+}
+
+/* ---------------------------------------------------------------
+ * Speichern / Duplizieren / Löschen
+ * --------------------------------------------------------------- */
+function leseAktuelles() {
+  var r = DB.find(function (x) { return x.id === aktuellerId; });
+  if (!r) return null;
+  r.name = document.getElementById("fName").value;
+  r.kategorie = document.getElementById("fKat").value;
+  r.portionen = parseInt(document.getElementById("fPortionen").value, 10) || 1;
+  r.bilder = (r.bilder || []).filter(function (b) { return (b || "").trim() !== ""; });
+  /* Leere Notiz = gar kein Feld: So bleibt der Datensatz identisch zu
+   * rezepte.js (dort fehlt "notiz"), und das Export-Format bleibt sauber
+   * (schreibt Notizen ohnehin nur bei Inhalt). */
+  var notizText = document.getElementById("fNotiz").value.trim();
+  if (notizText === "") delete r.notiz;
+  else r.notiz = notizText;
+
+  if (!r.nahrwerte) r.nahrwerte = {};
+  var n = r.nahrwerte;
+  n.kcal = wert(document.getElementById("nKcal"));
+  n.kohlenhydrate = wert(document.getElementById("nKh"));
+  n.eiweiss = wert(document.getElementById("nEw"));
+  n.ballaststoffe = wert(document.getElementById("nBal"));
+  n.fette = wert(document.getElementById("nFett"));
+  Object.keys(n).forEach(function (k) { if (n[k] == null) delete n[k]; });
+
+  r.zutaten = (r.zutaten || []).filter(function (z) { return (z.name || "").trim() !== ""; });
+  r.zubereitung = (r.zubereitung || []).map(function (s) { return (s || "").trim(); })
+    .filter(function (s) { return s !== ""; });
+  if (!r.zutaten.length) r.zutaten = [{ menge: "", einheit: "", name: "" }];
+  if (!r.zubereitung.length) r.zubereitung = [""];
+  return r;
+}
+
+function wert(el) {
+  var v = el.value.trim();
+  if (v === "") return null;
+  var n = Number(v.replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+function speichereAktuelles(zeigeMeldung) {
+  var r = leseAktuelles();
+  if (!r) return;
+  var neuerName = (r.name || "").trim();
+  if (!neuerName) {
+    melden(tr("Bitte einen Namen für das Rezept angeben."), true);
+    return;
+  }
+  r.name = neuerName;
+  speichernLocal();
+  markiereUnexportiert();
+  vergissFormularAenderung();
+  if (zeigeMeldung) melden(tr("💾 Rezept „{name}“ gespeichert.", { name: r.name }));
+  rendereListe();
+}
+
+function dupliziereAktuelles() {
+  if (!uebernehmeUngespeicherte()) return;   /* erst fragen, dann erst leseAktuelles! */
+  var r = leseAktuelles();
+  if (!r) return;
+  var neu = kopieren(r);
+  neu.id = neuerId(r.name);
+  neu.name = r.name + " " + tr("(Kopie)");
+  DB.push(neu);
+  speichernLocal();
+  /* Kein markiereUnexportiert(): wie bei Neu - der Export-Alarm kommt erst
+   * mit dem nächsten 💾-Sichern. */
+  rendereListe();
+  waehle(neu.id);
+  melden(tr("Rezept dupliziert: „{name}“", { name: neu.name }));
+}
+
+function loescheAktuelles() {
+  var r = DB.find(function (x) { return x.id === aktuellerId; });
+  if (!r) return;
+  /* Bewusst KEINE 💾-Rückfrage (anders als bei Neu/Duplizieren): Ungespeicherte
+   * Eingaben gehören genau zum Rezept, das hier gelöscht wird - sie verfallen
+   * sinnvollerweise mit ihm. Der Lösch-Dialog genügt. */
+  if (!confirm(tr("Rezept „{name}“ wirklich löschen?", { name: r.name }))) return;
+  var idx = DB.indexOf(r);
+  DB.splice(idx, 1);
+  speichernLocal();
+  markiereUnexportiert();
+  aktuellerId = null;
+  rendereListe();
+  var main = document.getElementById("formbereich");
+  main.innerHTML =
+    '<div class="leerzustand"><div class="gross">📖</div>' +
+    "<p>" + tr("Rezept gelöscht. Wähle links ein Rezept aus") + "<br>" + tr("oder lege ein neues an.") + "</p></div>";
+  vergissFormularAenderung();
+  melden(tr("Rezept gelöscht."));
+}
+
+/* ---------------------------------------------------------------
+ * Export / Import
+ * --------------------------------------------------------------- */
+/* Extrahiert aus einer .json/.js-Datei die Rezept-Liste als JSON-Text.
+ * Sucht das erste '[' außerhalb von Strings und Kommentaren (damit ein
+ * Kopf-Kommentar mit '[' nicht stört) und schneidet bis zur passenden
+ * schließenden Klammer ab. */
+function extrahiereListe(text) {
+  var n = text.length;
+  var anfang = -1;
+  var inString = null, inBlock = false, inLine = false;
+  for (var i = 0; i < n; i++) {
+    var c = text[i], d = text[i + 1];
+    if (inString) { if (c === "\\") { i++; } else if (c === inString) inString = null; continue; }
+    if (inBlock) { if (c === "*" && d === "/") { inBlock = false; i++; } continue; }
+    if (inLine) { if (c === "\n") inLine = false; continue; }
+    if (c === "/" && d === "/") { inLine = true; i++; continue; }
+    if (c === "/" && d === "*") { inBlock = true; i++; continue; }
+    if (c === '"' || c === "'") { inString = c; continue; }
+    if (c === "[") { anfang = i; break; }
+  }
+  if (anfang === -1) throw new Error(tr("Keine Liste gefunden"));
+  inString = null; inBlock = false; inLine = false;
+  var tiefe = 0;
+  for (i = anfang; i < n; i++) {
+    var c2 = text[i], d2 = text[i + 1];
+    if (inString) { if (c2 === "\\") { i++; } else if (c2 === inString) inString = null; continue; }
+    if (inBlock) { if (c2 === "*" && d2 === "/") { inBlock = false; i++; } continue; }
+    if (inLine) { if (c2 === "\n") inLine = false; continue; }
+    if (c2 === "/" && d2 === "/") { inLine = true; i++; continue; }
+    if (c2 === "/" && d2 === "*") { inBlock = true; i++; continue; }
+    if (c2 === '"' || c2 === "'") { inString = c2; continue; }
+    if (c2 === "[") { tiefe++; continue; }
+    if (c2 === "]") {
+      tiefe--;
+      if (tiefe === 0) return text.slice(anfang, i + 1);
+    }
+  }
+  throw new Error(tr("Keine Liste gefunden"));
+}
+
+function ladeAktuellesSauber() {
+  if (aktuellerId) speichereAktuelles(false);
+  return kopieren(DB);
+}
+
+function rezeptAlsJs(r) {
+  var n = r.nahrwerte || {};
+  return (
+    "{\n" +
+    '  "id": ' + JSON.stringify(r.id) + ",\n" +
+    '  "name": ' + JSON.stringify(r.name) + ",\n" +
+    '  "kategorie": ' + JSON.stringify(r.kategorie || "") + ",\n" +
+    '  "portionen": ' + (r.portionen || 1) + ",\n" +
+    '  "bilder": ' + JSON.stringify(r.bilder || []) + ",\n" +
+    '  "zutaten": [' + (r.zutaten || []).map(function (z) {
+      return '{ "menge": ' + JSON.stringify(z.menge == null ? "" : z.menge) +
+        ', "einheit": ' + JSON.stringify(z.einheit == null ? "" : z.einheit) +
+        ', "name": ' + JSON.stringify(z.name || "") + " }";
+    }).join(", ") + "],\n" +
+    '  "zubereitung": [' + (r.zubereitung || []).map(function (s) {
+      return JSON.stringify(s);
+    }).join(", ") + "],\n" +
+    '  "nahrwerte": {' + ["kcal", "kohlenhydrate", "eiweiss", "ballaststoffe", "fette"]
+      .filter(function (k) { return n[k] != null; })
+      .map(function (k) { return '  "' + k + '": ' + n[k]; }).join(", ") + "}" +
+    (r.notiz ? ',\n  "notiz": ' + JSON.stringify(r.notiz) + "\n" : "\n") +
+    "}"
+  );
+}
+
+function baueRezepteJs(daten) {
+  var heute = new Date().toLocaleDateString("de-DE");
+  return (
+    "/**\n" +
+    " * Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17\n" +
+    " * https://github.com/heino17/Rezepte-Sammlung\n" +
+    " *\n" +
+    " * REZEPTE – Rezept-Datenbank\n" +
+    " * Exportiert aus rezepte_bearbeiten.html am " + heute + " (" + daten.length + " Rezepte)\n" +
+    " *\n" +
+    " * Struktur eines Rezepts:\n" +
+    " *   id, name, kategorie, portionen, bilder,\n" +
+    " *   zutaten:      [ { menge, einheit, name }, ... ]\n" +
+    " *   zubereitung:  [ \"Schritt 1\", ... ]\n" +
+    " *   nahrwerte:    { kcal, kohlenhydrate, eiweiss, ballaststoffe, fette }\n" +
+    " */\n" +
+    "const REZEPTE = [\n" +
+    daten.map(rezeptAlsJs).join(",\n") +
+    "\n];\n\n" +
+    'if (typeof module !== "undefined" && module.exports) {\n' +
+    "  module.exports = REZEPTE;\n" +
+    "}\n"
+  );
+}
+
+function download(dateiname, inhalt, typ) {
+  var blob = new Blob([inhalt], { type: typ || "text/plain;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = dateiname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+document.getElementById("btnExportJS").onclick = function () {
+  var mitAuswahl = anzahlAusgewaehlt() > 0;
+  var daten = exportDaten();
+  var dateiname = exportDateiname(".js");
+  download(dateiname, baueRezepteJs(daten), "application/javascript;charset=utf-8");
+  melden(tr("{datei} wurde heruntergeladen – Datei in den Ordner assets legen, um sie zu aktualisieren.", { datei: dateiname }));
+  if (!mitAuswahl) exportiert();
+};
+
+document.getElementById("btnExportJSON").onclick = function () {
+  var daten = exportDaten();
+  var dateiname = exportDateiname(".json");
+  download(dateiname, JSON.stringify(daten, null, 2), "application/json;charset=utf-8");
+  melden(tr("{datei} exportiert – {anzahl} von {gesamt} Rezepten.", { datei: dateiname, anzahl: daten.length, gesamt: DB.length }));
+};
+
+document.getElementById("btnExportTCM").onclick = function () {
+  var dateiname = tcmQuelle;
+  download(dateiname, tcmBundleJs(), "application/javascript;charset=utf-8");
+  melden(tr("{datei} exportiert – bitte im Ordner assets/ überschreiben.", { datei: dateiname }));
+};
+
+document.getElementById("btnImportTCM").onclick = function () {
+  document.getElementById("tcmFileImport").click();
+};
+
+document.getElementById("tcmFileImport").addEventListener("change", function () {
+  var file = this.files[0];
+  this.value = "";
+  if (!file) return;
+  var leser = new FileReader();
+  leser.onload = function () {
+    try {
+      var daten = JSON.parse(leser.result);
+      var karte = {};
+      var an = 0;
+      Object.keys(daten).forEach(function (k) {
+        if (k === "_hinweis") return;
+        if (!daten[k] || typeof daten[k] !== "object") return;
+        karte[k] = daten[k];
+        an++;
+      });
+      if (an === 0) throw new Error(tr("Keine Zutaten gefunden"));
+      ZUTATEN_TCM = karte;
+      tcmQuelle = file.name.replace(/\.json$/i, ".js");
+      tcmIndexBasis = null;
+      tcmIndexAufbauen();
+      if (aktuellerId) {
+        var r = DB.find(function (x) { return x.id === aktuellerId; });
+        if (r) rendereZutaten(r);
+      }
+      melden(tr("{anzahl} Zutaten-Zuordnungen geladen – nur für diese Sitzung; mit 💾 5 Elemente speichern dauerhaft sichern.", { anzahl: an }));
+    } catch (e) {
+      melden(tr("Konnte zutaten-tcm.json nicht lesen (ungültige Datei)."), true);
+    }
+  };
+  leser.readAsText(file);
+});
+
+document.getElementById("btnImportJSON").onclick = function () {
+  document.getElementById("fileImport").click();
+};
+
+/* Zeigt ein Modal mit drei Optionen bei einer ID-Kollision beim Import.
+ * Löst das zurückgegebene Promise mit "ersetzen", "neu", "ueberspringen"
+ * oder "abbrechen" auf. Mit der Checkbox kann die gewählte Option für alle
+ * weiteren Kollisionen dieses Imports übernommen werden. */
+function zeigeKollisionsDialog(bestehender, importiert) {
+  return new Promise(function (resolve) {
+    var container = document.getElementById("modalContainer");
+    container.innerHTML =
+      '<div class="modal-overlay" id="kollisionOverlay"><div class="modal-box">' +
+        '<h3>' + tr("Rezept-ID bereits vorhanden") + '</h3>' +
+        '<p>' + tr("Die ID <code>{id}</code> gibt es schon in deiner Datenbank.", { id: escapeHtml(bestehender.id) }) + '</p>' +
+        '<div class="modal-vergleich">' +
+          '<div><span>' + tr("Bestehend:") + '</span> ' + escapeHtml(bestehender.name) + '</div>' +
+          '<div><span>' + tr("Importiert:") + '</span> ' + escapeHtml(importiert.name) + '</div>' +
+        "</div>" +
+        '<div class="modal-aktionen">' +
+          '<button class="danger" id="modalErsetzen">' + tr("Ersetzen") + '<small>' + tr("Bestehendes Rezept wird mit dem importierten überschrieben") + '</small></button>' +
+          '<button class="primary" id="modalNeu">' + tr("Als neues Rezept importieren") + '<small>' + tr("Bekommt automatisch eine eigene ID, beide bleiben erhalten") + '</small></button>' +
+          '<button class="ghost" id="modalUeberspringen">' + tr("Überspringen") + '<small>' + tr("Bestehendes Rezept bleibt unverändert") + '</small></button>' +
+        "</div>" +
+        '<div class="modal-fuss">' +
+          '<label class="modal-alle"><input type="checkbox" id="modalFuerAlle"> ' + tr("Auswahl für alle übernehmen") + '</label>' +
+          '<button class="ghost" id="modalAbbrechen">' + tr("Abbrechen") + '</button>' +
+        "</div>" +
+        '<p class="modal-hinweis" id="modalAutoHinweis" style="display:none">' + tr("Diese Auswahl gilt für alle weiteren Rezepte der Import-Datei.") + '</p>' +
+      "</div></div>";
+
+    function schliesse(ergebnis) {
+      if (document.getElementById("modalFuerAlle").checked) {
+        kollisionsAuto = ergebnis;
+      }
+      container.innerHTML = "";
+      document.removeEventListener("keydown", escFangen);
+      resolve(ergebnis);
+    }
+    function escFangen(ev) {
+      if (ev.key === "Escape") schliesse("abbrechen");
+    }
+    document.getElementById("modalErsetzen").onclick = function () { schliesse("ersetzen"); };
+    document.getElementById("modalNeu").onclick = function () { schliesse("neu"); };
+    document.getElementById("modalUeberspringen").onclick = function () { schliesse("ueberspringen"); };
+    document.getElementById("modalAbbrechen").onclick = function () { schliesse("abbrechen"); };
+    document.getElementById("modalFuerAlle").addEventListener("change", function () {
+      document.getElementById("modalAutoHinweis").style.display = this.checked ? "" : "none";
+    });
+    document.getElementById("kollisionOverlay").addEventListener("click", function (ev) {
+      if (ev.target === this) schliesse("abbrechen");
+    });
+    document.addEventListener("keydown", escFangen);
+  });
+}
+
+/* Öffnet das Hilfe-Modal in der Mitte der Seite. Größe passt sich dem Text an. */
+function zeigeHilfe() {
+  var container = document.getElementById("modalContainer");
+  var text = tr("1. <b>Rezept bearbeiten</b>") + "\n" +
+    tr("2. Rezept per <b>'Speichern'-Button</b> im Formular speichern") + "\n" +
+    tr("3. Dann per <b>'rezepte.js exportieren'</b>-Button, die Datenbank <b>'rezepte.js im Ordner assets überschreiben!</b>") + "\n\n" +
+    tr("Dann kannst Du in der <b><a href=\"rezepte.html\" id=\"hilfeLinkRezepte\">rezepte.html</a></b> die <b>Ausgabe nachladen</b>.") + "\n\n" +
+    tr("<b>💡 Es ist ausreichend die rezepte.js zu exportieren, wenn sämtliches Bearbeiten der Rezepte abgeschlossen ist.</b>") + "\n" +
+    tr("<b>💡 Reset: Der Button 🗘 verwirft alle Änderungen (Browser-Speicher) und lädt den Stand von rezepte.js neu</b>");
+  container.innerHTML =
+    '<div class="modal-overlay" id="hilfeOverlay"><div class="modal-box hilfe">' +
+      '<h3>' + tr("Abfolge zum erfolgreichen Speichern:") + '</h3>' +
+      '<div class="hilfe-text">' + (text) + "</div>" +
+      '<div class="modal-aktionen">' +
+        '<button class="primary" id="hilfeSchliessen">' + tr("Schließen") + '</button>' +
+      "</div>" +
+    "</div></div>";
+
+  function schliesse() {
+    container.innerHTML = "";
+    document.removeEventListener("keydown", escFangen);
+  }
+  function escFangen(ev) {
+    if (ev.key === "Escape") schliesse();
+  }
+  document.getElementById("hilfeSchliessen").onclick = schliesse;
+  document.getElementById("hilfeOverlay").addEventListener("click", function (ev) {
+    if (ev.target === this) schliesse();
+  });
+  document.getElementById("hilfeLinkRezepte").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    /* Signal an ein bereits offenes rezepte.html-Fenster: Ausgabe neu laden
+     * (greift über das storage-Event auch, wenn es nicht über diesen Link
+     * geöffnet wurde) */
+    try { localStorage.setItem("rezepte_neu_laden", String(Date.now())); } catch (e) { /* ignorieren */ }
+    /* Das benannte Fenster wiederverwenden und fokussieren, sonst neu öffnen */
+    window.open("rezepte.html", "julias_rezepte_ansicht");
+  });
+  document.addEventListener("keydown", escFangen);
+}
+
+document.getElementById("fileImport").addEventListener("change", async function () {
+  var file = this.files[0];
+  this.value = "";
+  if (!file) return;
+  var leser = new FileReader();
+  leser.onload = async function () {
+    try {
+      var text = leser.result;
+      var daten = JSON.parse(extrahiereListe(text));
+      if (!Array.isArray(daten)) throw new Error(tr("Keine Liste gefunden"));
+      daten.forEach(function (r) {
+        r.zutaten = r.zutaten || [];
+        r.zubereitung = r.zubereitung || [];
+        r.nahrwerte = r.nahrwerte || {};
+        r.bilder = r.bilder || [];
+        normalisiereZutaten(r);
+        if (!r.id) r.id = neuerId(r.name || "importiert");
+      });
+
+      kollisionsAuto = null;
+      var neu = 0, ersetzt = 0, uebersprungen = 0, umbenannt = 0, abgebrochen = false;
+      var i = 0;
+      while (i < daten.length) {
+        var r = daten[i++];
+        var bestehenderIndex = DB.findIndex(function (x) { return x.id === r.id; });
+        if (bestehenderIndex === -1) {
+          DB.push(r);
+          neu++;
+          continue;
+        }
+        var bestehender = DB[bestehenderIndex];
+        var antwort = kollisionsAuto || (await zeigeKollisionsDialog(bestehender, r));
+        if (antwort === "abbrechen") {
+          abgebrochen = true;
+          break;
+        }
+        if (antwort === "ersetzen") {
+          DB[bestehenderIndex] = r;
+          ersetzt++;
+        } else if (antwort === "neu") {
+          r.id = neuerId(r.name || "importiert");
+          DB.push(r);
+          umbenannt++;
+        } else if (antwort === "ueberspringen") {
+          uebersprungen++;
+        } else {
+          uebersprungen++;
+        }
+      }
+
+      speichernLocal();
+      markiereUnexportiert();
+      rendereListe();
+      var meldung = abgebrochen
+        ? tr("Import abgebrochen: {neu} neu, {ersetzt} ersetzt, {umbenannt} als neues Rezept, {uebersprungen} übersprungen.",
+            { neu: neu, ersetzt: ersetzt, umbenannt: umbenannt, uebersprungen: uebersprungen })
+        : tr("Import abgeschlossen: {neu} neu, {ersetzt} ersetzt, {umbenannt} als neues Rezept, {uebersprungen} übersprungen.",
+            { neu: neu, ersetzt: ersetzt, umbenannt: umbenannt, uebersprungen: uebersprungen });
+      melden(meldung);
+    } catch (e) {
+      melden(tr("Import fehlgeschlagen: {message}", { message: e.message }), true);
+    }
+  };
+  leser.readAsText(file);
+});
+
+/* Andere Datenbank importieren: ersetzt die aktuelle Arbeits-Datenbank
+ * komplett (wie "Datei öffnen"), die bisherige wird verworfen. */
+document.getElementById("btnImportDB").onclick = function () {
+  document.getElementById("fileImportDB").click();
+};
+document.getElementById("fileImportDB").addEventListener("change", function () {
+  var file = this.files[0];
+  this.value = "";
+  if (!file) return;
+  var leser = new FileReader();
+  leser.onload = function () {
+    try {
+      var text = leser.result;
+      var daten = JSON.parse(extrahiereListe(text));
+      if (!Array.isArray(daten)) throw new Error(tr("Keine Liste gefunden"));
+      if (!confirm(tr("Aktuelle Datenbank durch die importierte ersetzen? Die Datei enthält {anzahl} Rezepte.", { anzahl: daten.length }))) return;
+      daten.forEach(function (r) {
+        r.zutaten = r.zutaten || [];
+        r.zubereitung = r.zubereitung || [];
+        r.nahrwerte = r.nahrwerte || {};
+        r.bilder = r.bilder || [];
+        normalisiereZutaten(r);
+        if (!r.id) r.id = neuerId(r.name || "importiert");
+      });
+      DB = daten;
+      auswahl = {};
+      dbQuelle = file.name;
+      try { localStorage.setItem(DB_QUELLE_KEY, dbQuelle); } catch (e) { /* ignorieren */ }
+      speichernLocal();
+      markiereUnexportiert();
+      aktuellerId = null;
+      aktualisiereQuellAnzeige();
+      rendereListe();
+      if (DB.length) waehle(DB[0].id);
+      else {
+        var main = document.getElementById("formbereich");
+        main.innerHTML =
+          '<div class="leerzustand"><div class="gross">📖</div>' +
+          "<p>" + tr("Wähle links ein Rezept aus, um es zu bearbeiten,") + "<br>" + tr("oder lege ein neues Rezept an.") + "</p></div>";
+      }
+      melden(tr("Datenbank '{name}' geladen – {anzahl} Rezepte.", { name: file.name, anzahl: DB.length }));
+    } catch (e) {
+      melden(tr("Import fehlgeschlagen: {message}", { message: e.message }), true);
+    }
+  };
+  leser.readAsText(file);
+});
+
+/* Zurücksetzen auf die in rezepte.js enthaltenen Daten */
+document.getElementById("btnReset").onclick = function () {
+  /* Bei unexportierten Änderungen scharf warnen - sonst droht der generische
+   * Confirm aus Gewohnheit weggeklickt zu werden und Arbeit geht verloren. */
+  var resetFrage = unexportiert
+    ? tr("⚠️ Achtung: Es gibt Änderungen, die noch NICHT in rezepte.js exportiert sind! Wirklich alles verwerfen (auch TCM-Zuordnungen)?")
+    : tr("Alle eigenen Änderungen verwerfen (auch TCM-Zuordnungen) und auf den Inhalt von rezepte.js zurücksetzen?");
+  if (!confirm(resetFrage)) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignorieren */ }
+  try { localStorage.removeItem(DB_QUELLE_KEY); } catch (e) { /* ignorieren */ }
+  try { localStorage.removeItem(TCM_OVERLAY_KEY); } catch (e) { /* ignorieren */ }   /* eigene TCM-Zuordnungen */
+  try { localStorage.removeItem(TCM_NAMEN_KEY); } catch (e) { /* ignorieren */ }     /* deren Alias-Namen */
+  unexportiert = false;   /* sonst fragt beforeunload beim Neuladen nochmal und bricht es ab */
+  location.reload();
+};
+document.getElementById("btnHilfe").onclick = zeigeHilfe;
+
+/* Kategorien-Klappmenü schließen, wenn außerhalb geklickt wird */
+document.addEventListener("click", function (ev) {
+  if (katComboAktiv && !ev.target.closest(".kat-combo")) katComboAktiv.schliesse();
+  if (einheitComboAktiv && !ev.target.closest(".einheit-combo")) einheitComboAktiv.schliesse();
+});
+
+/* ---------------------------------------------------------------
+ * Ereignisse
+ * --------------------------------------------------------------- */
+document.getElementById("btnTheme").onclick = toggleThema;
+document.getElementById("suche").addEventListener("input", function () {
+  document.getElementById("sucheLeeren").hidden = !this.value;
+  rendereListe();
+});
+document.getElementById("sucheLeeren").onclick = function () {
+  document.getElementById("suche").value = "";
+  this.hidden = true;
+  rendereListe();
+  document.getElementById("suche").focus();
+};
+document.getElementById("filterKat").addEventListener("change", rendereListe);
+
+document.getElementById("btnAuswahlAlle").onclick = function () {
+  DB.forEach(function (r) { auswahl[r.id] = true; });
+  rendereListe();
+  melden(tr("Markierte Rezepte können jetzt exportiert werden!"));
+};
+document.getElementById("btnAuswahlKeine").onclick = function () {
+  auswahl = {};
+  rendereListe();
+};
+
+/* Auswahl-Steuerung: Checkboxen und "Alle wählen/Keine" sind versteckt.
+ * Ein Klick auf die Zahlenzeile blendet sie ein bzw. wieder aus (Enter/
+ * Leertaste per Tastatur). */
+(function () {
+  var aside = document.querySelector("aside");
+  var zahlenzeile = document.querySelector(".zahlenzeile");
+  if (!aside || !zahlenzeile) return;
+  function umschalten() {
+    aside.classList.toggle("auswahl-sichtbar");
+  }
+  zahlenzeile.addEventListener("click", umschalten);
+  zahlenzeile.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      umschalten();
+    }
+  });
+})();
+
+document.getElementById("rezeptliste").addEventListener("click", function (ev) {
+  if (ev.target.closest(".auswahl-kb")) return;   /* Checkbox-Klick gehört der Auswahl */
+  var btn = ev.target.closest("button");
+  var li = ev.target.closest("li");
+  if (!li) return;
+  var id = li.dataset.id;
+  if (btn) {
+    if (btn.dataset.aktion === "hoch") verschieben(id, "hoch");
+    else if (btn.dataset.aktion === "runter") verschieben(id, "runter");
+    else if (btn.dataset.aktion === "kat") {
+      ev.stopPropagation();   /* sonst schließt der document-Klick-Handler das Menü sofort wieder */
+      var katMenu = document.getElementById("katMoveMenu");
+      if (katMenu && !katMenu.hidden && katMoveId === id) {
+        katMenu.hidden = true;   /* erneuter Klick auf denselben Rezept-Knopf schließt wieder */
+      } else {
+        zeigeKategorieMenue(btn, id);
+      }
+      return;
+    }
+    return;
+  }
+  if (aktuellerId && aktuellerId !== id) speichereAktuelles(false);
+  waehle(id);
+});
+
+document.getElementById("rezeptliste").addEventListener("change", function (ev) {
+  var kb = ev.target.closest(".auswahl-kb");
+  if (!kb) return;
+  var vorher = anzahlAusgewaehlt();
+  if (kb.checked) auswahl[kb.dataset.id] = true;
+  else delete auswahl[kb.dataset.id];
+  aktualisiereAuswahlAnzeige();
+  if (kb.checked && vorher === 0) {
+    melden(tr("Markierte Rezepte können jetzt exportiert werden!"));
+  }
+});
+
+/* Kategorie-Schnellmenü: öffnet pro Rezept ein Popover mit allen Kategorien.
+ * Ein Klick setzt die Kategorie direkt; gesichert wird wie üblich erst beim
+ * Export nach rezepte.js. */
+var katMoveId = null;
+
+function zeigeKategorieMenue(knopf, id) {
+  var menu = document.getElementById("katMoveMenu");
+  if (!menu) return;
+  var r = DB.find(function (x) { return x.id === id; });
+  if (!r) return;
+  katMoveId = id;
+  var kat = kategorien();
+  if (kat.indexOf("Ohne Kategorie") === -1) kat.push("Ohne Kategorie");
+  menu.innerHTML = '<div class="kat-titel">' + tr("Verschieben nach") + '</div>' +
+    kat.map(function (k) {
+      var aktiv = (r.kategorie || "Ohne Kategorie") === k;
+      return '<button data-kat="' + escapeHtml(k) + '" class="' + (aktiv ? "aktuell" : "") + '">' +
+        (aktiv ? "✓ " : "") + escapeHtml(k === "Ohne Kategorie" ? tr("Ohne Kategorie") : k) + "</button>";
+    }).join("");
+  menu.hidden = false;
+  var rect = knopf.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + "px";
+  menu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - menu.offsetHeight - 8)) + "px";
+}
+
+document.getElementById("katMoveMenu").addEventListener("click", function (ev) {
+  var menu = this;
+  var b = ev.target.closest("button[data-kat]");
+  if (!b) return;
+  menu.hidden = true;
+  var neu = b.dataset.kat;
+  var r = DB.find(function (x) { return x.id === katMoveId; });
+  if (!r) return;
+  var wert = neu === "Ohne Kategorie" ? "" : neu;
+  if ((r.kategorie || "") === wert) return;
+  r.kategorie = wert;
+  markiereUnexportiert();
+  if (aktuellerId === r.id) {
+    var fKat = document.getElementById("fKat");
+    if (fKat) fKat.value = wert;
+  }
+  rendereListe();
+});
+
+document.addEventListener("click", function (ev) {
+  var menu = document.getElementById("katMoveMenu");
+  if (menu && !menu.hidden && !menu.contains(ev.target)) menu.hidden = true;
+});
+document.addEventListener("keydown", function (ev) {
+  if (ev.key === "Escape") {
+    var menu = document.getElementById("katMoveMenu");
+    if (menu) menu.hidden = true;
+    if (einheitComboAktiv) einheitComboAktiv.schliesse();
+  }
+});
+/* Beim Scrollen schließt das Popover wieder (position:fixed würde sonst am
+ * Viewport "kleben" bleiben). Capture-Phase fängt auch die scrollbare Liste.
+ * Scrollen im Popover selbst (dessen Kategorienliste) schließt nicht. */
+document.addEventListener("scroll", function (ev) {
+  var menu = document.getElementById("katMoveMenu");
+  if (!menu || menu.hidden) return;
+  if (menu.contains(ev.target)) return;   /* Scrollen im Popover selbst ist ok */
+  menu.hidden = true;
+}, true);
+
+/* Auch das Einheiten-Dropdown schließt beim Scrollen (position:fixed würde
+ * sonst am Viewport "kleben" bleiben); im Dropdown selbst scrollen ist ok. */
+document.addEventListener("scroll", function (ev) {
+  if (!einheitComboAktiv) return;
+  var liste = einheitComboAktiv.liste;
+  if (!liste || liste.hidden) return;
+  if (liste.contains(ev.target)) return;   /* Scrollen in der Liste selbst ist ok */
+  einheitComboAktiv.schliesse();
+}, true);
+
+/* Jede Eingabe im Rezeptformular (Tippen, Number-Spinner, Dropdown-Auswahl -
+ * die Einheiten-Combo feuert dafür selbst ein input-Event) lässt den
+ * 💾-Knopf auf ungespeicherte Änderungen aufmerksam machen. */
+document.addEventListener("input", function (ev) {
+  var main = document.getElementById("formbereich");
+  if (!main || !main.contains(ev.target)) return;
+  markiereFormularGeaendert();
+});
+
+/* ---------------------------------------------------------------
+ * Drag&Drop zum Umsortieren der Liste
+ * --------------------------------------------------------------- */
+function verschiebeZu(id, zielId, unten) {
+  var von = DB.findIndex(function (r) { return r.id === id; });
+  if (von < 0) return;
+  var karte = DB[von];
+  DB.splice(von, 1);
+  var zielIdx = DB.findIndex(function (r) { return r.id === zielId; });
+  if (zielIdx === -1) { DB.splice(von, 0, karte); return; }
+  DB.splice(zielIdx + (unten ? 1 : 0), 0, karte);
+  speichernLocal();
+  markiereUnexportiert();   /* Reihenfolge steht im Export -> Drag&Drop zählt als Änderung */
+  rendereListe();
+}
+
+function listeMarkierungenLeeren() {
+  var ul = document.getElementById("rezeptliste");
+  ul.querySelectorAll(".zieht, .drueber-oben, .drueber-unten").forEach(function (x) {
+    x.classList.remove("zieht", "drueber-oben", "drueber-unten");
+  });
+}
+
+var liste = document.getElementById("rezeptliste");
+liste.addEventListener("dragstart", function (ev) {
+  var li = ev.target.closest("li");
+  if (!li) return;
+  dragId = li.dataset.id;
+  ev.dataTransfer.effectAllowed = "move";
+  ev.dataTransfer.setData("text/plain", li.dataset.id);   /* für Firefox nötig */
+  li.classList.add("zieht");
+});
+
+liste.addEventListener("dragover", function (ev) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = "move";
+  var li = ev.target.closest("li");
+  if (!li || !dragId) return;
+  listeMarkierungenLeeren();
+  var box = li.getBoundingClientRect();
+  li.classList.add(ev.clientY < box.top + box.height / 2 ? "drueber-oben" : "drueber-unten");
+});
+
+liste.addEventListener("dragleave", function (ev) {
+  var li = ev.target.closest("li");
+  if (li) li.classList.remove("drueber-oben", "drueber-unten");
+});
+
+liste.addEventListener("drop", function (ev) {
+  ev.preventDefault();
+  listeMarkierungenLeeren();
+  var li = ev.target.closest("li");
+  if (!li || !dragId) return;
+  if (li.dataset.id !== dragId) {
+    var box = li.getBoundingClientRect();
+    verschiebeZu(dragId, li.dataset.id, ev.clientY >= box.top + box.height / 2);
+  }
+  dragId = null;
+});
+
+liste.addEventListener("dragend", function () {
+  listeMarkierungenLeeren();
+  dragId = null;
+});
+
+/* ---------------------------------------------------------------
+ * Strg+S speichert das aktuelle Rezept
+ * --------------------------------------------------------------- */
+document.addEventListener("keydown", function (ev) {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "s") {
+    ev.preventDefault();
+    if (aktuellerId) speichereAktuelles(true);
+  }
+});
+
+/* ---------------------------------------------------------------
+ * Start
+ * --------------------------------------------------------------- */
+initSprachWahl();
+laden();
+setzeThema(anfangsThema());
+setzeTitel(titelIndex());
+messeKopfHoehe();
+uebersetzeDOM();
+aktualisiereQuellAnzeige();
+aktualisiereAuswahlAnzeige();
+/* Fußzeilen-"Credits": eigener Tooltip - Hover per CSS, Klick/Tippen und
+ * Tastatur (Enter/Leertaste) per JS. Das Wort ist bewusst kein Link. */
+(function () {
+  var el = document.getElementById("creditsAnzeige");
+  if (!el) return;
+  var tip = document.createElement("div");
+  tip.className = "credits-tip";
+  tip.textContent = tr(el.getAttribute("data-tooltip") || "");
+  el.appendChild(tip);
+  el.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    el.classList.toggle("sichtbar");
+  });
+  el.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      el.classList.toggle("sichtbar");
+    }
+  });
+  document.addEventListener("click", function (ev) {
+    if (!el.contains(ev.target)) el.classList.remove("sichtbar");
+  });
+})();
+/* Import/Export-Dropdown: öffnet per Klick auf den Toggle (Enter/Leertaste
+ * auch per Tastatur), schließt bei Klick außerhalb, Escape oder nach einer
+ * Aktion im Menü. */
+(function () {
+  var menu = document.querySelector(".export-menu");
+  var toggle = document.getElementById("btnExportToggle");
+  if (!menu || !toggle) return;
+  toggle.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var wirdOffen = !menu.classList.contains("offen");
+    menu.classList.toggle("offen");
+    if (wirdOffen) {
+      var dd = menu.querySelector(".export-dropdown");
+      if (dd) {
+        dd.style.left = "";
+        dd.style.right = "";
+        var rect = dd.getBoundingClientRect();
+        if (rect.left < 0) {
+          dd.style.left = "0";
+          dd.style.right = "auto";
+        }
+      }
+    }
+  });
+  toggle.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      menu.classList.toggle("offen");
+    }
+  });
+  menu.addEventListener("click", function () { menu.classList.remove("offen"); });
+  document.addEventListener("click", function (ev) {
+    if (!menu.contains(ev.target)) menu.classList.remove("offen");
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") menu.classList.remove("offen");
+  });
+})();
+document.addEventListener("keydown", function (ev) {
+  if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+    var tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    var items = Array.from(document.querySelectorAll("#rezeptliste li:not(.leer)"));
+    if (!items.length) return;
+    var idx = items.findIndex(function (li) { return li.classList.contains("aktiv"); });
+    if (ev.key === "ArrowDown") {
+      idx = idx < items.length - 1 ? idx + 1 : 0;
+    } else {
+      idx = idx > 0 ? idx - 1 : items.length - 1;
+    }
+    var id = items[idx].dataset.id;
+    if (id) {
+      ev.preventDefault();
+      waehle(id);
+      var neu = document.querySelector("#rezeptliste li.aktiv");
+      var ul = document.getElementById("rezeptliste");
+      if (neu && ul) {
+        requestAnimationFrame(function () {
+          var liMitte = neu.offsetTop + neu.offsetHeight / 2;
+          ul.scrollTop = liMitte - ul.clientHeight / 2;
+        });
+      }
+    }
+  }
+});
+window.addEventListener("resize", messeKopfHoehe);
+if (DB.length) {
+  rendereListe();
+  var urlId = new URLSearchParams(location.search).get("id");
+  var startId = urlId && DB.some(function (x) { return x.id === urlId; }) ? urlId : DB[0].id;
+  waehle(startId);
+  var exportBtn = document.getElementById("btnExportToggle");
+  if (exportBtn) exportTitel = exportBtn.getAttribute("title");
+  exportiert();
+  melden(trPlural(DB.length, "Bereit – {anzahl} Rezept aus rezepte.js geladen.", "Bereit – {anzahl} Rezepte aus rezepte.js geladen."));
+} else {
+  rendereListe();
+  melden(tr("Keine Rezepte gefunden. Prüfe, ob rezepte.js im Ordner assets liegt."), true);
+}
+</script>
+</body>
+</html>

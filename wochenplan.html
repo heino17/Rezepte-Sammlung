@@ -1,0 +1,2458 @@
+<!DOCTYPE html>
+<!--
+  Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17
+  https://github.com/heino17/Rezepte-Sammlung
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="Julias Wochenplan">Julias Wochenplan</title>
+<style>
+  :root {
+    --gruen: #8a6a48;
+    --gruen-hell: #f1eade;
+    --gruen-hover: #6d5539;
+    --rot: #c62828;
+    --grau: #8d7a63;
+    --grau-hell: #f4efe7;
+    --linie: #e2d8c9;
+    --text: #3d3227;
+    --creme: #e9e2d7;
+    --kopf-h: 62px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #efe9de url("assets/Kueche_Hintergrund_hell.jpg") no-repeat center center fixed;
+    background-size: 100% 100%;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background:
+      repeating-linear-gradient(135deg, rgba(0,0,0,.025) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #f3ede1 0%, #e9e2d7 55%, #ddd1be 100%);
+    color: var(--text);
+    padding: 2px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+  header h1 { margin: -5px 0 -6px 0; }
+  #titelSammlung { font-size: 18px;
+    cursor: pointer; border-radius: 8px; padding: 2px 8px; margin-left: -10px;
+    transition: background .15s;
+  }
+  #titelSammlung:hover { background: var(--gruen-hell); }
+  header p { margin: 2px 0 0; opacity: .9; }
+
+  /* Custom Sprachumschalter (ersetzt natives <select>, da Browser das Styling
+     der aufklappenden Optionsliste bei <select> nicht bzw. kaum zulassen). */
+  #sprachWahl {
+    position: relative; display: inline-block;
+  }
+  #sprachWahlBtn {
+    font: inherit; font-size: 11.5px; padding: 4px 8px;
+    border: 1px solid currentColor; border-radius: 6px;
+    background: transparent; color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  #sprachWahlBtn::after { content: "▾"; font-size: 9px; opacity: .7; }
+  html[data-theme="dunkel"] #sprachWahlBtn { color: #e9e2d7; background: #3a332d; }
+
+  #sprachWahlListe {
+    position: absolute; top: calc(100% + 4px); right: 0px; z-index: 40;
+    min-width: 100%; list-style: none; margin: 0; padding: 4px;
+    border: 1px solid currentColor; border-radius: 8px;
+    /* Eigene, frei einstellbare Popup-Hintergrundfarbe: */
+    background: var(--sprach-popup-bg, #f4efe7);
+    color: var(--text);
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    max-height: 260px; overflow-y: auto;
+  }
+  html[data-theme="dunkel"] #sprachWahlListe {
+    background: var(--sprach-popup-bg-dunkel, #3a332d); color: #e9e2d7;
+  }
+  #sprachWahlListe[hidden] { display: none; }
+  #sprachWahlListe li {
+    font-size: 11.5px; padding: 5px 5px; border-radius: 6px;
+    cursor: pointer; white-space: nowrap;
+  }
+  #sprachWahlListe li:hover,
+  #sprachWahlListe li.aktiv { font-size: 11.5px; padding: 5px 5px; background: #E2D8C9; text-shadow: 0px 0px 1px #000000; }
+  html[data-theme="dunkel"] #sprachWahlListe li:hover,
+  html[data-theme="dunkel"] #sprachWahlListe li.aktiv { font-size: 11.5px; padding: 5px 5px; color: #000; text-shadow: 0px 0px 1px #000000; }
+
+  footer {
+    position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
+    background: linear-gradient(180deg, #ddd1be 0%, #d4c6b0 100%);
+    color: var(--text); padding: 1px 22px; z-index: 25;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 10px; box-shadow: 0 -2px 6px rgba(0,0,0,.12);
+  }
+  footer .fuss-links { text-align: left; }
+  footer .fuss-links a { text-align: left; color: var(--text); }
+  footer .fuss-links a:hover { text-align: left; color: var(--text); }
+  footer .fuss-rechts { text-align: right; }
+  footer .credits-link {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted currentColor;
+  }
+  footer .credits-link:focus-visible {
+    outline: 2px solid var(--gruen);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  footer .credits-link .credits-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 36px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(92vw, 640px);
+    background: var(--gruen-hell);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    z-index: 300;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease, visibility .18s;
+    pointer-events: none;
+  }
+  footer .credits-link .credits-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #2b2620;
+  }
+  footer .credits-link:hover .credits-tip,
+  footer .credits-link.sichtbar .credits-tip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  }
+  .actions button { padding: 4px 9px; font-size: 10.5px; border-radius: 6px; }
+  button {
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    background: #f4efe7;
+    color: var(--gruen);
+    font-weight: 600;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: var(--gruen-hell); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--gruen); color: #fff; }
+  button.primary:hover { background: var(--gruen-hover); color: #fff; }
+  button.danger { color: var(--rot); }
+  button.danger:hover { background: #fdecea; }
+  button.small { padding: 4px 10px; font-size: 13px; border-radius: 6px; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:disabled:hover { background: #f4efe7; }
+  .btn-link {
+    font: inherit; font-weight: 600; font-size: 10.5px;
+    text-decoration: none; color: var(--text);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 6px; padding: 4px 9px;
+    transition: background .15s;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .btn-link:hover { background: var(--gruen-hover); color: #fff; }
+
+  /* Speichern-Button leuchtet, solange Änderungen noch nicht als Datei gesichert sind */
+  #btnWpSpeichern.alarm {
+    border-color: var(--rot);
+    color: var(--rot);
+    animation: wpAlarm 1.4s ease-in-out infinite;
+  }
+  #btnWpSpeichern.alarm:hover { background: var(--rot); color: #fff; }
+  html[data-theme="dunkel"] #btnWpSpeichern.alarm:hover { color: #3a3226; }
+  @keyframes wpAlarm {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(198, 40, 40, .18); }
+    50% { box-shadow: 0 0 0 9px rgba(198, 40, 40, .32); }
+  }
+
+  main { padding: 18px 22px 90px; max-width: 1400px; margin: 0 auto; }
+
+  .kw-nav {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .kw-nav h2 { margin: 0; font-size: 18px; color: var(--gruen-hover); min-width: 220px; text-align: center; }
+  .kw-nav-datum { display: block; font-size: 12.5px; color: var(--grau); font-weight: 400; margin-top: 2px; }
+
+  .plan-layout { display: flex; gap: 18px; align-items: flex-start; }
+  .plan-spalte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+
+  aside.rezept-quelle {
+    width: 280px; flex-shrink: 0;
+    background: rgba(244, 239, 231, .93);
+    border-radius: 12px; padding: 14px;
+    position: sticky; top: calc(var(--kopf-h) + 12px);
+    max-height: calc(80vh - var(--kopf-h) - 24px);
+    display: flex; flex-direction: column;
+  }
+  aside.rezept-quelle h3 { margin: 0 0 10px; font-size: 14px; color: var(--gruen-hover); }
+  aside.rezept-quelle input[type="search"] {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--linie); border-radius: 6px;
+    font: inherit; font-size: 13px; margin-bottom: 8px; background: #fff;
+  }
+  aside.rezept-quelle select {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--linie); border-radius: 6px;
+    font: inherit; font-size: 13px; margin-bottom: 8px; background: #fff; color: var(--text);
+  }
+  #quellListe { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; }
+  #quellListe li {
+    padding: 8px 10px; margin-bottom: 4px; border-radius: 8px;
+    background: #fff; border: 1px solid var(--linie);
+    cursor: grab; font-size: 13.5px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  #quellListe li:active { cursor: grabbing; }
+  #quellListe li:hover { background: var(--gruen-hell); }
+  #quellListe li.dragging { opacity: .4; }
+  #quellListe li small { color: var(--grau); font-size: 11px; }
+  #quellListe .leer { text-align: center; color: var(--grau); font-size: 13px; padding: 20px 8px; cursor: default; }
+  #quellListe .leer:hover { background: transparent; }
+
+  .plan-tage {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+  }
+  .plan-aktionen {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: rgba(244, 239, 231, .93); border-radius: 12px; padding: 14px 18px;
+  }
+  .plan-aktionen button { font-size: 11.5px; padding: 6px 12px; }
+  .plan-hinweis { font-size: 11px; color: var(--grau); }
+  .tag {
+    background: rgba(244, 239, 231, .93);
+    border-radius: 12px; padding: 10px; min-height: 220px;
+    display: flex; flex-direction: column;
+  }
+  .tag.heute { outline: 2px solid var(--gruen); outline-offset: -2px; }
+  .tag-kopf { margin-bottom: 8px; }
+  .tag-kopf .tag-name { font-weight: 700; color: var(--gruen-hover); font-size: 14px; display: block; }
+  .tag-kopf .tag-datum { font-size: 11.5px; color: var(--grau); }
+  .tag-eintraege { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 40px; }
+  .tag-eintraege.drag-ueber { background: var(--gruen-hell); border-radius: 8px; }
+  .tag-eintrag {
+    background: #fff; border: 1px solid var(--linie); border-radius: 8px;
+    padding: 7px 8px; margin-bottom: 6px; font-size: 12.5px;
+    display: flex; align-items: flex-start; gap: 6px; cursor: grab;
+  }
+  .tag-eintrag:active { cursor: grabbing; }
+  .tag-eintrag.dragging { opacity: .4; }
+  .tag-eintrag .name { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+  .tag-eintrag button {
+    background: none; border: none; color: var(--grau); padding: 0 2px;
+    font-size: 13px; line-height: 1; flex-shrink: 0;
+  }
+  .tag-eintrag button:hover { background: none; color: var(--rot); }
+  .tag-leer { color: var(--grau); font-size: 12px; text-align: center; padding: 14px 4px; }
+
+  /* Nährwerte-Summen (Wochenplan) */
+  .tag-nahr {
+    margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--linie);
+    font-size: 11.5px; font-weight: 700; color: var(--gruen-hover);
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    cursor: help;
+  }
+  .tag-nahr .tag-nahr-fehlend { color: var(--rot); font-size: 12px; }
+  .tag-eintrag.ohne-nahr .name::after { content: " ⚠"; color: var(--rot); }
+  .monat-tag .tag-nahr { font-size: 10.5px; color: var(--grau); }
+  .plan-nahr {
+    margin-top: 14px; background: rgba(244, 239, 231, .93);
+    border-radius: 12px; padding: 12px 16px;
+  }
+  .plan-nahr-titel h3 { margin: 0; font-size: 14px; color: var(--gruen-hover); }
+  .plan-nahr-titel p { margin: 2px 0 0; font-size: 11.5px; color: var(--grau); }
+  .plan-nahr-schalter {
+    float: right; display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11.5px; font-weight: 600; color: var(--grau); user-select: none;
+    border: 1px solid var(--gruen);
+    border-radius: 6px;
+    padding: 2px 10px 2px 5px;
+  }
+  /* 3D-Kipp-Schalter (statt Checkbox) – generische Klassen bewusst
+   * unter dem Wrapper gescoped, damit nichts anderes angesprochen wird. */
+  .plan-nahr-schalter .switch {
+    background-color: var(--gruen-hell);
+    font-size: 9px;
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 25px;
+    user-select: none;
+  }
+  /* Default-Checkbox optisch entfernen */
+  .plan-nahr-schalter .cb {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  /* Der Kippschalter-Rahmen */
+  .plan-nahr-schalter .toggle {
+    position: absolute;
+    cursor: pointer;
+    width: 100%;
+    height: 24px;
+    background-color: var(--gruen-hell);
+    border-radius: 6px;
+    transition: 0.4s;
+    text-transform: uppercase;
+    font-weight: 700;
+    overflow: hidden;
+    box-shadow: -0.3em 0 0 0 var(--gruen-hell), -0.3em 0.3em 0 0 var(--gruen-hell),
+      0.3em 0 0 0 var(--gruen-hell), 0.3em 0.3em 0 0 var(--gruen-hell), 0 0.3em 0 0 var(--gruen-hell);
+  }
+  .plan-nahr-schalter .toggle > .left {
+    position: absolute;
+    display: flex;
+    width: 50%;
+    height: 88%;
+    border: 1px solid #cecdcd;
+    background-color: #f3f3f3;
+    color: #373737;
+    left: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    transform-origin: right;
+    transform: rotateX(10deg);
+    transform-style: preserve-3d;
+    transition: all 150ms;
+  }
+  .plan-nahr-schalter .left::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(206, 206, 206);
+    transform-origin: center left;
+    transform: rotateY(90deg);
+  }
+  .plan-nahr-schalter .left::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(112, 112, 112);
+    transform-origin: center bottom;
+    transform: rotateX(90deg);
+  }
+  .plan-nahr-schalter .toggle > .right {
+    position: absolute;
+    display: flex;
+    width: 50%;
+    height: 88%;
+    border: 1px solid #cecdcd;
+    background-color: #f3f3f3;
+    color: rgb(206, 206, 206);
+    right: 1px;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    transform-origin: left;
+    transform: rotateX(10deg) rotateY(-45deg);
+    transform-style: preserve-3d;
+    transition: all 150ms;
+  }
+  .plan-nahr-schalter .right::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(206, 206, 206);
+    transform-origin: center right;
+    transform: rotateY(-90deg);
+  }
+  .plan-nahr-schalter .right::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(112, 112, 112);
+    transform-origin: center bottom;
+    transform: rotateX(90deg);
+  }
+  .plan-nahr-schalter input:checked + .toggle > .left {
+    transform: rotateX(10deg) rotateY(45deg);
+    color: rgb(206, 206, 206);
+  }
+  .plan-nahr-schalter input:checked + .toggle > .right {
+    transform: rotateX(10deg) rotateY(0deg);
+    color: #00a050;
+  }
+  .plan-nahr-werte { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .nahr-karte {
+    background: #fff; border: 1px solid var(--linie); border-radius: 8px;
+    padding: 6px 10px; min-width: 108px; text-align: center;
+  }
+  .nahr-karte strong { display: block; font-size: 15px; }
+  .nahr-karte span { font-size: 11px; color: var(--grau); }
+  .plan-nahr-hinweis { margin-top: 8px; font-size: 12px; color: var(--rot); }
+
+  /* 🌿 5 Elemente – Balance der geplanten Woche / des Monats */
+  .plan-tcm {
+    margin-top: 10px; background: rgba(244, 239, 231, .93);
+    border-radius: 12px; padding: 2px 16px 10px;
+  }
+  .plan-tcm > summary {
+    cursor: pointer; font-weight: 700; font-size: 14px;
+    color: var(--gruen-hover); padding: 9px 0; list-style-position: inside;
+  }
+  .plan-tcm > summary:hover { color: var(--gruen); }
+  .plan-tcm[open] > summary { border-bottom: 1px solid var(--linie); margin-bottom: 8px; }
+  .plan-tcm-hinweis { margin: 0 0 8px; font-size: 11.5px; color: var(--grau); }
+  .tcm-zeile { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; flex-wrap: wrap; }
+  .tcm-label { font-size: 12px; color: var(--grau); min-width: 90px; }
+  .tcm-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tcm-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; border: 1px solid var(--linie); border-radius: 999px;
+    padding: 2px 9px; font-size: 12px;
+  }
+  .tcm-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .plan-tcm-fuss { margin-top: 8px; font-size: 11.5px; color: var(--grau); }
+
+  /* Ansichts-Umschalter Woche/Monat */
+  .ansicht-umschalter {
+    display: flex;
+    margin-left: 10px;
+    border: 1px solid var(--linie);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .ansicht-umschalter button { border-radius: 0; border: none; font-size: 13px; padding: 4px 12px; }
+  .ansicht-umschalter button.aktiv { background: var(--gruen); color: #fff; }
+
+  /* Monatsansicht: 8 Spalten (KW-Label + Mo-So) mit Wochenkopfzeile */
+  .monat-grid {
+    display: grid;
+    grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    border-radius: 12px;
+    padding: 10px;
+  }
+  .monat-kopf { text-align: center; font-size: 11.5px; color: var(--grau); font-weight: 600; padding: 5px 8px 3px; width: fit-content; justify-self: center; background: #fff; border-radius: 6px; box-shadow: 0 0 0 1px var(--linie); }
+  .monat-kopf-leer { visibility: hidden; }
+  .monat-woche {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--gruen-hover);
+    width: fit-content; justify-self: center; padding: 2px 8px;
+    background: #fff; border-radius: 6px; box-shadow: 0 0 0 1px var(--linie);
+  }
+  .monat-tag {
+    background: rgba(255, 255, 255, 0.81); border: 1px solid var(--linie); border-radius: 8px;
+    min-height: 96px; padding: 6px; min-width: 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .monat-tag.fremd { opacity: .38; background: transparent; }
+  .monat-tag.heute { outline: 2px solid var(--gruen); outline-offset: -2px; }
+  .monat-tag .tag-nr { font-size: 11.5px; color: var(--grau); font-weight: 700; align-self: flex-start; width: fit-content; background: #fff; border-radius: 6px; padding: 1px 6px; box-shadow: 0 0 0 1px var(--linie); }
+  .monat-tag.heute .tag-nr { color: var(--gruen-hover); }
+  .monat-tag .tag-eintraege { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 20px; }
+  .monat-tag .tag-eintrag { font-size: 11.5px; padding: 4px 5px; margin-bottom: 3px; }
+
+  @media (max-width: 1100px) {
+    .plan-layout { flex-direction: column; }
+    aside.rezept-quelle { width: 100%; position: static; max-height: 42vh; }
+    .plan-tage { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  }
+
+  /* Header-Knöpfe: Icon und Beschriftung getrennt (formeHeaderKnoepfe) –
+   * schmale Fenster zeigen nur die Icons, die Beschriftung bleibt als Tooltip. */
+  .btn-icon { margin-right: 5px; }
+  @media (max-width: 1015px) {
+    .actions { margin-top: -10px; }
+  }
+  @media (max-width: 879px) {
+  .actions { margin-top: 0px; }
+    .actions .btn-text { display: none; }
+  }
+  @media (max-width: 620px) {
+    .actions { margin-top: -10px; }
+  }
+
+  /* Phone: Monatsraster zur Seite scrollbar, damit die 8 Spalten nicht
+   * zerquetscht werden und nichts aus der Plan-Spalte herausragt. */
+  @media (max-width: 640px) {
+    .monat-grid {
+      grid-template-columns: 40px repeat(7, minmax(132px, 1fr));
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .monat-tag { min-height: 84px; }
+    .monat-kopf, .monat-woche { font-size: 10.5px; }
+  }
+
+  html[data-theme="dunkel"] {
+    --gruen: #c9a879;
+    --gruen-hell: #4a4235;
+    --gruen-hover: #e0d2bc;
+    --rot: #ff8a80;
+    --grau: #b3a48d;
+    --grau-hell: #3a352c;
+    --linie: #4c4437;
+    --text: #e9e2d7;
+    --creme: #5a4f3e;
+  }
+  html[data-theme="dunkel"] body {
+    background-color: #2e2a22;
+    background-image: url("assets/Kueche_Hintergrund_dunkel.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+  }
+  html[data-theme="dunkel"] header {
+    background:
+      repeating-linear-gradient(135deg, rgba(0,0,0,.15) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #4a4232 0%, #403a2e 55%, #35301f 100%);
+    color: #eee3cf;
+  }
+  html[data-theme="dunkel"] footer { background: linear-gradient(180deg, #4f4535 0%, #463d2e 100%); color: #eee3cf; }
+  html[data-theme="dunkel"] button { background: #3a352c; color: var(--gruen); }
+  html[data-theme="dunkel"] button:hover { background: var(--gruen-hell); }
+  html[data-theme="dunkel"] button.primary { background: var(--gruen); color: #3a3226; }
+  html[data-theme="dunkel"] button.primary:hover { background: var(--gruen-hover); color: #3a3226; }
+  html[data-theme="dunkel"] .btn-link { color: #eee3cf; }
+  html[data-theme="dunkel"] .btn-link:hover { background: var(--gruen-hover); color: #eee3cf; }
+  html[data-theme="dunkel"] aside.rezept-quelle,
+  html[data-theme="dunkel"] .tag,
+  html[data-theme="dunkel"] .plan-aktionen { background: rgba(58, 53, 44, .93); }
+  html[data-theme="dunkel"] #quellListe li,
+  html[data-theme="dunkel"] .tag-eintrag { background: #4a4436; border-color: #5a5140; color: #eee3cf; }
+  html[data-theme="dunkel"] #quellListe li:hover { background: var(--gruen-hell); color: var(--text); }
+  html[data-theme="dunkel"] aside.rezept-quelle input[type="search"],
+  html[data-theme="dunkel"] aside.rezept-quelle select { background: #4a4436; color: #eee3cf; border-color: #5a5140; }
+  html[data-theme="dunkel"] .kw-nav h2 { color: #eee3cf; }
+  html[data-theme="dunkel"] .ansicht-umschalter button.aktiv { color: #3a3226; }
+  html[data-theme="dunkel"] .monat-tag { background: rgba(74, 68, 54, 0.84); border-color: #5a5140; color: #eee3cf; }
+  html[data-theme="dunkel"] .monat-kopf,
+  html[data-theme="dunkel"] .monat-woche,
+  html[data-theme="dunkel"] .monat-tag .tag-nr {
+    background: #3d372c;
+    box-shadow: 0 0 0 1px #5a5140;
+  }
+  html[data-theme="dunkel"] .plan-nahr { background: rgba(58, 53, 44, .93); }
+  html[data-theme="dunkel"] .nahr-karte { background: #4a4436; border-color: #5a5140; color: #eee3cf; }
+  html[data-theme="dunkel"] .plan-tcm { background: rgba(58, 53, 44, .93); }
+  html[data-theme="dunkel"] .tcm-chip { background: #4a4436; border-color: #5a5140; color: #eee3cf; }
+
+  /* ⚙️-Werkzeugmenü (Woche/Monat kopieren, einfügen, leeren) */
+  .wp-menu { position: relative; margin-left: 8px; }
+  .wp-menu.offen > button::after { content: "▴"; }
+  .wp-menu > button::after { content: "▾"; margin-left: 4px; font-size: 10px; }
+  .wp-menu-offen {
+    position: absolute; top: 100%; right: 0; margin-top: 4px; z-index: 30;
+    background: #f3ede1; border: 1px solid var(--linie); border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15); padding: 6px 0; text-align: left;
+    width: max-content;
+  }
+  .wp-menu-offen button {
+    display: block; padding: 6px 12px; font: inherit; font-size: 13px;
+    background: none; border: none; color: var(--text); cursor: pointer; text-align: left;
+    white-space: nowrap;
+  }
+  .wp-menu-offen button:hover { background: var(--gruen-hell); }
+  .wp-menu-offen button:disabled { color: var(--grau); cursor: default; }
+  .wp-menu-offen button:disabled:hover { background: none; }
+  .wp-menu-offen button.aktiv { font-weight: 700; color: var(--gruen); }
+  html[data-theme="dunkel"] .wp-menu-offen { background: #3d372c; border-color: #5a5140; }
+  html[data-theme="dunkel"] .wp-menu-offen button { color: #eee3cf; }
+  html[data-theme="dunkel"] .wp-menu-offen button:hover { background: var(--gruen-hell); color: var(--text); }
+  html[data-theme="dunkel"] .wp-menu-offen button.aktiv { color: var(--gruen); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="titelSammlung" data-i18n-title="Titel anklicken, um zu wechseln">📆 Julia's Wochenplan</h1>
+    <p style="margin-left: 29px; font-size: 11.5px;" data-i18n="Rezepte auf die Woche verteilen">Rezepte auf die Woche verteilen</p>
+  </div>
+  <div class="actions">
+    <a href="rezepte.html" id="linkZurueck" class="btn-link" data-i18n-title="Zurück zur Rezepte-Sammlung" data-i18n="⬅️ Rezepte">⬅️ Rezepte</a>
+    <button id="btnWpSpeichern" class="btn-link" data-i18n-title="Nur die sichtbare Woche als Datei sichern (.json)" data-i18n="💾 Wochenplan speichern">💾 Wochenplan speichern</button>
+    <button id="btnWpOeffnen" class="btn-link" data-i18n-title="Wochenplan aus einer Datei laden (.json) – ersetzt die aktuell gespeicherten" data-i18n="📂 Wochenplan öffnen">📂 Wochenplan öffnen</button>
+    <input type="file" id="wpFileImport" accept=".json" hidden>
+    <button id="btnWpExportHTML" class="btn-link" data-i18n-title="Wochenplan als HTML-Datei exportieren (A4-Querformat)" data-i18n="📧 Wochenplan als HTML">📧 Wochenplan als HTML</button>
+    <button id="btnTheme" class="btn-link" data-i18n-title="Helles/Dunkles Design umschalten">🌙 Dunkel</button>
+    <div id="sprachWahl">
+      <button type="button" id="sprachWahlBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Sprache wechseln"></button>
+      <ul id="sprachWahlListe" role="listbox" hidden></ul>
+    </div>
+    <button style="background: transparent; font-size: 13px; color: red; padding: 2px 6px 2px 6px; margin-bottom: 1px; border: 1px solid var(--gruen);" id="btnReset" data-i18n-title="Verwirft alle Änderungen (Browser-Speicher) und lädt den Stand von rezepte.js neu">🗘</button>
+  </div>
+</header>
+
+<main>
+  <div class="kw-nav">
+    <button id="btnKwZurueck" class="small" data-i18n-title="Vorherige Woche" data-i18n="← Vorherige">← Vorherige</button>
+    <h2 id="kwTitel">KW 00<span class="kw-nav-datum" id="kwDatum"></span></h2>
+    <button id="btnKwVor" class="small" data-i18n-title="Nächste Woche" data-i18n="Nächste →">Nächste →</button>
+    <button id="btnKwHeute" class="small" data-i18n-title="Zur aktuellen Woche springen" data-i18n="Heute">Heute</button>
+    <div class="ansicht-umschalter">
+      <button id="btnAnsichtWoche" class="small aktiv" data-i18n-title="Wochenansicht anzeigen" data-i18n="Woche">Woche</button>
+      <button id="btnAnsichtMonat" class="small" data-i18n-title="Monatsansicht anzeigen" data-i18n="Monat">Monat</button>
+    </div>
+    <div class="wp-menu" id="wpMenu">
+      <button id="wpMenuToggle" class="small" data-i18n-title="Werkzeuge für die aktuelle Ansicht" data-i18n="⚙️">⚙️</button>
+      <div class="wp-menu-offen" id="wpMenuOffen" hidden></div>
+    </div>
+  </div>
+
+  <div class="plan-layout">
+    <aside class="rezept-quelle">
+      <h3 data-i18n="🍲 Rezepte">🍲 Rezepte</h3>
+      <input type="search" id="quellSuche" data-i18n-ph="Rezept suchen …" placeholder="Rezept suchen …" autocomplete="off">
+      <select id="quellFilterKat"></select>
+      <ul id="quellListe"></ul>
+    </aside>
+
+    <div class="plan-spalte">
+      <div class="plan-tage" id="planTage"></div>
+      <div class="plan-aktionen">
+        <button id="btnEinkaufErzeugen" class="primary" disabled>
+          🛒 Einkaufsliste für diese Woche erzeugen
+        </button>
+        <span class="plan-hinweis" data-i18n="Ersetzt eine evtl. bereits bestehende Einkaufsliste in der Rezeptübersicht.">Ersetzt eine evtl. bereits bestehende Einkaufsliste in der Rezeptübersicht.</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.0.0</small></div>
+  <div>❤️</div>
+  <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
+</footer>
+
+<script src="assets/rezepte.js"></script>
+<script src="assets/zutaten-tcm.js"></script>
+<script src="assets/sprachen.js"></script>
+<script>
+"use strict";
+
+var STORAGE_KEY = "rezept_db_v1";
+var WOCHENPLAN_KEY = "wochenplan_v1";
+var EK_REFS = "ek_refs_v1";
+var EK_EXTRAS = "ek_extras_v1";
+var THEME_KEY = "rezept_theme_v1";
+var ANSICHT_KEY = "wp_ansicht_v1";   /* Wochen-/Monatsansicht merken (überlebt auch den 🗘-Reset) */
+var POSITION_KEY = "wp_position_v1"; /* angezeigte Woche/Monat absolut merken (überlebt auch den 🗘-Reset) */
+
+var DB = [];
+var plaene = {};        /* { "2026-KW33": { "Mo": [rezeptId, ...], ... } } */
+var wpStand = null;     /* Datenbank-Stand beim letzten Datei-Export */
+var wpUnexportiert = false;
+var kwOffset = 0;       /* 0 = aktuelle Woche, +1 = nächste, -1 = vorherige ... */
+var ansicht = "woche";  /* "woche" = Wochenplan, "monat" = Monatsansicht */
+var monatOffset = 0;    /* 0 = aktueller Monat, +1 = nächster, -1 = vorheriger ... */
+var suchtext = "";
+var filterKat = "";
+var wocheZwischenablage = null;   /* Zwischenablage: Kopie einer Woche */
+var monatsZwischenablage = null;  /* Zwischenablage: Kopie eines Monats */
+var dragQuelle = null;  /* { rezeptId } beim Ziehen aus der Rezeptliste */
+var dragEintrag = null; /* { key, tag, index } beim Verschieben/Entfernen eines Eintrags */
+var ZUFALL_OPT_KEY = "wp_zufall_opt_v1";
+var zufallOpt = { anzahl: "1", modus: "leer", wiederholen: false };
+var zufallUndo = null;  /* Sicherung des Monats/Woche vor der letzten Zufalls-Befüllung */
+var zufallBearbeitung = false; /* zeigt den 🎲-Optionen-Bildschirm im Werkzeugmenü */
+
+/* Optionen der Zufalls-Befüllung über Seitenwechsel hinweg merken. */
+(function () {
+  try {
+    var o = JSON.parse(localStorage.getItem(ZUFALL_OPT_KEY));
+    if (o && typeof o === "object" && typeof o.anzahl === "string") zufallOpt = o;
+  } catch (e) { /* ignorieren */ }
+})();
+function sichereZufallOpt() {
+  try { localStorage.setItem(ZUFALL_OPT_KEY, JSON.stringify(zufallOpt)); } catch (e) { /* ignorieren */ }
+}
+
+var TAGE = [
+  { key: "Mo", name: "Montag" },
+  { key: "Di", name: "Dienstag" },
+  { key: "Mi", name: "Mittwoch" },
+  { key: "Do", name: "Donnerstag" },
+  { key: "Fr", name: "Freitag" },
+  { key: "Sa", name: "Samstag" },
+  { key: "So", name: "Sonntag" }
+];
+
+/* ---------------------------------------------------------------
+ * Datenhaltung
+ * --------------------------------------------------------------- */
+function laden() {
+  try {
+    var q = localStorage.getItem(STORAGE_KEY);
+    if (q) DB = JSON.parse(q);
+  } catch (e) { /* ignorieren */ }
+  if (!DB.length && typeof REZEPTE !== "undefined") {
+    DB = JSON.parse(JSON.stringify(REZEPTE));
+  }
+  try {
+    var p = JSON.parse(localStorage.getItem(WOCHENPLAN_KEY) || "{}");
+    plaene = p && typeof p === "object" ? p : {};
+  } catch (e) { plaene = {}; }
+}
+
+function speichernPlaene() {
+  try { localStorage.setItem(WOCHENPLAN_KEY, JSON.stringify(plaene)); } catch (e) { /* ignorieren */ }
+  markiereWpUnexportiert();
+}
+
+/* Beschriftung und Tooltip des Öffnen-Buttons je nach Ansicht. */
+function aktualisiereOeffnenButton() {
+  var btn = document.getElementById("btnWpOeffnen");
+  if (!btn) return;
+  var monat = ansicht === "monat";
+  btn.textContent = tr(monat ? "📂 Monatsplan öffnen" : "📂 Wochenplan öffnen");
+  btn.title = tr(monat
+    ? "Monatsplan aus einer Datei laden (.json) – ersetzt die aktuell gespeicherten"
+    : "Wochenplan aus einer Datei laden (.json) – ersetzt die aktuell gespeicherten");
+}
+
+/* Beschriftung und Tooltip des HTML-Export-Buttons je nach Ansicht. */
+function aktualisiereHtmlExportButton() {
+  var btn = document.getElementById("btnWpExportHTML");
+  if (!btn) return;
+  var monat = ansicht === "monat";
+  btn.textContent = tr(monat ? "📧 Monatsplan als HTML" : "📧 Wochenplan als HTML");
+  btn.title = tr(monat
+    ? "Monatsplan als HTML-Datei exportieren (A4-Querformat)"
+    : "Wochenplan als HTML-Datei exportieren (A4-Querformat)");
+}
+
+/* Beschriftung des Speichern-Buttons je nach Ansicht (Wochenplan/Monatsplan). */
+function aktualisiereSpeichernButton() {
+  var btn = document.getElementById("btnWpSpeichern");
+  if (!btn) return;
+  btn.textContent = tr(ansicht === "monat" ? "💾 Monatsplan speichern" : "💾 Wochenplan speichern");
+  btn.title = speichernTitel();
+}
+
+function speichernTitel() {
+  if (ansicht === "monat") {
+    return wpUnexportiert
+      ? tr("Monatsplan als Datei sichern (.json) – Änderungen sind noch nicht gesichert!")
+      : tr("Monatsplan als Datei sichern (.json)");
+  }
+  return wpUnexportiert
+    ? tr("Nur die sichtbare Woche als Datei sichern (.json) – Änderungen sind noch nicht gesichert!")
+    : tr("Nur die sichtbare Woche als Datei sichern (.json)");
+}
+
+/* Markiert den Speichern-Button als "alarm", solange Änderungen vorliegen,
+ * die noch nicht als Datei gesichert wurden. */
+function markiereWpUnexportiert() {
+  if (wpStand !== null && JSON.stringify(plaene) === wpStand) return;
+  wpUnexportiert = true;
+  var btn = document.getElementById("btnWpSpeichern");
+  if (btn) {
+    btn.classList.add("alarm");
+    aktualisiereSpeichernButton();
+  }
+}
+
+function markiereWpExportiert() {
+  wpStand = JSON.stringify(plaene);
+  wpUnexportiert = false;
+  var btn = document.getElementById("btnWpSpeichern");
+  if (btn) {
+    btn.classList.remove("alarm");
+    aktualisiereSpeichernButton();
+  }
+}
+
+/* Warnung beim Verlassen der Seite (z. B. versehentliches Schließen des
+ * Fensters), solange Änderungen noch nicht als Datei gesichert sind. Bei
+ * bewusster Navigation innerhalb der Rezept-App (Links auf andere .html-
+ * Seiten, Neuladen per F5) wird nicht gewarnt. */
+var erlaubteNavigation = false;
+function erlaubeNavigation() { erlaubteNavigation = true; }
+
+window.addEventListener("beforeunload", function (ev) {
+  if (!wpUnexportiert || erlaubteNavigation) return;
+  ev.preventDefault();
+  ev.returnValue = "";
+});
+
+/* Bewusste In-App-Navigation: Links auf lokale .html-Seiten gelten als
+ * gewollt (deckt künftige Links wie zu rezepte_bearbeiten.html mit ab) */
+document.addEventListener("click", function (ev) {
+  var link = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+  if (!link) return;
+  var href = link.getAttribute("href") || "";
+  if (/\.html(?:\?|$)/.test(href) && !/^(https?:)?\/\//i.test(href)) erlaubeNavigation();
+});
+window.addEventListener("keydown", function (ev) {
+  if (ev.key === "F5" || ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "r")) erlaubeNavigation();
+});
+
+/* ---------------------------------------------------------------
+ * Kalenderwochen-Berechnung (ISO 8601, Mo-So)
+ * --------------------------------------------------------------- */
+function montagDerWoche(datum) {
+  var d = new Date(datum);
+  var tag = (d.getDay() + 6) % 7; /* 0 = Montag */
+  d.setDate(d.getDate() - tag);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function isoKw(datum) {
+  var d = new Date(Date.UTC(datum.getFullYear(), datum.getMonth(), datum.getDate()));
+  var tagNr = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - tagNr + 3); /* Donnerstag dieser Woche */
+  var jahresstart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  var kw = Math.ceil((((d - jahresstart) / 86400000) + 1) / 7);
+  return { jahr: d.getUTCFullYear(), kw: kw };
+}
+
+function aktuellerMontag() {
+  var basis = montagDerWoche(new Date());
+  basis.setDate(basis.getDate() + kwOffset * 7);
+  return basis;
+}
+
+function kwSchluessel(montag) {
+  var info = isoKw(montag);
+  return info.jahr + "-KW" + String(info.kw).padStart(2, "0");
+}
+
+function aktuellerMonatsErster() {
+  var d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  d.setMonth(d.getMonth() + monatOffset);
+  return d;
+}
+
+function aktuellerMonatsLetzter() {
+  var d = aktuellerMonatsErster();
+  d.setMonth(d.getMonth() + 1);
+  d.setDate(0);
+  return d;
+}
+
+/* Schlüssel eines einzelnen Tages: { key: "2026-KW33", tag: "Mo" } */
+function tagesSchluessel(datum) {
+  var montag = montagDerWoche(datum);
+  var tag = TAGE[(datum.getDay() + 6) % 7].key;
+  return { key: kwSchluessel(montag), tag: tag };
+}
+
+/* Nicht-mutierender Zugriff auf die Rezeptliste eines Tages. */
+function planEintraege(schluessel) {
+  return (plaene[schluessel.key] || {})[schluessel.tag] || [];
+}
+
+/* Kurzer Wochentagsname (mo/So) über Intl, Montag-basiert (0=Mo, 6=So). */
+function kurzerWochentag(i) {
+  var referenz = new Date(2026, 0, 5); /* 2026-01-05 ist ein Montag */
+  referenz.setDate(referenz.getDate() + i);
+  return new Intl.DateTimeFormat(sprachTag(), { weekday: "short" }).format(referenz);
+}
+
+/* Wochen-Schlüssel ("2026-KW33"...) der Kalenderwochen zwischen zwei Daten. */
+function kwBereichFuer(erster, letzter) {
+  var keys = [];
+  var d = new Date(montagDerWoche(erster));
+  var ende = montagDerWoche(letzter);
+  for (; d <= ende; d.setDate(d.getDate() + 7)) {
+    keys.push(kwSchluessel(d));
+  }
+  return keys;
+}
+
+/* Kompakte KW-Angabe "KW31" bzw. "KW31-KW36" (erste bis letzte Woche). */
+function kwBereichKurz(erster, letzter) {
+  var kws = kwBereichFuer(erster, letzter)
+    .map(function (k) { return k.split("-")[1]; });
+  return kws.length === 1 ? kws[0] : kws[0] + "-" + kws[kws.length - 1];
+}
+
+function formatiereDatum(d) {
+  return formatiereDatumKurz(d);
+}
+
+/* ---------------------------------------------------------------
+ * Rendering
+ * --------------------------------------------------------------- */
+function aktuellerPlan() {
+  var key = kwSchluessel(aktuellerMontag());
+  if (!plaene[key]) plaene[key] = {};
+  return { key: key, plan: plaene[key] };
+}
+
+function rendereKwTitel() {
+  var montag = aktuellerMontag();
+  var info = isoKw(montag);
+  var sonntag = new Date(montag);
+  sonntag.setDate(sonntag.getDate() + 6);
+  document.getElementById("kwTitel").innerHTML =
+    tr("KW ") + String(info.kw).padStart(2, "0") + " · " + info.jahr +
+    '<span class="kw-nav-datum">' + formatiereDatum(montag) + " – " + formatiereDatum(sonntag) + "</span>";
+  document.getElementById("btnKwHeute").disabled = kwOffset === 0;
+}
+
+function rendereMonatTitel() {
+  var erster = aktuellerMonatsErster();
+  var letzter = aktuellerMonatsLetzter();
+  var monatText = new Intl.DateTimeFormat(sprachTag(), { month: "long", year: "numeric" }).format(erster);
+  document.getElementById("kwTitel").innerHTML =
+    monatText +
+    '<span class="kw-nav-datum">' + kwBereichKurz(erster, letzter) +
+    " · " + datumMitJahr(erster) + " – " + datumMitJahr(letzter) + "</span>";
+}
+
+function rendereMonatTage() {
+  var erster = aktuellerMonatsErster();
+  var letzter = aktuellerMonatsLetzter();
+  var heute = new Date();
+  var wrap = document.getElementById("planTage");
+  wrap.className = "monat-grid";
+  wrap.innerHTML = "";
+
+  var leerKopf = document.createElement("div");
+  leerKopf.className = "monat-kopf monat-kopf-leer";   /* Ecke über der KW-Spalte: unsichtbar, aber Zelle besetzt */
+  wrap.appendChild(leerKopf);
+  TAGE.forEach(function (t, i) {
+    var kopf = document.createElement("div");
+    kopf.className = "monat-kopf";
+    kopf.textContent = kurzerWochentag(i);
+    wrap.appendChild(kopf);
+  });
+
+  var letzterMontag = montagDerWoche(letzter);
+  for (var wochentag = new Date(montagDerWoche(erster)); wochentag <= letzterMontag; wochentag.setDate(wochentag.getDate() + 7)) {
+    var info = isoKw(wochentag);
+    var kwLabel = document.createElement("div");
+    kwLabel.className = "monat-woche";
+    kwLabel.textContent = "KW" + String(info.kw).padStart(2, "0");
+    wrap.appendChild(kwLabel);
+
+    for (var tagIdx = 0; tagIdx < 7; tagIdx++) {
+      var d = new Date(wochentag);
+      d.setDate(d.getDate() + tagIdx);
+      var imMonat = d.getFullYear() === erster.getFullYear() && d.getMonth() === erster.getMonth();
+      var zelle = document.createElement("div");
+      zelle.className = "monat-tag" + (imMonat ? "" : " fremd") + (heuteIstTag(d) ? " heute" : "");
+      var nr = document.createElement("div");
+      nr.className = "tag-nr";
+      nr.textContent = d.getDate();
+      zelle.appendChild(nr);
+
+      var ul = document.createElement("ul");
+      ul.className = "tag-eintraege";
+      if (imMonat) {
+        var schluessel = tagesSchluessel(d);
+        var monatEintraege = planEintraege(schluessel);
+        ul.dataset.key = schluessel.key;
+        ul.dataset.tag = schluessel.tag;
+        monatEintraege.forEach(function (rid, idx) {
+          var r = DB.find(function (x) { return x.id === rid; });
+          var li = document.createElement("li");
+          li.className = "tag-eintrag" + (r && !rezeptHatNahr(r) ? " ohne-nahr" : "");
+          li.draggable = true;
+          li.dataset.key = schluessel.key;
+          li.dataset.tag = schluessel.tag;
+          li.dataset.index = idx;
+          li.innerHTML = '<span class="name">' + escapeHtml(r ? r.name : tr("(gelöschtes Rezept)")) + "</span>" +
+            '<button title="' + tr("Entfernen") + '" data-key="' + schluessel.key +
+            '" data-tag="' + schluessel.tag + '" data-index="' + idx + '">✕</button>';
+          ul.appendChild(li);
+        });
+        bindeTagDrop(ul, schluessel);
+      }
+      zelle.appendChild(ul);
+      if (imMonat && monatEintraege.length) zelle.appendChild(macheTagesNahr(nahrSummeFuer(monatEintraege)));
+      wrap.appendChild(zelle);
+    }
+  }
+
+  wrap.querySelectorAll(".tag-eintrag button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      entferneEintrag({ key: btn.dataset.key, tag: btn.dataset.tag }, parseInt(btn.dataset.index, 10));
+    });
+  });
+  wrap.querySelectorAll(".tag-eintrag").forEach(bindeEintragDrag);
+  rendereNahrGesamt(alleRezeptIdsImMonat(), "Nährwerte dieses Monats");
+  rendereTcmGesamt(alleRezeptIdsImMonat(), "🌿 5 Elemente dieses Monats");
+  aktualisiereEinkaufButton();
+}
+
+/* Rendert je nach Ansicht die Wochen- oder Monatsansicht inkl. Navigation,
+ * Ansichts-Umschalter und Speichern-Button-Beschriftung. */
+function rendereAnsicht() {
+  var monat = ansicht === "monat";
+  document.getElementById("btnAnsichtWoche").classList.toggle("aktiv", !monat);
+  document.getElementById("btnAnsichtMonat").classList.toggle("aktiv", monat);
+  var zurueck = document.getElementById("btnKwZurueck");
+  var vor = document.getElementById("btnKwVor");
+  var heute = document.getElementById("btnKwHeute");
+  zurueck.textContent = tr(monat ? "← Monat" : "← Vorherige");
+  zurueck.title = tr(monat ? "Vorheriger Monat" : "Vorherige Woche");
+  vor.textContent = tr(monat ? "Monat →" : "Nächste →");
+  vor.title = tr(monat ? "Nächster Monat" : "Nächste Woche");
+  heute.textContent = tr("Heute");
+  heute.title = tr(monat ? "Zum aktuellen Monat springen" : "Zur aktuellen Woche springen");
+  heute.disabled = monat ? monatOffset === 0 : kwOffset === 0;
+  aktualisiereSpeichernButton();
+  aktualisiereOeffnenButton();
+  aktualisiereHtmlExportButton();
+  if (monat) {
+    rendereMonatTitel();
+    rendereMonatTage();
+  } else {
+    rendereKwTitel();
+    rendereTage();
+  }
+  merkePosition();
+}
+
+/* Angezeigte Position abspeichern - ABSOLUT (Datum) statt als Offset, denn
+ * "0 = aktueller Monat" verschiebt sich: Ein gemerkter September darf auch
+ * dann noch September zeigen, wenn die App im Oktober geöffnet wird. */
+function merkePosition() {
+  try {
+    var d = ansicht === "monat" ? aktuellerMonatsErster() : aktuellerMontag();
+    localStorage.setItem(POSITION_KEY, JSON.stringify({
+      a: ansicht,
+      p: d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()
+    }));
+  } catch (e) { /* ohne Storage nur für diese Sitzung */ }
+}
+
+/* Gemerkte Position in die heutigen Offsets zurückrechnen. Kaputte oder
+ * absurd weit entfernte Einträge werden still ignoriert. */
+function stellePositionWiederHer() {
+  try {
+    var pos = JSON.parse(localStorage.getItem(POSITION_KEY));
+    if (!pos || pos.a !== ansicht || typeof pos.p !== "string") return;
+    var t = pos.p.split("-");
+    if (t.length !== 3) return;
+    var y = parseInt(t[0], 10), mo = parseInt(t[1], 10) - 1, tag = parseInt(t[2], 10);
+    var d = new Date(y, mo, tag);
+    if (d.getFullYear() !== y || d.getMonth() !== mo || d.getDate() !== tag) return;
+    if (ansicht === "monat") {
+      var mOff = (d.getFullYear() * 12 + d.getMonth()) -
+        (new Date().getFullYear() * 12 + new Date().getMonth());
+      if (Math.abs(mOff) <= 1200) monatOffset = mOff;
+    } else {
+      var zMontag = montagDerWoche(d), heuteM = montagDerWoche(new Date());
+      var kwOff = Math.round((zMontag - heuteM) / (7 * 86400000));
+      if (Math.abs(kwOff) <= 5200) kwOffset = kwOff;
+    }
+  } catch (e) { /* kaputter Eintrag -> Standardposition */ }
+}
+
+/* Wechselt zwischen Wochen- und Monatsansicht und übernimmt dabei die
+ * aktuelle Position: Woche -> Monat zeigt den Monat der Woche, Monat ->
+ * Woche die erste Woche des Monats. */
+function wechsleAnsicht(ziel) {
+  if (ziel === ansicht) return;
+  if (ziel === "monat") {
+    var montag = aktuellerMontag();
+    monatOffset = (montag.getFullYear() * 12 + montag.getMonth()) -
+      (new Date().getFullYear() * 12 + new Date().getMonth());
+  } else {
+    var erster = aktuellerMonatsErster();
+    var zielMontag = montagDerWoche(erster);
+    var heuteMontag = montagDerWoche(new Date());
+    kwOffset = Math.round((zielMontag - heuteMontag) / (7 * 86400000));
+  }
+  ansicht = ziel;
+  try { localStorage.setItem(ANSICHT_KEY, ziel); } catch (e) { /* ohne Storage nur für diese Sitzung */ }
+  rendereAnsicht();
+}
+
+function heuteIstTag(datum) {
+  var heute = new Date();
+  return datum.getFullYear() === heute.getFullYear() &&
+    datum.getMonth() === heute.getMonth() &&
+    datum.getDate() === heute.getDate();
+}
+
+function rendereTage() {
+  var montag = aktuellerMontag();
+  var stand = aktuellerPlan();
+  var wrap = document.getElementById("planTage");
+  wrap.className = "plan-tage";
+  wrap.innerHTML = "";
+
+  TAGE.forEach(function (t, i) {
+    var datum = new Date(montag);
+    datum.setDate(datum.getDate() + i);
+
+    var col = document.createElement("div");
+    col.className = "tag" + (heuteIstTag(datum) ? " heute" : "");
+    col.innerHTML =
+      '<div class="tag-kopf"><span class="tag-name">' + tr(t.name) + '</span>' +
+      '<span class="tag-datum">' + formatiereDatum(datum) + '</span></div>' +
+      '<ul class="tag-eintraege" data-key="' + stand.key + '" data-tag="' + t.key + '"></ul>';
+    wrap.appendChild(col);
+
+    var ul = col.querySelector(".tag-eintraege");
+    var eintraege = stand.plan[t.key] || [];
+    if (!eintraege.length) {
+      ul.innerHTML = '<li class="tag-leer">' + tr("Rezept hierher ziehen") + '</li>';
+    } else {
+      eintraege.forEach(function (rezeptId, idx) {
+        var r = DB.find(function (x) { return x.id === rezeptId; });
+        var li = document.createElement("li");
+        li.className = "tag-eintrag" + (r && !rezeptHatNahr(r) ? " ohne-nahr" : "");
+        li.draggable = true;
+        li.dataset.key = stand.key;
+        li.dataset.tag = t.key;
+        li.dataset.index = idx;
+        li.innerHTML = '<span class="name">' + escapeHtml(r ? r.name : tr("(gelöschtes Rezept)")) + "</span>" +
+          '<button title="' + tr("Entfernen") + '" data-key="' + stand.key +
+          '" data-tag="' + t.key + '" data-index="' + idx + '">✕</button>';
+        ul.appendChild(li);
+      });
+      col.appendChild(macheTagesNahr(nahrSummeFuer(eintraege)));
+    }
+
+    bindeTagDrop(ul, { key: stand.key, tag: t.key });
+  });
+
+  wrap.querySelectorAll(".tag-eintrag").forEach(bindeEintragDrag);
+  wrap.querySelectorAll(".tag-eintrag button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      entferneEintrag({ key: btn.dataset.key, tag: btn.dataset.tag }, parseInt(btn.dataset.index, 10));
+    });
+  });
+
+  rendereNahrGesamt(alleRezeptIdsDerWoche(), "Nährwerte dieser Woche");
+  rendereTcmGesamt(alleRezeptIdsDerWoche(), "🌿 5 Elemente dieser Woche");
+  aktualisiereEinkaufButton();
+}
+
+/* Sammelt alle Rezept-IDs eines Datumsbereichs über alle Tage hinweg, in
+ * chronologischer Reihenfolge. Ein Rezept, das mehrfach eingeplant ist,
+ * taucht entsprechend mehrfach in der Liste auf. */
+function alleRezeptIdsImZeitraum(erster, letzter) {
+  var ids = [];
+  for (var d = new Date(erster); d <= letzter; d.setDate(d.getDate() + 1)) {
+    ids.push.apply(ids, planEintraege(tagesSchluessel(d)));
+  }
+  return ids;
+}
+
+function alleRezeptIdsDerWoche() {
+  var montag = aktuellerMontag();
+  var sonntag = new Date(montag);
+  sonntag.setDate(sonntag.getDate() + 6);
+  return alleRezeptIdsImZeitraum(montag, sonntag);
+}
+
+function alleRezeptIdsImMonat() {
+  return alleRezeptIdsImZeitraum(aktuellerMonatsErster(), aktuellerMonatsLetzter());
+}
+
+function aktualisiereEinkaufButton() {
+  var monat = ansicht === "monat";
+  var anzahl = monat ? alleRezeptIdsImMonat().length : alleRezeptIdsDerWoche().length;
+  var btn = document.getElementById("btnEinkaufErzeugen");
+  btn.disabled = anzahl === 0;
+  btn.textContent = anzahl
+    ? trPlural(anzahl,
+        monat
+          ? "🛒 Einkaufsliste für diesen Monat erzeugen ({anzahl} Rezept)"
+          : "🛒 Einkaufsliste für diese Woche erzeugen ({anzahl} Rezept)",
+        monat
+          ? "🛒 Einkaufsliste für diesen Monat erzeugen ({anzahl} Rezepte)"
+          : "🛒 Einkaufsliste für diese Woche erzeugen ({anzahl} Rezepte)")
+    : tr(monat ? "🛒 Einkaufsliste für diesen Monat erzeugen" : "🛒 Einkaufsliste für diese Woche erzeugen");
+}
+
+/* Datumsbereich "10.08. – 16.08.2026": erstes Datum ohne Jahr, letztes mit
+ * Jahr (das Jahr des ersten Datums erscheint nur, wenn es abweicht, z.B.
+ * bei Jahreswechsel). */
+function datumsBereichKurz(erster, letzter) {
+  var ersterText = formatiereDatumKurz(erster);
+  if (erster.getFullYear() !== letzter.getFullYear()) ersterText = datumMitJahr(erster);
+  return ersterText + " – " + datumMitJahr(letzter);
+}
+
+/* Bereichsangabe für die Einkaufslisten-Überschrift, z.B.
+ * "KW 33 · 10.08. – 16.08.2026" bzw. "KW31-KW36 · 01.08. – 31.08.2026". */
+function einkaufZeitraumText() {
+  if (ansicht === "monat") {
+    var erster = aktuellerMonatsErster();
+    var letzter = aktuellerMonatsLetzter();
+    return kwBereichKurz(erster, letzter) + " · " + datumsBereichKurz(erster, letzter);
+  }
+  var montag = aktuellerMontag();
+  var info = isoKw(montag);
+  var sonntag = new Date(montag);
+  sonntag.setDate(sonntag.getDate() + 6);
+  return tr("KW ") + String(info.kw).padStart(2, "0") + " · " + datumsBereichKurz(montag, sonntag);
+}
+
+function erzeugeEinkaufsliste() {
+  var ids = ansicht === "monat" ? alleRezeptIdsImMonat() : alleRezeptIdsDerWoche();
+  if (!ids.length) return;
+  var thema = document.documentElement.getAttribute("data-theme") || "hell";
+  var url = "rezepte.html?plan=" + encodeURIComponent(ids.join(",")) +
+    "&ekZeitraum=" + encodeURIComponent(einkaufZeitraumText()) +
+    "&theme=" + thema + "&lang=" + sprache;
+  erlaubeNavigation();
+  location.href = url;
+}
+
+function entferneEintrag(schluessel, index) {
+  if (!plaene[schluessel.key]) return;
+  var liste = plaene[schluessel.key][schluessel.tag] || [];
+  liste.splice(index, 1);
+  if (!liste.length) delete plaene[schluessel.key][schluessel.tag];
+  speichernPlaene();
+  rendereAnsicht();
+}
+
+function fuegeEintragHinzu(schluessel, rezeptId) {
+  if (!plaene[schluessel.key]) plaene[schluessel.key] = {};
+  if (!plaene[schluessel.key][schluessel.tag]) plaene[schluessel.key][schluessel.tag] = [];
+  plaene[schluessel.key][schluessel.tag].push(rezeptId);
+  speichernPlaene();
+  rendereAnsicht();
+}
+
+function verschiebeEintrag(vonSchluessel, vonIndex, nachSchluessel) {
+  var quelle = (plaene[vonSchluessel.key] || {})[vonSchluessel.tag] || [];
+  var rezeptId = quelle[vonIndex];
+  if (rezeptId == null) return;
+  quelle.splice(vonIndex, 1);
+  if (plaene[vonSchluessel.key] && !quelle.length) delete plaene[vonSchluessel.key][vonSchluessel.tag];
+  if (!plaene[nachSchluessel.key]) plaene[nachSchluessel.key] = {};
+  if (!plaene[nachSchluessel.key][nachSchluessel.tag]) plaene[nachSchluessel.key][nachSchluessel.tag] = [];
+  plaene[nachSchluessel.key][nachSchluessel.tag].push(rezeptId);
+  speichernPlaene();
+  rendereAnsicht();
+}
+
+/* ---------------------------------------------------------------
+ * Einkaufsliste für die Woche erzeugen
+ * --------------------------------------------------------------- */
+
+/* Skaliert eine einzelne Mengenangabe mit einem Faktor (gleiche Logik wie
+ * in rezepte.html für die Portionen-Umrechnung), hier genutzt um Zutaten
+ * bei mehrfach eingeplanten Rezepten hochzurechnen ("2x Donauwellen" ->
+ * doppelte Menge je Zutat). */
+function skaliereMenge(m, faktor) {
+  var s = String(m == null ? "" : m).trim();
+  if (!s || faktor === 1) return s;
+
+  var bereichM = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)(\s.*)?$/);
+  if (bereichM) {
+    var a = formatiereZahl(parseFloat(bereichM[1].replace(",", ".")) * faktor);
+    var b = formatiereZahl(parseFloat(bereichM[2].replace(",", ".")) * faktor);
+    return a + "-" + b + (bereichM[3] || "");
+  }
+
+  var numM = s.match(/^(\d+(?:[.,]\d+)?)(?:\s*\/\s*(\d+))?(\s.*)?$/);
+  if (!numM) return s;
+  var num = numM[2] != null
+    ? parseFloat(numM[1].replace(",", ".")) / parseFloat(numM[2])
+    : parseFloat(numM[1].replace(",", "."));
+  if (isNaN(num)) return s;
+  var rest = numM[3] || "";
+  return formatiereZahl(num * faktor) + rest;
+}
+function formatiereZahl(n) {
+  return formatiereZahlLocale(n);
+}
+
+/* ---------------------------------------------------------------
+ * Nährwerte-Summen (pro Tag, Woche, Monat)
+ * --------------------------------------------------------------- */
+/* "Gesamt der geplanten Rezepte": Die Summen entstehen aus den gespeicherten
+ * Nährwerten jedes eingeplanten Rezepts - wie in der Einkaufsliste zählen
+ * Mehrfach-Planungen desselben Rezepts entsprechend mehrfach. */
+var NAHR_FELDER = [
+  { key: "kcal", label: "Kalorien", einheit: "kcal" },
+  { key: "kohlenhydrate", label: "Kohlenhydrate", einheit: "g" },
+  { key: "eiweiss", label: "Eiweiß", einheit: "g" },
+  { key: "ballaststoffe", label: "Ballaststoffe", einheit: "g" },
+  { key: "fette", label: "Fette", einheit: "g" }
+];
+
+/* Umschalter Gesamt <-> Pro Portion: Die gespeicherten Nährwerte sind
+ * Pro-Portion-Werte. "Gesamt" rechnet jede Planung als ganzes Rezept
+ * (Wert × Portionszahl – wie in der Einkaufsliste zählt eine Mehrfach-
+ * Planung mehrfach), "Pro Portion" zählt je Planung genau 1 Portion
+ * (Wert × 1). Die Auswahl bleibt gespeichert. */
+var NAHR_PORTION_KEY = "plan_nahr_pro_portion_v1";
+var nahrProPortion = false;
+try { nahrProPortion = localStorage.getItem(NAHR_PORTION_KEY) === "1"; } catch (e) { /* ignorieren */ }
+
+/* Beschriftung des aktuellen Modus (Untertitel der Box, Tooltips, Export). */
+function nahrModusText() {
+  return nahrProPortion
+    ? tr("Pro Portion – je 1 Portion pro geplantem Rezept")
+    : tr("Gesamt der geplanten Rezepte");
+}
+
+/* Faktor für die Nährwerte eines Rezepts im aktuellen Modus
+ * (gespeicherte Werte gelten je 1 Portion). */
+function nahrFaktor(r) {
+  return nahrProPortion ? 1 : (r.portionen || 1);
+}
+
+/* true, sobald ein Rezept irgendeinen Nährwert hinterlegt hat. */
+function rezeptHatNahr(r) {
+  if (!r || !r.nahrwerte) return false;
+  return NAHR_FELDER.some(function (f) { return typeof r.nahrwerte[f.key] === "number"; });
+}
+
+/* Summiert die Nährwerte aller übergebenen Rezept-IDs. liefert die fünf
+ * Nährwert-Summen plus fehlend = Anzahl vorhandener Rezepte ohne jede Angabe
+ * (gelöschte Rezepte werden ganz übersprungen). */
+function nahrSummeFuer(rezeptIds) {
+  var s = { kcal: 0, kohlenhydrate: 0, eiweiss: 0, ballaststoffe: 0, fette: 0, fehlend: 0 };
+  rezeptIds.forEach(function (rid) {
+    var r = DB.find(function (x) { return x.id === rid; });
+    if (!r) return;
+    if (!rezeptHatNahr(r)) { s.fehlend++; return; }
+    NAHR_FELDER.forEach(function (f) {
+      if (typeof r.nahrwerte[f.key] === "number") s[f.key] += r.nahrwerte[f.key] * nahrFaktor(r);
+    });
+  });
+  return s;
+}
+
+function formatiereNahrWert(wert, runden) {
+  return formatiereZahl(runden ? Math.round(wert) : Math.round(wert * 10) / 10);
+}
+
+function nahrFehlendText(anzahl) {
+  return trPlural(anzahl, "{anzahl} Rezept ohne Nährwerte", "{anzahl} Rezepte ohne Nährwerte");
+}
+
+/* Kleine kcal-Zeile für eine Tages-Spalte. */
+function macheTagesNahr(summe) {
+  var div = document.createElement("div");
+  div.innerHTML = '<div class="tag-nahr" title="' + escapeHtml(nahrModusText()) + '">' +
+    formatiereNahrWert(summe.kcal, true) + " kcal" +
+    (summe.fehlend > 0
+      ? '<span class="tag-nahr-fehlend" title="' + escapeHtml(nahrFehlendText(summe.fehlend)) + '">⚠</span>'
+      : "") +
+    "</div>";
+  return div.firstElementChild;
+}
+
+/* Kleine kcal-Zeile für eine Tages-Spalte als HTML-String (Export). */
+function tagesNahrHtml(summe) {
+  return '<div class="tag-nahr" title="' + escapeHtml(nahrModusText()) + '">' +
+    formatiereNahrWert(summe.kcal, true) + " kcal" +
+    (summe.fehlend > 0
+      ? '<span class="tag-nahr-fehlend" title="' + escapeHtml(nahrFehlendText(summe.fehlend)) + '">⚠</span>'
+      : "") +
+    "</div>";
+}
+
+/* Übersichts-Box (Woche/Monat) mit allen fünf Nährwerten. Der Umschalter
+ * ist rein interaktiv und entfällt im Export (mitSchalter = false). */
+function gesamtNahrInnerHtml(titelKey, summe, mitSchalter) {
+  var html = '<div class="plan-nahr-titel"><h3>' + escapeHtml(tr(titelKey)) + "</h3>" +
+    "<p>" + escapeHtml(nahrModusText()) + "</p>" +
+    (mitSchalter === false ? "" :
+    '<span class="plan-nahr-schalter">' + escapeHtml(tr("Pro Portion")) +
+      '<label class="switch"><input class="cb" type="checkbox" id="nahrProPortionSchalter"' +
+        (nahrProPortion ? " checked" : "") + ">" +
+        '<span class="toggle"><span class="left">' + escapeHtml(tr("Aus")) + "</span>" +
+        '<span class="right">' + escapeHtml(tr("Ein")) + "</span></span></label></span>") +
+    "</div>" +
+    '<div class="plan-nahr-werte">' +
+    NAHR_FELDER.map(function (f) {
+      return '<div class="nahr-karte"><strong>' +
+        formatiereNahrWert(summe[f.key], f.key === "kcal") +
+        "</strong><span>" + escapeHtml(tr(f.label)) + " · " + f.einheit + "</span></div>";
+    }).join("") +
+    "</div>";
+  if (summe.fehlend > 0) {
+    html += '<div class="plan-nahr-hinweis">⚠ ' + escapeHtml(nahrFehlendText(summe.fehlend)) + "</div>";
+  }
+  return html;
+}
+
+/* Hängt die Übersichts-Box unter das Planraster (Woche oder Monat). */
+function rendereNahrGesamt(ids, titelKey) {
+  var alt = document.getElementById("planNahrGesamt");
+  if (alt) alt.parentNode.removeChild(alt);
+  var box = document.createElement("div");
+  box.id = "planNahrGesamt";
+  box.className = "plan-nahr";
+  box.innerHTML = gesamtNahrInnerHtml(titelKey, nahrSummeFuer(ids));
+  var schalter = box.querySelector("#nahrProPortionSchalter");
+  if (schalter) {
+    schalter.addEventListener("change", function () {
+      nahrProPortion = schalter.checked;
+      try { localStorage.setItem(NAHR_PORTION_KEY, nahrProPortion ? "1" : "0"); } catch (e) { /* ignorieren */ }
+      rendereAnsicht();   /* Tages-Zeilen, Box und Balance neu aufbauen */
+    });
+  }
+  var ziel = document.getElementById("planTage");
+  ziel.parentNode.insertBefore(box, ziel.nextSibling);
+}
+
+/* ---------------------------------------------------------------
+ * 🌿 5 Elemente – Balance der geplanten Woche / des Monats
+ * Liest dieselbe Datendatei assets/zutaten-tcm.js wie rezepte.html
+ * und fasst alle eingeplanten Rezepte zusammen.
+ * --------------------------------------------------------------- */
+var TCM_AUF_KEY = "tcm_bereich_offen_v1";   /* gleiche Voreinstellung wie in rezepte.html */
+/* Anzeige-Zuordnung: Slug (aus ZUTATEN_TCM) -> [deutscher Schlüssel, Punkfarbe]. */
+var TCM_ANZEIGE = {
+  element: {
+    holz:   ["Holz",   "#5ba83b"],
+    feuer:  ["Feuer",  "#d9534f"],
+    erde:   ["Erde",   "#c9a227"],
+    metall: ["Metall", "#8fa0ad"],
+    wasser: ["Wasser", "#3f7fb0"]
+  },
+  geschmack: {
+    sauer:  ["sauer"],
+    bitter: ["bitter"],
+    suess:  ["süß"],
+    scharf: ["scharf"],
+    salzig: ["salzig"]
+  },
+  thermik: {
+    heiss:   ["heiß",   "#d9534f"],
+    warm:    ["warm",   "#e89a3d"],
+    neutral: ["neutral","#b3a48d"],
+    kuehl:   ["kühl",   "#5ba8d9"],
+    kalt:    ["kalt",   "#3f7fb0"]
+  }
+};
+
+function tcmNorm(s) {
+  return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/* Normalisierter Index (tcmNorm(Schlüssel) -> Eintrag); eigene Änderungen aus
+ * dem Pflege-Modul (localStorage "zutaten_tcm_v1") haben Vorrang. */
+var tcmIndex = null;
+function tcmLookupTabelle() {
+  if (tcmIndex) return tcmIndex;
+  tcmIndex = {};
+  if (typeof ZUTATEN_TCM === "undefined") return tcmIndex;
+  Object.keys(ZUTATEN_TCM).forEach(function (k) {
+    var e = ZUTATEN_TCM[k];
+    tcmIndex[tcmNorm(k)] = e;
+    /* Namens-Varianten ("namen": weitere Sprachen) mit aufnehmen */
+    ((e && e.namen) || []).forEach(function (v) {
+      var nv = tcmNorm(v);
+      if (nv && !tcmIndex[nv]) tcmIndex[nv] = e;
+    });
+  });
+  try {
+    var overlay = JSON.parse(localStorage.getItem("zutaten_tcm_v1") || "{}");
+    Object.keys(overlay).forEach(function (k) {
+      tcmIndex[tcmNorm(k)] = overlay[k];
+    });
+  } catch (e) { /* ignorieren */ }
+  return tcmIndex;
+}
+
+/* Findet den TCM-Eintrag einer Zutat: erst exakt (normalisiert), dann ohne
+ * Klammer-Zusätze wie "(à 150 g)" bzw. ohne abschließendes ", …". */
+function tcmZuZutat(name) {
+  var index = tcmLookupTabelle();
+  var n = tcmNorm(name);
+  if (index[n]) return index[n];
+  var basis = n.replace(/\s*\([^)]*\)\s*/g, " ").replace(/,\s*$/, "").replace(/\s+/g, " ").trim();
+  if (basis && index[basis]) return index[basis];
+  return null;
+}
+
+/* Aggregiert die Zutaten aller geplanten Rezepte: Häufigkeit je Wert plus
+ * Trefferquote; Rezepte ganz ohne Zuordnung werden gesondert gezählt. */
+function tcmAggregatFuerIds(ids) {
+  var agg = { element: {}, geschmack: {}, thermik: {}, treffer: 0, gesamt: 0, ohne: 0 };
+  ids.forEach(function (rid) {
+    var r = DB.find(function (x) { return x.id === rid; });
+    if (!r) return;
+    var hatTreffer = false;
+    (r.zutaten || []).forEach(function (z) {
+      agg.gesamt++;
+      var e = tcmZuZutat(z.name);
+      if (!e) return;
+      agg.treffer++;
+      hatTreffer = true;
+      if (e.element) agg.element[e.element] = (agg.element[e.element] || 0) + 1;
+      (e.geschmack || []).forEach(function (g) {
+        agg.geschmack[g] = (agg.geschmack[g] || 0) + 1;
+      });
+      if (e.thermik) agg.thermik[e.thermik] = (agg.thermik[e.thermik] || 0) + 1;
+    });
+    if (!hatTreffer) agg.ohne++;
+  });
+  return agg;
+}
+
+/* Eine Zeile der Balance-Box: Chips nach Häufigkeit sortiert. */
+function tcmBalanceZeile(typ, zaehler) {
+  var schluesel = Object.keys(zaehler).sort(function (a, b) { return zaehler[b] - zaehler[a]; });
+  if (!schluesel.length) return "";
+  var m = TCM_ANZEIGE[typ] || {};
+  var label = tr(typ === "element" ? "Elemente:" : typ === "geschmack" ? "Geschmack:" : "Thermik:");
+  var chips = schluesel.map(function (s) {
+    var e = m[s] || [s];
+    var dot = e[1] ? '<span class="tcm-dot" style="background:' + e[1] + '"></span>' : "";
+    return '<span class="tcm-chip">' + dot + escapeHtml(tr(e[0])) + " <strong>×" + zaehler[s] + "</strong></span>";
+  }).join("");
+  return '<div class="tcm-zeile"><span class="tcm-label">' + escapeHtml(label) +
+    '</span><span class="tcm-chips">' + chips + "</span></div>";
+}
+
+/* Inhalt der Balance-Box (ohne Aufklapper) – für Bildschirm und HTML-Export. */
+function tcmBalanceInhaltHtml(ids) {
+  var agg = tcmAggregatFuerIds(ids);
+  var zeilen = tcmBalanceZeile("element", agg.element) +
+    tcmBalanceZeile("geschmack", agg.geschmack) +
+    tcmBalanceZeile("thermik", agg.thermik);
+  var fuss = tr("Abgeleitet aus {treffer} von {gesamt} Zutaten.", { treffer: agg.treffer, gesamt: agg.gesamt });
+  if (agg.ohne > 0) fuss += " · ⚠ " + trPlural(agg.ohne, "{anzahl} Rezept ohne Zuordnung", "{anzahl} Rezepte ohne Zuordnung");
+  return '<p class="plan-tcm-hinweis">' +
+      escapeHtml(tr("Abgeleitet aus den Rezeptzutaten – ohne Therapie-Anspruch, nur zur Orientierung.")) +
+    "</p>" +
+    (zeilen ? '<div class="plan-tcm-zeilen">' + zeilen + "</div>" : "") +
+    '<div class="plan-tcm-fuss">' + escapeHtml(fuss) + "</div>";
+}
+
+/* Hängt die aufklappbare Balance-Box unter die Nährwert-Box. */
+function rendereTcmGesamt(ids, titelKey) {
+  var alt = document.getElementById("planTcmGesamt");
+  if (alt) alt.parentNode.removeChild(alt);
+  var offen = false;
+  try { offen = localStorage.getItem(TCM_AUF_KEY) === "1"; } catch (e) { /* ignorieren */ }
+  var det = document.createElement("details");
+  det.id = "planTcmGesamt";
+  det.className = "plan-tcm";
+  if (offen) det.open = true;
+  det.innerHTML = "<summary>" + escapeHtml(tr(titelKey)) + "</summary>" + tcmBalanceInhaltHtml(ids);
+  var ziel = document.getElementById("planNahrGesamt") || document.getElementById("planTage");
+  ziel.parentNode.insertBefore(det, ziel.nextSibling);
+}
+
+/* Merkt sich den Aufklapp-Zustand dauerhaft ("toggle" bubblt nicht -> Capture). */
+document.addEventListener("toggle", function (e) {
+  var t = e.target;
+  if (t && t.id === "planTcmGesamt") {
+    try { localStorage.setItem(TCM_AUF_KEY, t.open ? "1" : "0"); } catch (err) { /* ignorieren */ }
+  }
+}, true);
+
+/* ---------------------------------------------------------------
+ * Rezeptliste (Quelle für Drag & Drop)
+ * --------------------------------------------------------------- */
+function slugNorm(s) {
+  return String(s == null ? "" : s).toLowerCase()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+}
+
+function kategorien() {
+  var set = [];
+  DB.forEach(function (r) {
+    var k = r.kategorie || "Ohne Kategorie";
+    if (set.indexOf(k) === -1) set.push(k);
+  });
+  return set.sort();
+}
+
+function rendereQuellListe() {
+  var ul = document.getElementById("quellListe");
+  var suche = slugNorm(suchtext);
+  var liste = DB.filter(function (r) {
+    if (filterKat && (r.kategorie || "Ohne Kategorie") !== filterKat) return false;
+    if (!suche) return true;
+    return slugNorm(r.name).indexOf(suche) !== -1;
+  }).sort(function (a, b) { return a.name.localeCompare(b.name, sprachTag()); });
+
+  ul.innerHTML = "";
+  if (!liste.length) {
+    ul.innerHTML = '<li class="leer">' + tr("Kein Rezept gefunden.") + '</li>';
+    return;
+  }
+  liste.forEach(function (r) {
+    var li = document.createElement("li");
+    li.draggable = true;
+    li.dataset.id = r.id;
+    li.innerHTML = escapeHtml(r.name) + "<small>" + escapeHtml(r.kategorie || tr("Ohne Kategorie")) + "</small>";
+    li.addEventListener("dragstart", function (ev) {
+      dragQuelle = { rezeptId: r.id };
+      li.classList.add("dragging");
+      ev.dataTransfer.effectAllowed = "copy";
+    });
+    li.addEventListener("dragend", function () {
+      li.classList.remove("dragging");
+      dragQuelle = null;
+    });
+    ul.appendChild(li);
+  });
+}
+
+/* ---------------------------------------------------------------
+ * Drag & Drop
+ * --------------------------------------------------------------- */
+function bindeEintragDrag(li) {
+  li.addEventListener("dragstart", function (ev) {
+    dragEintrag = { key: li.dataset.key, tag: li.dataset.tag, index: parseInt(li.dataset.index, 10) };
+    li.classList.add("dragging");
+    ev.dataTransfer.effectAllowed = "move";
+  });
+  li.addEventListener("dragend", function () {
+    li.classList.remove("dragging");
+    dragEintrag = null;
+  });
+}
+
+function bindeTagDrop(ul, schluessel) {
+  ul.addEventListener("dragover", function (ev) {
+    if (!dragQuelle && !dragEintrag) return;
+    ev.preventDefault();
+    ul.classList.add("drag-ueber");
+  });
+  ul.addEventListener("dragleave", function () {
+    ul.classList.remove("drag-ueber");
+  });
+  ul.addEventListener("drop", function (ev) {
+    ev.preventDefault();
+    ul.classList.remove("drag-ueber");
+    if (dragQuelle) {
+      fuegeEintragHinzu(schluessel, dragQuelle.rezeptId);
+      dragQuelle = null;
+    } else if (dragEintrag) {
+      verschiebeEintrag({ key: dragEintrag.key, tag: dragEintrag.tag }, dragEintrag.index, schluessel);
+      dragEintrag = null;
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+ * Hell-/Dunkelmodus
+ * --------------------------------------------------------------- */
+function anfangsThema() {
+  var urlThema = new URLSearchParams(location.search).get("theme");
+  if (urlThema === "dunkel" || urlThema === "hell") return urlThema;
+  try {
+    var gespeichert = localStorage.getItem(THEME_KEY);
+    if (gespeichert === "dunkel" || gespeichert === "hell") return gespeichert;
+  } catch (e) { /* ignorieren */ }
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dunkel";
+  return "hell";
+}
+function setzeThema(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignorieren */ }
+  document.getElementById("btnTheme").textContent = tr(t === "dunkel" ? "☀️" : "🌙");
+  var linkZurueck = document.getElementById("linkZurueck");
+  if (linkZurueck) linkZurueck.href = urlMitSprache("rezepte.html?theme=" + t);
+}
+function toggleThema() {
+  var aktuell = document.documentElement.getAttribute("data-theme") || "hell";
+  setzeThema(aktuell === "dunkel" ? "hell" : "dunkel");
+}
+
+/* ---------------------------------------------------------------
+ * Titel-Spielerei: Überschrift beim Anklicken umschalten
+ * --------------------------------------------------------------- */
+var TITEL_KEY = "rezept_titel_v1";
+var titelVariationen = [
+  "📆 Julia's Wochenplan",
+  "📆 Mein Wochenplan",
+  "📆 Unser Wochenplan"
+];
+function setzeTitel(i) {
+  var h = document.getElementById("titelSammlung");
+  if (!h) return;
+  i = i % titelVariationen.length;
+  if (i < 0) i += titelVariationen.length;
+  h.textContent = "📆 " + tr(titelVariationen[i].replace("📆 ", ""));
+  try { localStorage.setItem(TITEL_KEY, String(i)); } catch (e) { /* ignorieren */ }
+}
+function titelIndex() {
+  try {
+    var v = parseInt(localStorage.getItem(TITEL_KEY), 10);
+    if (v >= 0 && v < titelVariationen.length) return v;
+  } catch (e) { /* ignorieren */ }
+  return 0;
+}
+document.getElementById("titelSammlung").onclick = function () {
+  setzeTitel((titelIndex() + 1) % titelVariationen.length);
+};
+
+/* ---------------------------------------------------------------
+ * Hilfsfunktionen
+ * --------------------------------------------------------------- */
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function zweistellig(n) { return String(n).padStart(2, "0"); }
+
+/* ---------------------------------------------------------------
+ * Datei-Export / -Import (Wochenplan: nur die sichtbare Woche,
+ * Monatsplan: alle Wochen des sichtbaren Monats)
+ * --------------------------------------------------------------- */
+function download(dateiname, inhalt, typ) {
+  var blob = new Blob([inhalt], { type: typ || "text/plain;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = dateiname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+function datumMitJahr(d) {
+  return zweistellig(d.getDate()) + "." + zweistellig(d.getMonth() + 1) + "." + d.getFullYear();
+}
+
+/* "_erstellt-TT.MM.JJJJ_HH-MM-SS"-Anhang für Dateinamen. */
+function erstelltTeil(jetzt) {
+  return "_erstellt-" + datumMitJahr(jetzt) + "_" +
+    zweistellig(jetzt.getHours()) + "-" + zweistellig(jetzt.getMinutes()) + "-" + zweistellig(jetzt.getSeconds());
+}
+
+/* Basis-Dateiname des aktuell sichtbaren Zeitraums ohne _erstellt-Anhang,
+ * z. B. "Wochenplan_KW31_27.07.2026-02.08.2026" oder
+ * "Monatsplan_KW31-KW36_01.08.2026-31.08.2026". */
+function planExportBasis() {
+  if (ansicht === "monat") {
+    var erster = aktuellerMonatsErster();
+    var letzter = aktuellerMonatsLetzter();
+    return "Monatsplan_" + kwBereichKurz(erster, letzter) + "_" +
+      datumMitJahr(erster) + "-" + datumMitJahr(letzter);
+  }
+  var montag = aktuellerMontag();
+  var info = isoKw(montag);
+  var sonntag = new Date(montag);
+  sonntag.setDate(sonntag.getDate() + 6);
+  return "Wochenplan_KW" + String(info.kw).padStart(2, "0") + "_" +
+    datumMitJahr(montag) + "-" + datumMitJahr(sonntag);
+}
+
+function speichereWochenplaeneAlsDatei() {
+  var jetzt = new Date();
+  var dateiname = planExportBasis() + erstelltTeil(jetzt) + ".json";
+  var auszug = {}; /* nur die Wochen des sichtbaren Zeitraums */
+  if (ansicht === "monat") {
+    var erster = aktuellerMonatsErster();
+    var letzter = aktuellerMonatsLetzter();
+    kwBereichFuer(erster, letzter).forEach(function (key) {
+      if (plaene[key]) auszug[key] = plaene[key];
+    });
+  } else {
+    var montag = aktuellerMontag();
+    var key = kwSchluessel(montag);
+    if (plaene[key]) auszug[key] = plaene[key];
+  }
+  download(dateiname, JSON.stringify(auszug, null, 2), "application/json;charset=utf-8");
+  markiereWpExportiert();
+}
+
+function oeffneWochenplaeneAusDatei(datei) {
+  var leser = new FileReader();
+  leser.onload = function () {
+    var eingelesen;
+    try {
+      eingelesen = JSON.parse(leser.result);
+    } catch (e) {
+      alert(tr("Die Datei ist kein gültiges JSON und konnte nicht gelesen werden."));
+      return;
+    }
+    if (!eingelesen || typeof eingelesen !== "object" || Array.isArray(eingelesen)) {
+      alert(tr("Diese Datei enthält keinen gültigen Wochenplan."));
+      return;
+    }
+    var anzahlWochen = Object.keys(eingelesen).length;
+    if (!confirm(trPlural(anzahlWochen,
+      "Diese Datei enthält {anzahl} Woche.\n\nAlle bisher gespeicherten Wochenpläne werden dabei ersetzt. Fortfahren?",
+      "Diese Datei enthält {anzahl} Wochen.\n\nAlle bisher gespeicherten Wochenpläne werden dabei ersetzt. Fortfahren?")))
+      return;
+
+    plaene = eingelesen;
+    speichernPlaene();
+    kwOffset = 0;
+    rendereAnsicht();
+    markiereWpExportiert();
+    alert(trPlural(anzahlWochen, "Wochenplan geladen ({anzahl} Woche).", "Wochenplan geladen ({anzahl} Wochen)."));
+  };
+  leser.onerror = function () {
+    alert(tr("Die Datei konnte nicht gelesen werden."));
+  };
+  leser.readAsText(datei);
+}
+
+/* ---------------------------------------------------------------
+ * Wochen-/Monatsplan als druckfertiges HTML (A4-Querformat)
+ * --------------------------------------------------------------- */
+/* Erzeugen einer kompakten HTML-Übersicht des aktuell sichtbaren Zeitraums,
+ * als Hochglanz-Blatt in A4-Querformat (200 mm × 297 mm). Beim Drucken
+ * sorgt @page size:A4 landscape für die richtige Papierausrichtung. */
+var PLAN_STYLES =
+  "@page{size:A4 landscape;margin:12mm;}" +
+  "html,body{margin:0;padding:0;background:#efe9de;color:#3d3227;" +
+  "font-family:Arial,\"Segoe UI\",sans-serif;font-size:14px;line-height:1.4;}" +
+  ".blatt{width:297mm;min-height:210mm;margin:0 auto;background:#fff;" +
+  "box-sizing:border-box;padding:13mm 15mm;box-shadow:0 4px 18px rgba(0,0,0,.18);}" +
+  ".kopf{border-bottom:3px solid #c9b08f;padding-bottom:10px;margin-bottom:12px;}" +
+  "h1{margin:0;font-size:24px;color:#6d5539;}" +
+  ".kopf p{margin:5px 0 0;color:#8d7a63;font-size:13px;}" +
+  ".kopf-aktionen{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}" +
+  ".kopf-aktionen .btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;" +
+  "border:1px solid #c9b08f;border-radius:6px;background:#fff;color:#6d5539;" +
+  "font:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;}" +
+  ".kopf-aktionen .btn:hover{background:#f1eade;}" +
+  "table{width:100%;border-collapse:collapse;table-layout:fixed;}" +
+  "table th,table td{border:1px solid #e2d8c9;}" +
+  "table.woche th{background:#f1eade;text-align:left;font-size:13px;color:#6d5539;" +
+  "padding:6px 8px;font-weight:700;}" +
+  "table.woche th .tag-datum{display:block;font-weight:400;color:#8d7a63;font-size:11.5px;}" +
+  "table.woche td{padding:7px;height:118px;vertical-align:top;}" +
+  "table.monat th{background:#f1eade;color:#6d5539;font-size:12px;padding:4px 2px;}" +
+  "table.monat td.kw{background:#f1eade;color:#6d5539;font-weight:700;font-size:11px;" +
+  "text-align:center;vertical-align:middle;width:11mm;padding:2px;}" +
+  "table.monat td.tag{vertical-align:top;padding:4px;}" +
+  "table.monat td.tag.fremd{background:#f7f3ea;opacity:.45;}" +
+  "table.monat .tag-nr{font-size:11px;color:#8d7a63;font-weight:700;margin-bottom:2px;}" +
+  ".eintrag{background:#f4efe7;border:1px solid #e2d8c9;border-radius:6px;" +
+  "padding:3px 6px;margin-bottom:4px;font-size:12px;line-height:1.3;}" +
+  "table.monat .eintrag{font-size:10.5px;padding:2px 4px;margin-bottom:3px;}" +
+  ".leer{color:#d3c8b8;font-size:12px;}" +
+  ".tag-nahr{font-size:11px;color:#8d7a63;font-weight:700;margin-top:5px;}" +
+  ".tag-nahr .tag-nahr-fehlend{color:#c62828;}" +
+  "table.monat .tag-nahr{font-size:10px;margin-top:3px;}" +
+  ".plan-nahr{border:1px solid #e2d8c9;border-radius:8px;margin-top:14px;padding:10px 12px;background:#f4efe7;}" +
+  ".plan-nahr-titel h3{margin:0;font-size:15px;color:#6d5539;}" +
+  ".plan-nahr-titel p{margin:3px 0 0;color:#8d7a63;font-size:11.5px;}" +
+  ".plan-nahr-werte{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}" +
+  ".nahr-karte{background:#fff;border:1px solid #e2d8c9;border-radius:6px;padding:5px 10px;min-width:100px;text-align:center;}" +
+  ".nahr-karte strong{display:block;font-size:15px;color:#3d3227;}" +
+  ".nahr-karte span{font-size:10.5px;color:#8d7a63;}" +
+  ".plan-nahr-hinweis{margin-top:8px;color:#c62828;font-size:11.5px;}" +
+  ".plan-tcm{border:1px solid #e2d8c9;border-radius:8px;margin-top:14px;padding:10px 12px;background:#f4efe7;}" +
+  ".plan-tcm h3{margin:0;font-size:15px;color:#6d5539;}" +
+  ".plan-tcm-hinweis{margin:3px 0 0;color:#8d7a63;font-size:11.5px;}" +
+  ".plan-tcm-zeilen{margin-top:8px;}" +
+  ".tcm-zeile{display:flex;gap:8px;align-items:baseline;margin:4px 0;flex-wrap:wrap;}" +
+  ".tcm-label{font-size:12px;color:#8d7a63;min-width:90px;}" +
+  ".tcm-chips{display:flex;gap:6px;flex-wrap:wrap;}" +
+  ".tcm-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e2d8c9;border-radius:999px;padding:2px 9px;font-size:12px;}" +
+  ".tcm-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}" +
+  ".plan-tcm-fuss{margin-top:8px;color:#8d7a63;font-size:11.5px;}" +
+  ".fuss{margin-top:16px;color:#b3a48d;font-size:12px;text-align:center;}" +
+  "@media print{body{background:#fff;}.blatt{box-shadow:none;width:auto;min-height:auto;margin:0;padding:0;}.kopf-aktionen{display:none;}}";
+
+/* Name eines eingeplanten Rezepts bzw. Platzhalter für gelöschte. */
+function rezeptNameFuer(id) {
+  var r = DB.find(function (x) { return x.id === id; });
+  return r ? r.name : tr("(gelöschtes Rezept)");
+}
+
+/* Wochenraster (Mo-So) als HTML-Tabelle. */
+function planWocheHtml() {
+  var montag = aktuellerMontag();
+  var zellen = TAGE.map(function (t, i) {
+    var datum = new Date(montag);
+    datum.setDate(datum.getDate() + i);
+    var eintraege = planEintraege(tagesSchluessel(datum));
+    return '<th>' + escapeHtml(tr(t.name)) + '<span class="tag-datum">' +
+      escapeHtml(datumMitJahr(datum)) + "</span></th>";
+  }).join("");
+  var zellenInhalt = TAGE.map(function (t, i) {
+    var datum = new Date(montag);
+    datum.setDate(datum.getDate() + i);
+    var eintraege = planEintraege(tagesSchluessel(datum));
+    return "<td>" + (eintraege.length
+      ? eintraege.map(function (rid) {
+        return '<div class="eintrag">' + escapeHtml(rezeptNameFuer(rid)) + "</div>";
+      }).join("") + tagesNahrHtml(nahrSummeFuer(eintraege))
+      : '<span class="leer">–</span>') + "</td>";
+  }).join("");
+  return '<table class="woche"><thead><tr>' + zellen + "</tr></thead><tbody><tr>" +
+    zellenInhalt + "</tr></tbody></table>";
+}
+
+/* Monatsraster (KW-Spalte + Mo-So) als HTML-Tabelle. */
+function planMonatHtml() {
+  var erster = aktuellerMonatsErster();
+  var letzter = aktuellerMonatsLetzter();
+  var kopf = "<tr><th></th>" + TAGE.map(function (t, i) {
+    return "<th>" + escapeHtml(kurzerWochentag(i)) + "</th>";
+  }).join("") + "</tr>";
+
+  var zeilen = "";
+  var letzterMontag = montagDerWoche(letzter);
+  for (var wochentag = new Date(montagDerWoche(erster)); wochentag <= letzterMontag; wochentag.setDate(wochentag.getDate() + 7)) {
+    var info = isoKw(wochentag);
+    zeilen += '<tr><td class="kw">KW' + String(info.kw).padStart(2, "0") + "</td>";
+    for (var tagIdx = 0; tagIdx < 7; tagIdx++) {
+      var d = new Date(wochentag);
+      d.setDate(d.getDate() + tagIdx);
+      var imMonat = d.getFullYear() === erster.getFullYear() && d.getMonth() === erster.getMonth();
+      var eintraege = imMonat ? planEintraege(tagesSchluessel(d)) : [];
+      zeilen += '<td class="tag' + (imMonat ? "" : " fremd") + '">' +
+        '<div class="tag-nr">' + d.getDate() + "</div>" +
+        (eintraege.length
+          ? eintraege.map(function (rid) {
+            return '<div class="eintrag">' + escapeHtml(rezeptNameFuer(rid)) + "</div>";
+          }).join("") + tagesNahrHtml(nahrSummeFuer(eintraege))
+          : "") +
+        "</td>";
+    }
+    zeilen += "</tr>";
+  }
+  return '<table class="monat"><thead>' + kopf + "</thead><tbody>" + zeilen + "</tbody></table>";
+}
+
+/* Textfassung des Plans für den mailto:-Body (mailto überträgt nur Klartext,
+ * keine Anhänge und kein HTML-Rendering). */
+function planMailBody(titel) {
+  var monat = ansicht === "monat";
+  var tage = [];
+  if (monat) {
+    for (var d = new Date(aktuellerMonatsErster()); d <= aktuellerMonatsLetzter(); d.setDate(d.getDate() + 1)) {
+      tage.push(new Date(d));
+    }
+  } else {
+    var montag = aktuellerMontag();
+    for (var i = 0; i < 7; i++) {
+      tage.push(new Date(montag.getFullYear(), montag.getMonth(), montag.getDate() + i));
+    }
+  }
+
+  var zeilen = [titel, ""];
+  tage.forEach(function (datum) {
+    var eintraege = planEintraege(tagesSchluessel(datum));
+    if (!eintraege.length) return;
+    zeilen.push(kurzerWochentag((datum.getDay() + 6) % 7) + ", " + datumMitJahr(datum) + ":");
+    eintraege.forEach(function (rid) {
+      var r = DB.find(function (x) { return x.id === rid; });
+      var kcalText = r && r.nahrwerte && typeof r.nahrwerte.kcal === "number"
+        ? formatiereNahrWert(r.nahrwerte.kcal * nahrFaktor(r), true) + " kcal"
+        : tr("keine Nährwerte");
+      zeilen.push("  • " + (r ? r.name : tr("(gelöschtes Rezept)")) + " — " + kcalText);
+    });
+    var summe = nahrSummeFuer(eintraege);
+    zeilen.push("  " + tr("Tages-Summe") + ": " + formatiereNahrWert(summe.kcal, true) + " kcal" +
+      (summe.fehlend > 0 ? " ⚠ " + nahrFehlendText(summe.fehlend) : ""));
+    zeilen.push("");
+  });
+
+  var gesamt = nahrSummeFuer(monat ? alleRezeptIdsImMonat() : alleRezeptIdsDerWoche());
+  zeilen.push("──────────────────────────");
+  zeilen.push((monat ? tr("Nährwerte dieses Monats") : tr("Nährwerte dieser Woche")) +
+    " (" + nahrModusText() + "):");
+  NAHR_FELDER.forEach(function (f) {
+    zeilen.push("  " + tr(f.label) + ": " + formatiereNahrWert(gesamt[f.key], f.key === "kcal") + " " + f.einheit);
+  });
+  if (gesamt.fehlend > 0) zeilen.push("⚠ " + nahrFehlendText(gesamt.fehlend));
+  zeilen.push("");
+  zeilen.push(tr("Sollte der Plan als HTML-Datei vorliegen, kann dieser als Anhang hier beigefügt werden."));
+  return zeilen.join("\n");
+}
+
+/* Exportiert die aktuelle Ansicht (Woche oder Monat) als eigenständige,
+ * druckfertige HTML-Datei im A4-Querformat. */
+function exportierePlanHtml() {
+  var monat = ansicht === "monat";
+  var gesamt = monat ? alleRezeptIdsImMonat().length : alleRezeptIdsDerWoche().length;
+
+  var titel, inhalt;
+  if (monat) {
+    var erster = aktuellerMonatsErster();
+    var monatText = new Intl.DateTimeFormat(sprachTag(), { month: "long", year: "numeric" }).format(erster);
+    titel = tr("📆 Monatsplan") + " – " + monatText;
+    inhalt = planMonatHtml();
+  } else {
+    titel = tr("📆 Wochenplan");
+    inhalt = planWocheHtml();
+  }
+  var hinweis = einkaufZeitraumText();
+  var anzahlText = trPlural(gesamt, "{anzahl} Rezept", "{anzahl} Rezepte");
+  var nahrHtml = gesamtNahrInnerHtml(
+    monat ? "Nährwerte dieses Monats" : "Nährwerte dieser Woche",
+    nahrSummeFuer(monat ? alleRezeptIdsImMonat() : alleRezeptIdsDerWoche()),
+    false);   /* Umschalter gehört nicht in den Export */
+  var tcmTitel = monat ? "🌿 5 Elemente dieses Monats" : "🌿 5 Elemente dieser Woche";
+  var tcmHtml = '<div class="plan-tcm"><h3>' + escapeHtml(tr(tcmTitel)) + "</h3>" +
+    tcmBalanceInhaltHtml(monat ? alleRezeptIdsImMonat() : alleRezeptIdsDerWoche()) + "</div>";
+
+  var jetzt = new Date();
+  var dateiname = planExportBasis() + erstelltTeil(jetzt) + ".html";
+  var emailKopf = titel + " – " + hinweis;
+  var mailHref = "mailto:mail@example.com?subject=" + encodeURIComponent(emailKopf) +
+    "&body=" + encodeURIComponent(planMailBody(emailKopf));
+  var aktionen =
+    '<div class="kopf-aktionen">' +
+    '<a class="btn" href="' + escapeHtml(mailHref) + '" title="' + escapeHtml(tr("Per E-Mail versenden")) + '">📧 ' +
+    escapeHtml(tr("E-Mail")) + "</a>" +
+    '<button class="btn" type="button" onclick="window.print()" title="' + escapeHtml(tr("Drucken")) + '">🖨️ ' +
+    escapeHtml(tr("Drucken")) + "</button>" +
+    "</div>";
+
+  var html =
+    "<!DOCTYPE html>\n<html lang=\"" + sprachTag() + "\">\n<head>\n" +
+    "<meta charset=\"UTF-8\">\n" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+    "<title>" + escapeHtml(titel) + " – " + escapeHtml(hinweis) + "</title>\n" +
+    "<style>" + PLAN_STYLES + "</style>\n</head>\n<body>\n" +
+    '<div class="blatt">\n' +
+    '<div class="kopf">\n<h1>' + escapeHtml(titel) + "</h1>\n" +
+    "<p>" + escapeHtml(hinweis) + " · " + escapeHtml(anzahlText) + "</p>\n</div>\n" +
+    inhalt + "\n" +
+    nahrHtml + "\n" +
+    tcmHtml + "\n" +
+    aktionen + "\n" +
+    '<p class="fuss">Erstellt mit Julia\'s Rezepte-Sammlung</p>\n' +
+    "</div>\n</body>\n</html>";
+
+  download(dateiname, html, "text/html;charset=utf-8");
+}
+
+/* ---------------------------------------------------------------
+ * Start
+ * --------------------------------------------------------------- */
+setzeThema(anfangsThema());
+setzeTitel(titelIndex());
+/* Übernimmt einen Themenwechsel auch bei Rücknavigation (Zurück-Knopf/
+ * bfcache) sowie bei Änderung in anderen Tabs */
+window.addEventListener("pageshow", function () {
+  erlaubteNavigation = false;
+  setzeThema(anfangsThema());
+});
+window.addEventListener("storage", function (ev) {
+  if (ev.key === THEME_KEY) setzeThema(anfangsThema());
+});
+laden();
+/* Gespeicherte Ansicht wiederherstellen: Wer im Monatsplan war, bleibt auch
+ * nach Neuladen oder 🗘-Reset im Monatsplan (Ansichts-Einstellung wie Theme). */
+try {
+  var gemerkteAnsicht = localStorage.getItem(ANSICHT_KEY);
+  if (gemerkteAnsicht === "woche" || gemerkteAnsicht === "monat") ansicht = gemerkteAnsicht;
+} catch (e) { /* ohne Storage bleibt es bei der Wochenansicht */ }
+stellePositionWiederHer();
+rendereAnsicht();
+markiereWpExportiert();
+initSprachWahl();
+uebersetzeDOM();
+
+/* Emoji und Beschriftung der Header-Knöpfe trennen: Bei schmalen Fenstern
+ * (<880px, siehe Media Query unten) blendet CSS nur .btn-text aus, das Icon
+ * bleibt als vollwertiger Knopf mit Tooltip erhalten. */
+function formeHeaderKnoepfe() {
+  ["btnWpSpeichern", "btnWpOeffnen", "btnWpExportHTML", "linkZurueck"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el || !el.querySelector || !el.getAttribute) return;
+    var voll = el.getAttribute("data-i18n") || "";
+    var leer = voll.indexOf(" ");
+    if (leer === -1 || el.querySelector(".btn-text")) return;
+    el.innerHTML = '<span class="btn-icon">' + escapeHtml(voll.slice(0, leer)) + '</span>' +
+      '<span class="btn-text">' + escapeHtml(voll.slice(leer + 1)) + "</span>";
+  });
+}
+formeHeaderKnoepfe();
+/* Fußzeilen-"Credits": eigener Tooltip - Hover per CSS, Klick/Tippen und
+ * Tastatur (Enter/Leertaste) per JS. Das Wort ist bewusst kein Link. */
+(function () {
+  var el = document.getElementById("creditsAnzeige");
+  if (!el) return;
+  var tip = document.createElement("div");
+  tip.className = "credits-tip";
+  tip.textContent = tr(el.getAttribute("data-tooltip") || "");
+  el.appendChild(tip);
+  el.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    el.classList.toggle("sichtbar");
+  });
+  el.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      el.classList.toggle("sichtbar");
+    }
+  });
+  document.addEventListener("click", function (ev) {
+    if (!el.contains(ev.target)) el.classList.remove("sichtbar");
+  });
+})();
+
+var quellSel = document.getElementById("quellFilterKat");
+quellSel.innerHTML = '<option value="">' + tr("Alle Kategorien") + '</option>' + kategorien().map(function (k) {
+  return '<option value="' + escapeHtml(k) + '">' + escapeHtml(k === "Ohne Kategorie" ? tr("Ohne Kategorie") : k) + "</option>";
+}).join("");
+
+rendereQuellListe();
+
+document.getElementById("btnTheme").onclick = toggleThema;
+
+/* 🗘 Reset: alle eigenen Inhalte aus dem Browser-Speicher werfen und neu laden.
+ * Ansichts-Einstellungen bleiben erhalten (Theme, Sprache, Nährwert-Ansicht,
+ * TCM auf/zu, Titel-Spielerei) – wie in rezepte_bearbeiten.html. */
+document.getElementById("btnReset").onclick = function () {
+  /* Bei ungesicherten Plan-Änderungen scharf warnen - sonst droht der
+   * generische Confirm aus Gewohnheit weggeklickt zu werden. Die Ansicht
+   * entscheidet, ob von Wochen- oder Monatsplan-Änderungen die Rede ist. */
+  var resetFrage = wpUnexportiert
+    ? tr(ansicht === "monat"
+        ? "⚠️ Achtung: Es gibt Monatsplan-Änderungen, die noch nicht als Datei gesichert sind! Wirklich alles verwerfen?"
+        : "⚠️ Achtung: Es gibt Wochenplan-Änderungen, die noch nicht als Datei gesichert sind! Wirklich alles verwerfen?")
+    : tr("Alle eigenen Änderungen verwerfen (auch TCM-Zuordnungen) und auf den Inhalt von rezepte.js zurücksetzen?");
+  if (!confirm(resetFrage)) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignorieren */ }      /* DB-Override vom Editor */
+  try { localStorage.removeItem(WOCHENPLAN_KEY); } catch (e) { /* ignorieren */ }   /* gespeicherte Wochenpläne */
+  try { localStorage.removeItem(ZUFALL_OPT_KEY); } catch (e) { /* ignorieren */ }   /* 🎲-Generator-Optionen */
+  try { localStorage.removeItem(EK_REFS); } catch (e) { /* ignorieren */ }          /* Einkaufsliste (rezepte.html) */
+  try { localStorage.removeItem(EK_EXTRAS); } catch (e) { /* ignorieren */ }
+  try { localStorage.removeItem("zutaten_tcm_v1"); } catch (e) { /* ignorieren */ }       /* eigene TCM-Zuordnungen */
+  try { localStorage.removeItem("zutaten_tcm_namen_v1"); } catch (e) { /* ignorieren */ } /* deren Alias-Namen */
+  erlaubeNavigation();   /* der bewusste Reset gilt als gewollt - nicht noch einmal per beforeunload nachfragen, sonst bricht das Neuladen ab */
+  location.reload();
+};
+
+document.getElementById("btnKwZurueck").onclick = function () {
+  if (ansicht === "monat") monatOffset--; else kwOffset--;
+  rendereAnsicht();
+};
+document.getElementById("btnKwVor").onclick = function () {
+  if (ansicht === "monat") monatOffset++; else kwOffset++;
+  rendereAnsicht();
+};
+document.getElementById("btnKwHeute").onclick = function () {
+  if (ansicht === "monat") monatOffset = 0; else kwOffset = 0;
+  rendereAnsicht();
+};
+/* ---------------------------------------------------------------
+ * ⚙️-Werkzeugmenü: Woche/Monat kopieren, einfügen, leeren
+ * --------------------------------------------------------------- */
+/* Alle Kalendertage des aktuell sichtbaren Monats (nur die zu ihm
+ * gehörigen Tage, nicht die angrenzenden Fremdtage der Rasterwochen). */
+function monatsTage() {
+  var erster = aktuellerMonatsErster();
+  var letzter = aktuellerMonatsLetzter();
+  var tage = [];
+  for (var d = new Date(erster); d <= letzter; d.setDate(d.getDate() + 1)) {
+    tage.push(new Date(d));
+  }
+  return tage;
+}
+
+/* Setzt (ids = Array) bzw. löscht (ids = null) die Einträge eines einzelnen
+ * Tages, ohne andere Tage der Rasterwoche anzufassen. */
+function setzeTagPlan(s, ids) {
+  var woche = plaene[s.key];
+  if (ids == null) {
+    if (woche) delete woche[s.tag];
+    return;
+  }
+  if (!woche) { woche = {}; plaene[s.key] = woche; }
+  woche[s.tag] = ids;
+}
+
+function kopiereWoche() {
+  var key = kwSchluessel(aktuellerMontag());
+  wocheZwischenablage = JSON.parse(JSON.stringify(plaene[key] || {}));
+  rendereWpMenu();
+}
+function schneideWocheAus() {
+  kopiereWoche();
+  leereWoche();
+}
+/* Kopiert die Einträge des sichtbaren Monats taggenau: Index (i) der
+ * Zwischenablage entspricht dem Tag (i+1). */
+function kopiereMonat() {
+  monatsZwischenablage = monatsTage().map(function (d) {
+    var eintraege = planEintraege(tagesSchluessel(d));
+    return eintraege.length ? JSON.parse(JSON.stringify(eintraege)) : null;
+  });
+  rendereWpMenu();
+}
+function schneideMonatAus() {
+  kopiereMonat();
+  leereMonat();
+}
+function fuegeWocheEin() {
+  var key = kwSchluessel(aktuellerMontag());
+  if (!wocheZwischenablage) return;
+  plaene[key] = JSON.parse(JSON.stringify(wocheZwischenablage));
+  speichernPlaene(); rendereAnsicht();
+}
+/* Fügt taggenau ein: Der 01. des kopierten Monats landet auf dem 01. des
+ * Zielmonats usw. Ist der kopierte Monat länger als der Zielmonat, werden
+ * die überschüssigen Tage hinten weggelassen; ist er kürzer, werden die
+ * restlichen Zieltage geleert. Fremdtage der Rasterwochen bleiben unberührt. */
+function fuegeMonatEin() {
+  if (!monatsZwischenablage || !monatsZwischenablage.length) return;
+  var tage = monatsTage();
+  for (var i = 0; i < tage.length; i++) {
+    var quelle = i < monatsZwischenablage.length ? monatsZwischenablage[i] : null;
+    setzeTagPlan(tagesSchluessel(tage[i]),
+      quelle && quelle.length ? JSON.parse(JSON.stringify(quelle)) : null);
+  }
+  speichernPlaene(); rendereAnsicht();
+}
+function leereWoche() {
+  var key = kwSchluessel(aktuellerMontag());
+  delete plaene[key];
+  speichernPlaene(); rendereAnsicht();
+}
+/* Leert nur die Tage des sichtbaren Monats; Fremdtage bleiben erhalten. */
+function leereMonat() {
+  monatsTage().forEach(function (d) { setzeTagPlan(tagesSchluessel(d), null); });
+  speichernPlaene(); rendereAnsicht();
+}
+
+function rendereWpMenu() {
+  var el = document.getElementById("wpMenuOffen");
+  if (!el) return;
+  var monat = ansicht === "monat";
+  if (zufallBearbeitung) { rendereZufallMenue(el, monat); return; }
+  var clipboard = monat ? monatsZwischenablage : wocheZwischenablage;
+  if (monat) {
+    el.innerHTML =
+      '<button data-aktion="kopieren">📋 ' + tr("Monat kopieren") + '</button>' +
+      '<button data-aktion="ausschneiden">✂️ ' + tr("Monat ausschneiden") + '</button>' +
+      '<button data-aktion="einfuegen"' + (clipboard ? "" : " disabled") + '>📌 ' + tr("Monat einfügen") + '</button>' +
+      '<button data-aktion="leeren">🗑 ' + tr("Monat leeren") + '</button>' +
+      '<button data-aktion="zufall">🎲 ' + tr("Zufällig befüllen") + '</button>' +
+      '<button data-aktion="undo"' + (zufallUndo ? "" : " disabled") + '>↩ ' + tr("Zufall rückgängig") + '</button>';
+  } else {
+    el.innerHTML =
+      '<button data-aktion="kopieren">📋 ' + tr("Woche kopieren") + '</button>' +
+      '<button data-aktion="ausschneiden">✂️ ' + tr("Woche ausschneiden") + '</button>' +
+      '<button data-aktion="einfuegen"' + (clipboard ? "" : " disabled") + '>📌 ' + tr("Woche einfügen") + '</button>' +
+      '<button data-aktion="leeren">🗑 ' + tr("Woche leeren") + '</button>' +
+      '<button data-aktion="zufall">🎲 ' + tr("Zufällig befüllen") + '</button>' +
+      '<button data-aktion="undo"' + (zufallUndo ? "" : " disabled") + '>↩ ' + tr("Zufall rückgängig") + '</button>';
+  }
+  el.querySelectorAll("button").forEach(bindeWpMenuAktion);
+}
+
+/* Untermenü der Zufalls-Befüllung: Modi, Optionen + Befüllen auslösen. */
+function rendereZufallMenue(el) {
+  var modus = zufallOpt.modus;
+  el.innerHTML =
+    '<button data-aktion="zufallAusfuehren">🎲 ' + tr("Zufällig befüllen") + '</button>' +
+    '<button data-aktion="zufallModusLeer"' + (modus === "leer" ? ' class="aktiv"' : "") + '>' +
+      (modus === "leer" ? "✓ " : "") + tr("Nur leere Tage füllen") + '</button>' +
+    '<button data-aktion="zufallModusZusatz"' + (modus === "zusatz" ? ' class="aktiv"' : "") + '>' +
+      (modus === "zusatz" ? "✓ " : "") + tr("Zusätzlich") + '</button>' +
+    '<button data-aktion="zufallModusErsetzen"' + (modus === "ersetzen" ? ' class="aktiv"' : "") + '>' +
+      (modus === "ersetzen" ? "✓ " : "") + tr("Alles ersetzen") + '</button>' +
+    '<button data-aktion="zufallAnzahl">' + tr(zufallOpt.anzahl === "1" ? "Anzahl pro Tag: 1" : "Anzahl pro Tag: 2") + '</button>' +
+    '<button data-aktion="zufallWiederholen">' + tr(zufallOpt.wiederholen ? "Wiederholen erlaubt" : "Ohne Wiederholungen") + '</button>' +
+    (zufallUndo ? '<button data-aktion="undo">↩ ' + tr("Zufall rückgängig") + '</button>' : "") +
+    '<button data-aktion="zufallAbbrechen">← ' + tr("Zurück") + '</button>';
+  el.querySelectorAll("button").forEach(bindeWpMenuAktion);
+}
+
+/* Verdrahtet einen Menü-Button; "offenBleiben"-Aktionen wechseln nur die Ansicht. */
+function bindeWpMenuAktion(btn) {
+  btn.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var menu = document.getElementById("wpMenu");
+    var el = document.getElementById("wpMenuOffen");
+    var monat = ansicht === "monat";
+    var a = btn.dataset.aktion;
+    var offenBleiben = a === "zufall" || a === "zufallAbbrechen" || a === "zufallAnzahl" ||
+      a === "zufallModusLeer" || a === "zufallModusZusatz" || a === "zufallModusErsetzen" ||
+      a === "zufallWiederholen" || a === "undo";
+    if (a === "kopieren") { if (monat) kopiereMonat(); else kopiereWoche(); }
+    else if (a === "ausschneiden") { if (monat) schneideMonatAus(); else schneideWocheAus(); }
+    else if (a === "einfuegen") { if (monat) fuegeMonatEin(); else fuegeWocheEin(); }
+    else if (a === "leeren") { if (monat) leereMonat(); else leereWoche(); }
+    else if (a === "zufall") { zufallBearbeitung = true; rendereWpMenu(); }
+    else if (a === "zufallAbbrechen") { zufallBearbeitung = false; rendereWpMenu(); }
+    else if (a === "zufallAnzahl") { zufallOpt.anzahl = zufallOpt.anzahl === "1" ? "2" : "1"; sichereZufallOpt(); rendereWpMenu(); }
+    else if (a === "zufallModusLeer") { zufallOpt.modus = "leer"; sichereZufallOpt(); rendereWpMenu(); }
+    else if (a === "zufallModusZusatz") { zufallOpt.modus = "zusatz"; sichereZufallOpt(); rendereWpMenu(); }
+    else if (a === "zufallModusErsetzen") { zufallOpt.modus = "ersetzen"; sichereZufallOpt(); rendereWpMenu(); }
+    else if (a === "zufallWiederholen") { zufallOpt.wiederholen = !zufallOpt.wiederholen; sichereZufallOpt(); rendereWpMenu(); }
+    else if (a === "zufallAusfuehren") { befuellenZufaellig(); zufallBearbeitung = false; rendereWpMenu(); }
+    else if (a === "undo") { zufallBearbeitung = false; stelleZufallWiederHer(); rendereWpMenu(); }
+    if (offenBleiben) {
+      el.hidden = false;
+      menu.classList.add("offen");
+    } else {
+      el.hidden = true;
+      menu.classList.remove("offen");
+    }
+  });
+}
+
+/* Die 7 Kalendertage (Mo–So) der aktuell sichtbaren Woche. */
+function wochenTage() {
+  var tage = [];
+  var mo = aktuellerMontag();
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(mo);
+    d.setDate(mo.getDate() + i);
+    tage.push(d);
+  }
+  return tage;
+}
+
+/* Rezept-IDs der aktuell sichtbaren Quellliste (Respektiert Suche + Filter). */
+function sichtbareRezeptIds() {
+  var suche = slugNorm(suchtext);
+  return DB.filter(function (r) {
+    if (filterKat && (r.kategorie || "Ohne Kategorie") !== filterKat) return false;
+    if (!suche) return true;
+    return slugNorm(r.name).indexOf(suche) !== -1;
+  }).map(function (r) { return r.id; });
+}
+
+/* Sichert die betroffenen Wochen des Zeitraums für die Undo-Funktion. */
+function sicherungZeitraum(tage) {
+  var kopie = {};
+  tage.forEach(function (d) {
+    var s = tagesSchluessel(d);
+    if (!(s.key in kopie)) {
+      kopie[s.key] = plaene[s.key] ? JSON.parse(JSON.stringify(plaene[s.key])) : null;
+    }
+  });
+  return kopie;
+}
+
+/* Stellt den Zustand vor der letzten Zufalls-Befüllung wieder her. */
+function stelleZufallWiederHer() {
+  if (!zufallUndo) return;
+  Object.keys(zufallUndo).forEach(function (k) {
+    if (zufallUndo[k] == null) delete plaene[k];
+    else plaene[k] = zufallUndo[k];
+  });
+  zufallUndo = null;
+  speichernPlaene();
+  rendereAnsicht();
+}
+
+/* Befüllt die sichtbare Woche bzw. den sichtbaren Monat zufällig mit
+ * Rezepten aus der Quellliste (Grundfunktion + Optionen). */
+function befuellenZufaellig() {
+  var tage = ansicht === "monat" ? monatsTage() : wochenTage();
+  var pool = sichtbareRezeptIds();
+  if (!pool.length) { alert(tr("Kein Rezept gefunden.")); return; }
+  if (zufallOpt.modus === "ersetzen" && !confirm(tr(
+    ansicht === "monat" ? "Monat wirklich zufällig neu befüllen?" : "Woche wirklich zufällig neu befüllen?"))) {
+    return;
+  }
+  zufallUndo = sicherungZeitraum(tage);
+
+  /* "Ohne Wiederholungen": alle im Zeitraum bereits eingeplanten Rezepte
+   * fließen in den Ausschluss-Pool ein (bei "Alles ersetzen" initial leer). */
+  var benutzt = {};
+  if (!zufallOpt.wiederholen && zufallOpt.modus !== "ersetzen") {
+    tage.forEach(function (d) {
+      planEintraege(tagesSchluessel(d)).forEach(function (id) { benutzt[id] = true; });
+    });
+  }
+
+  var max = zufallOpt.anzahl === "1" ? 1 : 2;
+  tage.forEach(function (d) {
+    var s = tagesSchluessel(d);
+    var vorhanden = planEintraege(s).slice();
+    var ziel = max;
+    /* "Nur leere Tage": bis zur Ziel-Anzahl ergänzen; "Zusätzlich": immer
+     * ziel neue Rezepte dazu; "Alles ersetzen": bestehende Einträge löschen. */
+    var anzahlNeu = zufallOpt.modus === "leer"
+      ? Math.max(0, Math.min(ziel - vorhanden.length, max))
+      : ziel;
+    if (zufallOpt.modus === "ersetzen") vorhanden = [];
+    for (var n = 0; n < anzahlNeu; n++) {
+      var wahlbar = zufallOpt.wiederholen
+        ? pool
+        : pool.filter(function (id) { return benutzt[id] !== true; });
+      if (!wahlbar.length) break;
+      var gezogen = wahlbar[Math.floor(Math.random() * wahlbar.length)];
+      benutzt[gezogen] = true;
+      vorhanden.push(gezogen);
+    }
+    setzeTagPlan(s, vorhanden.length ? vorhanden : null);
+  });
+  speichernPlaene();
+  rendereAnsicht();
+}
+
+(function () {
+  var menu = document.getElementById("wpMenu");
+  var toggle = document.getElementById("wpMenuToggle");
+  var offen = document.getElementById("wpMenuOffen");
+  if (!menu || !toggle || !offen) return;
+
+  toggle.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var istOffen = !offen.hidden;
+    if (!istOffen) rendereWpMenu();
+    offen.hidden = istOffen;
+    menu.classList.toggle("offen", !istOffen);
+  });
+  document.addEventListener("click", function (ev) {
+    if (!menu.contains(ev.target)) { offen.hidden = true; menu.classList.remove("offen"); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") { offen.hidden = true; menu.classList.remove("offen"); }
+  });
+})();
+
+document.getElementById("btnAnsichtWoche").onclick = function () { wechsleAnsicht("woche"); };
+document.getElementById("btnAnsichtMonat").onclick = function () { wechsleAnsicht("monat"); };
+document.getElementById("btnEinkaufErzeugen").onclick = erzeugeEinkaufsliste;
+document.getElementById("btnWpSpeichern").onclick = speichereWochenplaeneAlsDatei;
+document.getElementById("btnWpExportHTML").onclick = exportierePlanHtml;
+document.getElementById("btnWpOeffnen").onclick = function () {
+  document.getElementById("wpFileImport").click();
+};
+document.getElementById("wpFileImport").addEventListener("change", function () {
+  var datei = this.files && this.files[0];
+  if (datei) oeffneWochenplaeneAusDatei(datei);
+  this.value = ""; /* erlaubt erneutes Auswählen derselben Datei */
+});
+document.getElementById("quellSuche").addEventListener("input", function () {
+  suchtext = this.value;
+  rendereQuellListe();
+});
+document.getElementById("quellFilterKat").addEventListener("change", function () {
+  filterKat = this.value;
+  rendereQuellListe();
+});
+</script>
+</body>
+</html>
+

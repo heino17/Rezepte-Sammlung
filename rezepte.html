@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<!--
+  Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17
+  https://github.com/heino17/Rezepte-Sammlung
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="Julias Rezepte-Sammlung">Julia's Rezepte-Sammlung</title>
+<style>
+  :root {
+    --gruen: #8a6a48;
+    --gruen-hell: #f1eade;
+    --gruen-hover: #6d5539;
+    --rot: #f92a2a;
+    --orange: #ff9042;
+    --grau: #8d7a63;
+    --grau-hell: #f4efe7;
+    --linie: #e2d8c9;
+    --text: #3d3227;
+    --creme: #e9e2d7;
+    --kopf-h: 62px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #efe9de url("assets/Kueche_Hintergrund_hell.jpg") no-repeat center center fixed;
+    background-size: 100% 100%;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background:
+      repeating-linear-gradient(135deg, rgba(0,0,0,.025) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #f3ede1 0%, #e9e2d7 55%, #ddd1be 100%);
+    color: var(--text);
+    padding: 2px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+  header h1 { margin: -5px 0 0 0; font-size: 20px; font-weight: 700; }
+  #titelSammlung {
+    cursor: pointer; border-radius: 8px; padding: 2px 8px; margin-left: -8px;
+    transition: background .15s;
+  }
+  #titelSammlung:hover { background: var(--gruen-hell); }
+  header p { margin: 2px 0 0; font-size: 12.5px; opacity: .9; }
+
+  /* Custom Sprachumschalter (ersetzt natives <select>, da Browser das Styling
+     der aufklappenden Optionsliste bei <select> nicht bzw. kaum zulassen). */
+  #sprachWahl {
+    position: relative; display: inline-block;
+  }
+  #sprachWahlBtn {
+    font: inherit; font-size: 11.5px; padding: 4px 8px;
+    border: 1px solid currentColor; border-radius: 6px;
+    background: transparent; color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  #sprachWahlBtn::after { content: "▾"; font-size: 9px; opacity: .7; }
+  html[data-theme="dunkel"] #sprachWahlBtn { color: #e9e2d7; background: #3a332d; }
+
+  #sprachWahlListe {
+    position: absolute; top: calc(100% + 4px); right: 0px; z-index: 40;
+    min-width: 100%; list-style: none; margin: 0; padding: 4px;
+    border: 1px solid currentColor; border-radius: 8px;
+    /* Eigene, frei einstellbare Popup-Hintergrundfarbe: */
+    background: var(--sprach-popup-bg, #f4efe7);
+    color: var(--text);
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    max-height: 260px; overflow-y: auto;
+  }
+  html[data-theme="dunkel"] #sprachWahlListe {
+    background: var(--sprach-popup-bg-dunkel, #3a332d); color: #e9e2d7;
+  }
+  #sprachWahlListe[hidden] { display: none; }
+  #sprachWahlListe li {
+    font-size: 11.5px; padding: 5px 5px; border-radius: 6px;
+    cursor: pointer; white-space: nowrap;
+  }
+  #sprachWahlListe li:hover,
+  #sprachWahlListe li.aktiv { font-size: 11.5px; padding: 5px 5px; background: #E2D8C9; text-shadow: 0px 0px 1px #000000; }
+  html[data-theme="dunkel"] #sprachWahlListe li:hover,
+  html[data-theme="dunkel"] #sprachWahlListe li.aktiv { font-size: 11.5px; padding: 5px 5px; color: #000; text-shadow: 0px 0px 1px #000000; }
+
+  footer {
+    position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
+    background: linear-gradient(180deg, #ddd1be 0%, #d4c6b0 100%);
+    color: var(--text); padding: 1px 22px; z-index: 25;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 10px; box-shadow: 0 -2px 6px rgba(0,0,0,.12);
+  }
+  footer .fuss-links { text-align: left; }
+  footer .fuss-links a { text-align: left; color: var(--text); }
+  footer .fuss-links a:hover { text-align: left; color: var(--text); }
+  footer .fuss-rechts { text-align: right; }
+  footer .credits-link {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted currentColor;
+  }
+  footer .credits-link:focus-visible {
+    outline: 2px solid var(--gruen);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  footer .credits-link .credits-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 36px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(92vw, 640px);
+    background: var(--gruen-hell);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    z-index: 300;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease, visibility .18s;
+    pointer-events: none;
+  }
+  footer .credits-link .credits-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #2b2620;
+  }
+  footer .credits-link:hover .credits-tip,
+  footer .credits-link.sichtbar .credits-tip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .actions button { padding: 4px 9px; font-size: 11.5px; border-radius: 6px; }
+  button {
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    background: #f4efe7;
+    color: var(--gruen);
+    font-weight: 600;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: var(--gruen-hell); }
+  button:active { transform: translateY(1px); }
+  button.danger { color: var(--rot); }
+  button.danger:hover { background: #fdecea; }
+  button.small { padding: 4px 10px; font-size: 13px; border-radius: 6px; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:disabled:hover { background: #fff; }
+  .btn-link {
+    font: inherit; font-weight: 600; font-size: 11.5px;
+    text-decoration: none; color: var(--text);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 6px; padding: 4px 9px;
+    transition: background .15s;
+  }
+  .btn-link:hover { background: var(--gruen-hover); color: #fff; }
+
+  #status {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    background: var(--gruen-hover); color: #fff;
+    padding: 9px 18px; border-radius: 999px;
+    font-size: 13.5px; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    z-index: 60; max-width: 90vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #status.error { background: var(--rot); }
+  #status[hidden] { display: none; }
+
+  .layout { display: flex; min-height: calc(100vh - var(--kopf-h)); }
+  aside {
+    width: 275px; min-width: 275px;
+    background: rgba(233,226,215,.94);
+    border-right: 1px solid var(--linie);
+    display: flex; flex-direction: column;
+    position: sticky;
+    top: var(--kopf-h);
+    height: calc(98.5vh - var(--kopf-h));
+  }
+  .liste-kopf { padding: 12px 12px 6px; display: flex; flex-direction: column; gap: 8px; }
+  .suche-wrap { position: relative; }
+  .suche-wrap input[type="search"] { padding-right: 32px; }
+  .suche-wrap input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  .suche-x {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: var(--grau);
+    font-size: 13px; line-height: 1; padding: 0; cursor: pointer;
+  }
+  .suche-x:hover, .suche-x:active { background: transparent; color: var(--gruen-hover); transform: none; }
+  .liste-kopf input[type="search"], .liste-kopf select {
+    font: inherit; padding: 7px 10px; border: 1px solid var(--linie); border-radius: 8px; width: 100%;
+    background: #f4efe7; color: var(--text);
+  }
+  .zahlenzeile { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--grau); padding: 0 4px; }
+  #rezeptliste { list-style: none; margin: 0; padding: 6px 10px 14px; overflow-y: auto; flex: 1; }
+  #rezeptliste li {
+    padding: 2px 10px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    border: 1px solid transparent; margin-bottom: 3px;
+  }
+  #rezeptliste li:hover { background: var(--grau-hell); }
+  #rezeptliste li.aktiv { background: var(--gruen-hell); border-color: var(--gruen); }
+  #rezeptliste li .name { flex: 1; min-width: 0; }
+  #rezeptliste li .name small { display: block; color: var(--grau); font-size: 12px; }
+  .leer { color: var(--grau); text-align: center; padding: 30px 12px; font-size: 13.5px; }
+
+  main { flex: 1; padding: 22px; }
+  .leerzustand { text-align: center; color: var(--grau); padding: 60px 20px; }
+  .leerzustand .gross { font-size: 44px; }
+
+  .rezept {
+    background: rgba(233,226,215,.93); border: 1px solid var(--linie); border-radius: 12px;
+    padding: 24px 26px; max-width: 975px; margin: 0 auto;
+  }
+  .rezept-kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+  .rezept-kopf .titel { flex: 1; min-width: 0; }
+  .rezept-kopf-aktionen { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+  .rezept-kopf .kategorie {
+    display: inline-block; background: var(--gruen-hell); color: var(--gruen-hover);
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 8px;
+    cursor: pointer; transition: filter .15s;
+  }
+  .rezept-kopf .kategorie:hover { filter: brightness(.94); }
+  .rezept-kopf .kategorie:focus-visible { outline: 2px solid var(--gruen); outline-offset: 2px; }
+  .rezept h2 { margin: 0 0 2px; font-size: 24px; color: var(--gruen-hover); }
+  .untertitel { color: var(--grau); font-size: 13.5px; margin: 0; }
+
+  .portionen-regler { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--grau); font-weight: 600; }
+  .port-btn {
+    width: 22px; height: 22px; padding: 0; border-radius: 999px;
+    font-size: 15px; line-height: 1; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .port-zahl { min-width: 1.6em; text-align: center; font-weight: 700; color: var(--gruen-hover); }
+  .port-reset {
+    font: inherit; font-weight: 600; font-size: 12px; color: var(--grau);
+    background: none; border: none; padding: 0 0 0 4px; cursor: pointer;
+    text-decoration: underline;
+  }
+  .port-reset:hover { color: var(--gruen-hover); background: none; }
+
+  .nahrwerte { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .nahr { background: var(--gruen-hell); border-radius: 10px; padding: 8px 14px; text-align: center; min-width: 96px; }
+  .nahr .nahr-wert { display: block; font-size: 16px; font-weight: 700; color: var(--gruen-hover); }
+  .nahr .nahr-label { font-size: 11.5px; color: var(--gruen); }
+  .nahr-quelle { margin: -4px 0 0; }
+  .nahr-quelle-btn { background: none; border: none; padding: 0; color: var(--grau); font: inherit; font-size: 10px; cursor: pointer; text-decoration: underline dotted; }
+  .nahr-quelle-btn:hover { background: none; color: var(--gruen-hover); }
+
+  /* Modal: Zutaten-Naehrwert-Tabelle (Datenbasis der Berechnung) */
+  .modal-huelle { position: fixed; inset: 0; z-index: 1000; background: rgba(40, 32, 22, .55); display: flex; align-items: center; justify-content: center; padding: 18px; }
+  .modal-huelle[hidden] { display: none; }
+  .modal-karte { background: var(--creme); color: var(--text); border-radius: 14px; width: min(720px, 100%); max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0, 0, 0, .35); overflow: hidden; }
+  .modal-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px 10px; border-bottom: 1px solid var(--linie); }
+  .modal-kopf h3 { margin: 0; font-size: 17px; }
+  .modal-zu { background: none; border: none; font-size: 20px; line-height: 1; padding: 4px 10px; cursor: pointer; color: var(--grau); border-radius: 8px; }
+  .modal-zu:hover { color: var(--text); background: var(--gruen-hell); }
+  .modal-legende { margin: 10px 18px 0; font-size: 12px; color: var(--grau); }
+  .modal-suche { display: block; margin: 10px 18px; padding: 8px 12px; border: 1px solid var(--linie); border-radius: 9px; background: #fffdf9; color: var(--text); font: inherit; font-size: 14px; width: calc(100% - 36px); box-sizing: border-box; }
+  .modal-tabellen-wickel { overflow: auto; padding: 0 18px 16px; }
+  .nahr-quelle-tabelle { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .nahr-quelle-tabelle th, .nahr-quelle-tabelle td { padding: 6px 8px; border-bottom: 1px solid var(--linie); text-align: left; white-space: nowrap; }
+  .nahr-quelle-tabelle th { position: sticky; top: 0; background: var(--creme); font-size: 11.5px; color: var(--gruen); }
+  .nahr-quelle-tabelle td.zahl, .nahr-quelle-tabelle th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .tcm { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .tcm-zeile { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .tcm-label { font-size: 12.5px; font-weight: 700; color: var(--gruen-hover); min-width: 96px; }
+  .tcm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tcm-chip {
+    background: var(--gruen-hell); border: 1px solid var(--linie);
+    color: var(--gruen-hover); border-radius: 999px; padding: 3px 11px;
+    font-size: 12.5px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tcm-chip[data-tcm] { cursor: pointer; transition: filter .15s; }
+  .tcm-chip[data-tcm]:hover { filter: brightness(.94); }
+  .tcm-chip[data-tcm]:focus-visible { outline: 2px solid var(--gruen); outline-offset: 2px; }
+  .tcm-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
+  .tcm-fuss { font-size: 11.5px; color: var(--grau); margin: 8px 0 0; }
+
+  .rezept-bilder { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: center; }
+  .rezept-bild {
+    width: 300px; height: 150px; max-width: 100%;
+    object-fit: cover; border-radius: 10px; border: 1px solid var(--linie);
+    box-shadow: 0 2px 6px rgba(0,0,0,.14);
+    background: #fff;
+    cursor: zoom-in;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .rezept-bild:hover { border-color: var(--gruen); }
+  /* Klick-Zoom: Bild wächst über seine Nachbarn hinaus und kommt nach vorne. */
+  .rezept-bild.gross {
+    transform: scale(1.8);
+    z-index: 30;
+    box-shadow: 0 10px 28px rgba(0,0,0,.6);
+    cursor: zoom-out;
+  }
+
+  .bereich { margin-top: 24px; }
+  .bereich > h3 {
+    font-size: 15px; font-weight: 700; color: var(--gruen-hover);
+    border-bottom: 2px solid var(--gruen-hell); padding-bottom: 6px; margin: 0 0 4px;
+  }
+  .tcm-bereich > summary {
+    font-size: 15px; font-weight: 700; color: var(--gruen-hover);
+    border-bottom: 2px solid var(--gruen-hell); padding-bottom: 6px;
+    margin: 0 0 4px; cursor: pointer; list-style-position: inside;
+  }
+  .tcm-bereich > summary:hover { color: var(--gruen); }
+  .tcm-bereich[open] > summary { margin-bottom: 10px; }
+  .hinweis { font-size: 12.5px; color: var(--grau); margin: 4px 0 10px; }
+  .hinweis a { color: var(--gruen-hover); font-size: 10px; text-decoration: underline; cursor: pointer; margin-left: 8px; }
+  .hinweis a:hover { text-decoration: none; }
+
+  table.zutaten { width: 100%; border-collapse: collapse; }
+  table.zutaten th {
+    text-align: left; font-size: 12.5px; color: var(--grau);
+    font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--linie);
+  }
+  table.zutaten td { padding: 6px 8px; border-bottom: 1px solid #ece4d6; vertical-align: top; }
+  table.zutaten th.check, table.zutaten td.check { width: 34px; text-align: center; }
+  table.zutaten td.menge { width: 130px; color: var(--grau); white-space: nowrap; }
+  table.zutaten tbody tr:hover { background: #f6f0e4; }
+  table.zutaten input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--gruen); cursor: pointer; }
+
+  ol.schritte { margin: 8px 0 0; padding: 0; list-style: none; counter-reset: schritt; }
+  ol.schritte li {
+    position: relative; padding: 0 0 14px 42px; margin: 0;
+    counter-increment: schritt; min-height: 24px;
+  }
+  ol.schritte li::before {
+    content: counter(schritt);
+    position: absolute; left: 0; top: 0;
+    background: var(--gruen-hell); color: var(--gruen-hover);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  ol.schritte li::after {
+    content: ""; position: absolute; left: 14px; top: 32px; bottom: 2px; width: 2px;
+    background: var(--gruen-hell);
+  }
+  ol.schritte li:last-child::after { display: none; }
+
+  .nav-rezept { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--linie); display: flex; justify-content: space-between; gap: 10px; }
+
+  .notizen-bereich .notiz-oeffnen { font-size: 13px; padding: 6px 12px; }
+  .notiz-feld {
+    width: 100%; min-height: 90px; resize: vertical;
+    font: inherit; font-size: 14px; color: var(--text);
+    background: var(--gruen-hell); border: 1px solid var(--linie); border-radius: 8px;
+    padding: 10px 12px; box-sizing: border-box;
+  }
+  .notiz-feld:focus { outline: 2px solid var(--gruen); outline-offset: 1px; }
+  .notiz-status { font-size: 12px; color: var(--grau); margin: 4px 0 0; min-height: 1.4em; }
+
+  .kueche-backdrop {
+    position: fixed; inset: 0; background: var(--creme);
+    opacity: 0; visibility: hidden; transition: opacity .2s; z-index: 60;
+  }
+  .kueche-backdrop.offen { opacity: 1; visibility: visible; }
+  .kueche {
+    position: fixed; inset: 0; background: var(--creme); color: var(--text);
+    opacity: 0; visibility: hidden; transition: opacity .2s;
+    z-index: 61; display: flex; flex-direction: column;
+    --kueche-schrift: 1;
+  }
+  .kueche.offen { opacity: 1; visibility: visible; }
+  .kueche-kopf {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 20px; border-bottom: 2px solid var(--gruen-hell);
+    flex-shrink: 0;
+  }
+  .kueche-kopf h2 { margin: 0; font-size: 20px; color: var(--gruen-hover); }
+  .kueche-kopf-aktionen { display: flex; align-items: center; gap: 8px; }
+  .kueche-schrift-btn { font-size: 13px; padding: 6px 10px; }
+  .kueche-inhalt {
+    flex: 1; overflow-y: auto; padding: 20px; max-width: 720px;
+    margin: 0 auto; width: 100%; box-sizing: border-box;
+    font-size: calc(16px * var(--kueche-schrift));
+  }
+  .kueche-inhalt h3 {
+    font-size: calc(18px * var(--kueche-schrift)); color: var(--gruen-hover);
+    border-bottom: 2px solid var(--gruen-hell); padding-bottom: 6px; margin: 0 0 10px;
+  }
+  .kueche-zutaten { list-style: none; margin: 0 0 28px; padding: 0; }
+  .kueche-zutaten li {
+    padding: 8px 0; border-bottom: 1px solid #ece4d6;
+    display: flex; gap: 10px;
+  }
+  .kueche-zutaten .kueche-menge { color: var(--grau); min-width: 90px; flex-shrink: 0; }
+  .kueche-schritte { margin: 0; padding: 0; list-style: none; counter-reset: kschritt; }
+  .kueche-schritte li {
+    position: relative; padding: 0 0 22px 48px; margin: 0;
+    counter-increment: kschritt; line-height: 1.5;
+  }
+  .kueche-schritte li::before {
+    content: counter(kschritt);
+    position: absolute; left: 0; top: 0;
+    background: var(--gruen-hell); color: var(--gruen-hover);
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: calc(15px * var(--kueche-schrift));
+  }
+  .kueche-wach-hinweis {
+    font-size: 12.5px; color: var(--grau); text-align: center;
+    padding: 6px 20px 14px;
+  }
+
+  .kueche-timer-wrap { position: relative; }
+  .kueche-timer-popover {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: var(--grau-hell); border: 1px solid var(--linie);
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    padding: 12px; width: 240px; max-width: calc(100vw - 40px); z-index: 5;
+    opacity: 0; visibility: hidden; transform: translateY(-4px);
+    transition: opacity .15s, transform .15s, visibility .15s;
+  }
+  .kueche-timer-popover.offen { opacity: 1; visibility: visible; transform: translateY(0); }
+  .kueche-timer-slider-anzeige {
+    text-align: center; font-size: 22px; font-weight: 700;
+    color: var(--gruen-hover); margin: 6px 0 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .kueche-timer-slider {
+    width: 100%; margin: 0 0 10px; display: block;
+    accent-color: var(--gruen); cursor: pointer;
+  }
+  .kueche-timer-frei { display: flex; flex-direction: column; gap: 6px; }
+  .kueche-timer-frei input[type="text"] {
+    width: 100%; font: inherit; font-size: 13px;
+    border: 1px solid var(--linie); border-radius: 6px; padding: 7px 8px;
+    background: var(--creme); color: var(--text); box-sizing: border-box;
+  }
+  .kueche-timer-frei-zeile { display: flex; gap: 6px; }
+  .kueche-timer-frei-zeile input[type="number"] {
+    width: 0; flex: 1; font: inherit; font-size: 13px;
+    border: 1px solid var(--linie); border-radius: 6px; padding: 7px 8px;
+    background: var(--creme); color: var(--text); box-sizing: border-box;
+  }
+  .kueche-timer-frei-zeile button {
+    font-size: 13px; padding: 7px 12px; border-radius: 6px;
+    background: var(--gruen); color: #fff; border: none; cursor: pointer;
+  }
+
+  .kueche-timer-liste {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 0 20px; flex-shrink: 0;
+  }
+  .kueche-timer-liste:not(:empty) { padding-bottom: 12px; }
+  /* Kurz-Hinweis "läuft bereits": klappt über der Timer-Liste auf und
+   * wieder zu, ohne das Layout springen zu lassen. */
+  .kueche-timer-hinweis {
+    max-height: 0; opacity: 0; overflow: hidden; margin: 0 20px;
+    transition: max-height .25s ease, opacity .25s ease, margin .25s ease;
+    text-align: center;
+  }
+  .kueche-timer-hinweis.offen {
+    max-height: 60px; opacity: 1; margin: 8px 20px;
+  }
+  .kueche-timer-hinweis span {
+    display: inline-block;
+    padding: 6px 16px; border-radius: 999px;
+    background: var(--gruen-hell); border: 1px solid var(--linie);
+    color: var(--text); font-size: 15px; font-weight: 600;
+  }
+  .kueche-timer-chip {
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--gruen-hell); border: 1px solid #29a36a;
+    border-radius: 15px; padding: 6px 8px 6px 14px; margin-top: 1px;
+    font-size: calc(14px * var(--kueche-schrift)); font-variant-numeric: tabular-nums;
+  }
+  .kueche-timer-chip > * { position: relative; z-index: 1; }
+  .kueche-timer-progress {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+    border-radius: 15px; z-index: 0; pointer-events: none;
+    transition: width 1s linear, background-color .3s;
+  }
+  .kueche-timer-chip.stufe-gruen .kueche-timer-progress { background: #14e881; opacity: .65; }
+  .kueche-timer-chip.stufe-orange .kueche-timer-progress { background: var(--orange); opacity: .75; }
+  .kueche-timer-chip.stufe-rot .kueche-timer-progress { background: var(--rot); opacity: .9; }
+  .kueche-timer-chip .zeit { font-weight: 700; color: #000000; min-width: 3.6em; text-shadow: 0px 0px 2px #d3d3d3; }
+  .kueche-timer-chip .name { color: #000000; font-weight: 700; max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0px 0px 2px #d3d3d3; }
+  html[data-theme="dunkel"] .kueche-timer-chip .zeit { font-weight: 700; color: #FFFFFF; min-width: 3.6em; text-shadow: 0px 0px 2px #000000;}
+  html[data-theme="dunkel"] .kueche-timer-chip .name { color: #FFFFFF; font-weight: 700; max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0px 0px 2px #000000; }
+  .kueche-timer-chip button {
+    width: calc(22px * var(--kueche-schrift)); height: calc(22px * var(--kueche-schrift));
+    border-radius: 50%; border: none;
+    background: transparent; color: var(--grau); cursor: pointer;
+    font-size: calc(13px * var(--kueche-schrift)); line-height: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .kueche-timer-chip button:hover { background: var(--linie); color: var(--text); }
+  .kueche-timer-chip.abgelaufen {
+    background: var(--rot); border-color: var(--rot); color: #fff;
+    animation: kuecheTimerBlink 1s ease-in-out infinite;
+  }
+  .kueche-timer-chip.abgelaufen .zeit { color: #fff; }
+  /* Abgelaufener Wecker: Der Kuechenmodus-Knopf blinkt rot, damit der
+   * Alarm auch dann auffaellt, wenn die Kuechenansicht gerade zu ist. */
+  #btnKuecheAn.alarm-blinkt {
+    background: var(--rot); border-color: var(--rot); color: #fff;
+    animation: kuecheAlarmBlinken 1.1s ease-in-out infinite;
+  }
+  @keyframes kuecheAlarmBlinken {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(249, 42, 42, .55); }
+    50% { box-shadow: 0 0 0 12px rgba(249, 42, 42, 0); }
+  }
+  .kueche-timer-chip.abgelaufen .name { color: #fff; }
+  @keyframes kuecheTimerBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .35; }
+  }
+
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    opacity: 0; visibility: hidden; transition: opacity .2s; z-index: 40;
+  }
+  .backdrop.offen { opacity: 1; visibility: visible; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 92vw;
+    background: #f4efe7; box-shadow: -4px 0 16px rgba(0,0,0,.18);
+    transform: translateX(105%); transition: transform .25s ease;
+    display: flex; flex-direction: column; z-index: 50; visibility: hidden;
+  }
+  .drawer.offen { transform: translateX(0); visibility: visible; }
+  .drawer-kopf {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--linie);
+    background: var(--creme); color: var(--text);
+  }
+  .drawer-kopf h2 { margin: 0; font-size: 17px; }
+  .drawer-datum { font-size: 13px; font-weight: 400; color: var(--grau); margin-left: 8px; }
+  .drawer-kopf button { background: rgba(109,85,57,.12); color: var(--gruen-hover); }
+  .drawer-kopf button:hover { background: rgba(109,85,57,.22); }
+  .ek-aktionen { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--linie); }
+  .ek-aktionen .spacer { flex: 1; }
+  #ekInhalt { flex: 1; overflow-y: auto; padding: 8px 16px 16px; }
+  .ek-leer { color: var(--grau); text-align: center; padding: 40px 12px; font-size: 13.5px; }
+  .ek-eintrag {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-bottom: 1px solid #ece4d6;
+  }
+  .ek-info { flex: 1; min-width: 0; }
+  .ek-name { font-weight: 600; font-size: 14px; }
+  .ek-name small { color: var(--grau); font-size: 12px; font-weight: 400; }
+  .ek-menge { display: block; color: var(--grau); font-size: 12.5px; }
+  .ek-fuss { border-top: 1px solid var(--linie); padding: 12px 16px; }
+  .ek-fuss h3 { margin: 0 0 8px; font-size: 13px; color: var(--gruen-hover); }
+  .ek-umschalter { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--linie); }
+  .ek-umschalter button { flex: 1; border-color: var(--linie); }
+  .ek-umschalter button.aktiv { background: var(--gruen); color: #fff; border-color: var(--gruen); }
+  .ek-rezept-kopf {
+    font-weight: 700; color: var(--gruen-hover); font-size: 13px;
+    padding: 10px 4px 4px; margin-top: 6px;
+    border-bottom: 1px solid var(--linie);
+  }
+  .ek-rezept-kopf small { color: var(--grau); font-weight: 400; font-size: 11.5px; }
+  .ek-rezept-kopf.klick { cursor: pointer; }
+  .ek-rezept-kopf.klick:hover { color: var(--gruen); text-decoration: underline; }
+  .ek-rezept-kopf.klick:focus-visible { outline: 2px solid var(--gruen); outline-offset: 2px; border-radius: 4px; }
+  .ek-neu { display: flex; gap: 6px; }
+  .ek-neu input {
+    font: inherit; padding: 7px 9px; border: 1px solid var(--linie); border-radius: 8px; flex: 1; min-width: 0;
+  }
+  .ek-neu input.schmal { flex: 0 1 110px; }
+  .ek-neu button { flex-shrink: 0; }
+
+  html[data-theme="dunkel"] {
+    --gruen: #c9a879;
+    --gruen-hell: #4a4235;
+    --gruen-hover: #e0d2bc;
+    --rot: #ff8a80;
+    --orange: #ffb066;
+    --grau: #b3a48d;
+    --grau-hell: #3a352c;
+    --linie: #4c4437;
+    --text: #e9e2d7;
+    --creme: #5a4f3e;
+  }
+  html[data-theme="dunkel"] body {
+    background-color: #322c22;
+    background-image: url("assets/Kueche_Hintergrund_dunkel.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+  }
+  html[data-theme="dunkel"] header {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #635844 0%, #5a4f3e 55%, #4f4535 100%);
+  }
+  html[data-theme="dunkel"] footer { background: linear-gradient(180deg, #4f4535 0%, #463d2e 100%); }
+  html[data-theme="dunkel"] .drawer-kopf { background: var(--creme); }
+  html[data-theme="dunkel"] .btn-link:hover { background: var(--gruen-hover); color: #3a3226; }
+  html[data-theme="dunkel"] #status { background: #6d5539; }
+  html[data-theme="dunkel"] #status.error { background: #b71c1c; color: #fff; }
+  html[data-theme="dunkel"] aside { background: rgba(90, 79, 62, .94); }
+  html[data-theme="dunkel"] .liste-kopf input, html[data-theme="dunkel"] .liste-kopf select {
+    background: #3a352c; color: var(--text); border-color: var(--linie);
+  }
+  html[data-theme="dunkel"] .suche-x { background: transparent; color: var(--grau); }
+  html[data-theme="dunkel"] .suche-x:hover { background: transparent; color: var(--text); }
+  html[data-theme="dunkel"] #rezeptliste li.aktiv { border-color: var(--gruen); }
+  html[data-theme="dunkel"] .rezept { background: rgba(90, 79, 62, .93); }
+  html[data-theme="dunkel"] table.zutaten td { border-color: #4c4437; }
+  html[data-theme="dunkel"] table.zutaten tbody tr:hover { background: #4a4235; }
+  html[data-theme="dunkel"] .drawer { background: #403a30; }
+  html[data-theme="dunkel"] .ek-eintrag { border-color: #4c4437; }
+  html[data-theme="dunkel"] .ek-umschalter button.aktiv { background: var(--gruen); color: #3a3226; border-color: var(--gruen); }
+  html[data-theme="dunkel"] .ek-neu input { background: #3a352c; color: var(--text); border-color: var(--linie); }
+  html[data-theme="dunkel"] button { background: var(--gruen-hell); color: var(--gruen); }
+  html[data-theme="dunkel"] button:hover { color: var(--gruen-hover); }
+  html[data-theme="dunkel"] button.danger { color: var(--rot); }
+  html[data-theme="dunkel"] button.danger:hover { background: #2b1818; }
+  html[data-theme="dunkel"] button:disabled, html[data-theme="dunkel"] button:disabled:hover { background: #3a352c; }
+
+  @media (max-width: 800px) {
+    .layout { flex-direction: column; }
+    aside { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--linie); max-height: 45vh; }
+    main { padding: 14px; }
+    .rezept { padding: 18px 16px; }
+  }
+
+  /* Bei breiten Fenstern stößt sich das Layout vom linken Rand ab
+   * und pendelt sich mittig ein (statt <aside> links kleben zu lassen). */
+  @media (min-width: 1400px) {
+    .layout { max-width: 1400px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="titelSammlung" data-i18n-title="Titel anklicken, um zu wechseln">🍲 Julia's Rezepte-Sammlung</h1>
+    <p style="margin: -3px 0 0 35px;" data-i18n="Rezeptbuch zum Selberschreiben 📝">Rezeptbuch zum Selberschreiben 📝</p>
+  </div>
+  <div class="actions">
+    <button id="btnEinkauf"><span data-i18n="🛒 Einkaufsliste">🛒 Einkaufsliste</span> <span id="ekBadge">(0)</span></button>
+    <button id="btnWochenplan" class="btn-link" data-i18n="📆 Wochenplan">📆 Wochenplan</button>
+    <button id="btnBearbeiten" class="btn-link" data-i18n="✏️ Rezepte bearbeiten">✏️ Rezepte bearbeiten</button>
+    <button id="btnTheme" class="btn-link" data-i18n-title="Helles/Dunkles Design umschalten">🌙 Dunkel</button>
+    <div id="sprachWahl">
+      <button type="button" id="sprachWahlBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Sprache wechseln"></button>
+      <ul id="sprachWahlListe" role="listbox" hidden></ul>
+    </div>
+  </div>
+</header>
+
+<div id="status" hidden></div>
+
+<div class="layout">
+  <aside>
+    <div class="liste-kopf">
+      <div class="suche-wrap">
+        <input type="search" id="suche" data-i18n-ph="Rezept suchen …" placeholder="Rezept suchen …" autocomplete="off">
+        <button id="sucheLeeren" class="suche-x" data-i18n-title="Suche leeren" title="Suche leeren" hidden>✕</button>
+      </div>
+      <select id="filterKat"></select>
+      <select id="filterTcm" data-i18n-title="Nach 5 Elementen filtern (TCM)" title="Nach 5 Elementen filtern (TCM)"></select>
+      <div class="zahlenzeile"><span id="anzahl"></span></div>
+    </div>
+    <ul id="rezeptliste"></ul>
+  </aside>
+
+  <main id="bereich">
+    <div class="leerzustand">
+      <div class="gross">📖</div>
+      <p data-i18n="Wähle links ein Rezept aus …">Wähle links ein Rezept aus …</p>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.0.0</small></div>
+  <div>❤️</div>
+  <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
+</footer>
+
+<div id="ekBackdrop" class="backdrop"></div>
+
+<div id="kuecheBackdrop" class="kueche-backdrop"></div>
+<div id="kueche" class="kueche">
+  <div class="kueche-kopf">
+    <h2 id="kuecheTitel"></h2>
+    <div class="kueche-kopf-aktionen">
+      <div class="kueche-timer-wrap">
+        <button id="btnKuecheTimer" class="kueche-schrift-btn" data-i18n-title="Timer stellen" title="Timer stellen">+⏰</button>
+        <div id="kuecheTimerPopover" class="kueche-timer-popover">
+          <form id="kuecheTimerForm" class="kueche-timer-frei">
+            <input type="text" id="kuecheTimerName" list="kuecheTimerNamenListe" data-i18n-ph="Was kocht? (optional)" placeholder="Was kocht? (optional)" autocomplete="off">
+            <datalist id="kuecheTimerNamenListe">
+              <option data-i18n-value="Eier" value="Eier"></option>
+              <option data-i18n-value="Kartoffeln" value="Kartoffeln"></option>
+              <option data-i18n-value="Nudeln" value="Nudeln"></option>
+              <option data-i18n-value="Reis" value="Reis"></option>
+              <option data-i18n-value="Backofen" value="Backofen"></option>
+              <option data-i18n-value="Gemüse dünsten" value="Gemüse dünsten"></option>
+              <option data-i18n-value="Baguette aufbacken" value="Baguette aufbacken"></option>
+              <option data-i18n-value="Teig ruhen lassen" value="Teig ruhen lassen"></option>
+              <option data-i18n-value="Fisch ziehen" value="Fisch ziehen"></option>
+              <option data-i18n-value="Gemüse braten" value="Gemüse braten"></option>
+              <option data-i18n-value="Teig gehen lassen" value="Teig gehen lassen"></option>
+              <option data-i18n-value="Teig kühlen" value="Teig kühlen"></option>
+              <option data-i18n-value="Kuchen abkühlen" value="Kuchen abkühlen"></option>
+              <option data-i18n-value="Fisch" value="Fisch"></option>
+              <option data-i18n-value="Hähnchen" value="Hähnchen"></option>
+              <option data-i18n-value="Pudding" value="Pudding"></option>
+              <option data-i18n-value="Baguette" value="Baguette"></option>
+            </datalist>
+            <div id="kuecheTimerAnzeige" class="kueche-timer-slider-anzeige">10 min</div>
+            <input type="range" id="kuecheTimerSlider" class="kueche-timer-slider" min="1" max="180" step="1" value="10">
+            <div class="kueche-timer-frei-zeile">
+              <input type="number" id="kuecheTimerMin" min="1" max="180" step="1" value="10">
+              <button type="submit" data-i18n="Start">Start</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <button id="btnKuecheSchriftMinus" class="kueche-schrift-btn" data-i18n-title="Schrift kleiner" title="Schrift kleiner">A−</button>
+      <button id="btnKuecheSchriftPlus" class="kueche-schrift-btn" data-i18n-title="Schrift größer" title="Schrift größer">A+</button>
+      <button id="btnKuecheZu" data-i18n-title="Küchenmodus verlassen" title="Küchenmodus verlassen">✕</button>
+    </div>
+  </div>
+  <div id="kuecheTimerHinweis" class="kueche-timer-hinweis" hidden></div>
+  <div id="kuecheTimerListe" class="kueche-timer-liste"></div>
+  <div id="kuecheInhalt" class="kueche-inhalt"></div>
+</div>
+
+<div id="ekDrawer" class="drawer">
+  <div class="drawer-kopf">
+    <h2><span data-i18n="🛒 Einkaufsliste">🛒 Einkaufsliste</span> <span id="ekDatum" class="drawer-datum"></span></h2>
+    <button id="btnEkZu" data-i18n-title="Schließen" title="Schließen">✕</button>
+  </div>
+  <div class="ek-aktionen">
+    <button id="btnKopieren" class="small" data-i18n="📋 Text kopieren">📋 Text kopieren</button>
+    <button id="btnExportHTML" class="small" data-i18n-title="Einkaufsliste als HTML-Datei exportieren (zum Versenden per E-Mail)" data-i18n="📧 Als HTML">📧 Als HTML</button>
+    <button id="btnLeeren" class="small danger" data-i18n="Leeren">Leeren</button>
+    <span class="spacer"></span>
+    <span id="ekAnzahl" style="align-self:center;font-size:12.5px;color:var(--grau)"></span>
+  </div>
+  <div class="ek-umschalter">
+    <button id="btnAnsRezept" class="small" data-i18n="👥 Nach Rezept">👥 Nach Rezept</button>
+    <button id="btnAnsZutat" class="small" data-i18n="🧺 Nach Zutat">🧺 Nach Zutat</button>
+  </div>
+  <div id="ekInhalt"></div>
+  <div class="ek-fuss">
+    <h3 data-i18n="Manuell hinzufügen">Manuell hinzufügen</h3>
+    <div class="ek-neu">
+      <input type="text" id="ekNeuName" data-i18n-ph="Zutat …" placeholder="Zutat …">
+      <input type="text" id="ekNeuMenge" data-i18n-ph="Menge …" placeholder="Menge …" class="schmal">
+      <button id="btnEkNeu">＋</button>
+    </div>
+  </div>
+</div>
+
+<div id="nahrQuelleModal" class="modal-huelle" hidden>
+  <div class="modal-karte" role="dialog" aria-modal="true" aria-labelledby="nahrQuelleTitel">
+    <div class="modal-kopf">
+      <h3 id="nahrQuelleTitel" data-i18n="Zutaten-Nährwerte (pro 100 g)">Zutaten-Nährwerte (pro 100 g)</h3>
+      <button id="btnNahrQuelleZu" class="modal-zu" data-i18n-title="Schließen" title="Schließen" data-i18n-aria="Schließen" aria-label="Schließen">✕</button>
+    </div>
+    <p class="modal-legende" id="nahrQuelleHinweis"></p>
+    <input type="search" id="nahrSuche" class="modal-suche" data-i18n-ph="Zutat suchen …" placeholder="Zutat suchen …" autocomplete="off">
+    <div class="modal-tabellen-wickel">
+      <table class="nahr-quelle-tabelle" id="nahrTabelle"></table>
+    </div>
+  </div>
+</div>
+
+<script src="assets/rezepte.js"></script>
+<script src="assets/zutaten-tcm.js"></script>
+<script src="assets/zutaten-naehrwerte.js"></script>
+<script src="assets/sprachen.js"></script>
+<script>
+"use strict";
+
+var STORAGE_KEY = "rezept_db_v1";     /* gleicher Key wie der Editor */
+var EK_REFS = "ek_refs_v1";
+var EK_EXTRAS = "ek_extras_v1";
+var EK_SKALEN = "ek_skalen_v1";
+var REZ_NOTIZEN = "rezept_notizen_v1";
+var EK_ANSICHT = "ek_ansicht_v1";
+var THEME_KEY = "rezept_theme_v1";
+
+var DB = [];
+var aktuellerId = null;
+var filterKat = "";
+var filterTcm = ""; /* z. B. "element:holz", "geschmack:suess", "thermik:kuehl" */
+var suchtext = "";
+var statusTimeout = null;
+var ansicht = "rezept";   /* "rezept" oder "zutat" */
+
+/* Misst die Höhe des fixierten Kopfbereichs, damit die linke Liste
+ * darunter klebt und intern scrollt. */
+function messeKopfHoehe() {
+  var h = document.querySelector("header").offsetHeight;
+  document.documentElement.style.setProperty("--kopf-h", h + "px");
+}
+
+var refs = [];      /* angehakte Zutaten: "r:<rezeptId>:<index>" */
+var extras = [];    /* manuell ergänzte Einträge: { key, menge, name } */
+var refSkalen = {}; /* skalierte Mengen für angehakte Zutaten: { "r:<id>:<i>": "225 g" } */
+var ekZeitraum = ""; /* Zeitraum aus dem Wochenplan, z.B. "KW 33 · 10.08. – 16.08.2026" */
+var portionenFaktor = 1; /* aktueller Skalierungsfaktor der offenen Rezeptansicht */
+var notizen = {};   /* eigene Notizen pro Rezept: { rezeptId: "text" } */
+var notizSpeicherTimeout = null;
+
+function ladeArray(key) {
+  try {
+    var v = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
+}
+function ladeObjekt(key) {
+  try {
+    var v = JSON.parse(localStorage.getItem(key) || "{}");
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  } catch (e) { return {}; }
+}
+function speichere(key, wert) {
+  try { localStorage.setItem(key, JSON.stringify(wert)); } catch (e) { /* ignorieren */ }
+}
+
+function laden() {
+  try {
+    var q = localStorage.getItem(STORAGE_KEY);
+    if (q) DB = JSON.parse(q);
+  } catch (e) { /* ignorieren */ }
+  if (!DB.length && typeof REZEPTE !== "undefined") {
+    DB = JSON.parse(JSON.stringify(REZEPTE));
+  }
+  refs = ladeArray(EK_REFS);
+  extras = ladeArray(EK_EXTRAS);
+  refSkalen = ladeObjekt(EK_SKALEN);
+  notizen = ladeObjekt(REZ_NOTIZEN);
+  try {
+    var a = localStorage.getItem(EK_ANSICHT);
+    if (a === "rezept" || a === "zutat") ansicht = a;
+  } catch (e) { /* ignorieren */ }
+}
+
+function kategorien() {
+  var set = [];
+  DB.forEach(function (r) {
+    var k = r.kategorie || "Ohne Kategorie";
+    if (set.indexOf(k) === -1) set.push(k);
+  });
+  return set.sort();
+}
+
+function slugNorm(s) {
+  return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/* Setzt eine Zutat aus den getrennten Feldern menge + einheit zusammen,
+ * z. B. { menge: "200", einheit: "g" } -> "200 g". Ältere Daten ohne
+ * "einheit" (z. B. { menge: "200 g" }) bleiben dabei unverändert lesbar. */
+function mengeText(z) {
+  var m = z && (z.menge || "") ? String(z.menge).trim() : "";
+  var e = z && (z.einheit || "") ? einheitAnzeige(String(z.einheit).trim()) : "";
+  return m + (m && e ? " " : "") + e;
+}
+
+function melden(text, fehler) {
+  var s = document.getElementById("status");
+  s.hidden = false;
+  s.textContent = text;
+  s.className = fehler ? "error" : "";
+  clearTimeout(statusTimeout);
+  statusTimeout = setTimeout(function () { s.hidden = true; }, 4000);
+}
+
+/* ---------------------------------------------------------------
+ * Hell-/Dunkelmodus
+ * --------------------------------------------------------------- */
+function anfangsThema() {
+  var urlThema = new URLSearchParams(location.search).get("theme");
+  if (urlThema === "dunkel" || urlThema === "hell") return urlThema;
+  try {
+    var gespeichert = localStorage.getItem(THEME_KEY);
+    if (gespeichert === "dunkel" || gespeichert === "hell") return gespeichert;
+  } catch (e) { /* ignorieren */ }
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dunkel";
+  return "hell";
+}
+
+function setzeThema(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignorieren */ }
+  document.getElementById("btnTheme").textContent =
+    t === "dunkel" ? "☀️" : "🌗";
+}
+
+function toggleThema() {
+  setzeThema(document.documentElement.getAttribute("data-theme") === "dunkel" ? "hell" : "dunkel");
+}
+
+/* ---------------------------------------------------------------
+ * Titel-Spielerei: Überschrift beim Anklicken umschalten
+ * --------------------------------------------------------------- */
+var TITEL_KEY = "rezept_titel_v1";
+var titelVariationen = [
+  "🍲 Julia's Rezepte-Sammlung",
+  "🍲 Meine Rezepte-Sammlung",
+  "🍲 Unsere Rezepte-Sammlung"
+];
+function setzeTitel(i) {
+  var h = document.getElementById("titelSammlung");
+  if (!h) return;
+  i = i % titelVariationen.length;
+  if (i < 0) i += titelVariationen.length;
+  h.textContent = "🍲 " + tr(titelVariationen[i].replace("🍲 ", ""));
+  try { localStorage.setItem(TITEL_KEY, String(i)); } catch (e) { /* ignorieren */ }
+}
+function titelIndex() {
+  try {
+    var v = parseInt(localStorage.getItem(TITEL_KEY), 10);
+    if (v >= 0 && v < titelVariationen.length) return v;
+  } catch (e) { /* ignorieren */ }
+  return 0;
+}
+document.getElementById("titelSammlung").onclick = function () {
+  setzeTitel((titelIndex() + 1) % titelVariationen.length);
+};
+
+/* ---------------------------------------------------------------
+ * Rezeptliste
+ * --------------------------------------------------------------- */
+function anzeigeListe() {
+  var suche = slugNorm(suchtext);
+  return DB.filter(function (r) {
+    if (filterKat && (r.kategorie || "Ohne Kategorie") !== filterKat) return false;
+    if (suche) {
+      var inName = slugNorm(r.name).indexOf(suche) !== -1;
+      var inZutaten = slugNorm((r.zutaten || []).map(function (z) { return z.name; }).join(" ")).indexOf(suche) !== -1;
+      if (!inName && !inZutaten) return false;
+    }
+    if (filterTcm) {
+      var teile = filterTcm.split(":");
+      var agg = tcmAggregat(r);
+      if (!agg[teile[0]] || agg[teile[0]].indexOf(teile[1]) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function rendereListe() {
+  var ul = document.getElementById("rezeptliste");
+  var liste = anzeigeListe().sort(function (a, b) { return a.name.localeCompare(b.name, sprachTag()); });
+  ul.innerHTML = "";
+  liste.forEach(function (r) {
+    var li = document.createElement("li");
+    li.className = r.id === aktuellerId ? "aktiv" : "";
+    li.dataset.id = r.id;
+    li.innerHTML = '<span class="name">' + escapeHtml(r.name) +
+      "<small>" + escapeHtml(r.kategorie || tr("Ohne Kategorie")) + "</small></span>";
+    li.addEventListener("click", function () { waehle(r.id); });
+    ul.appendChild(li);
+  });
+  document.getElementById("anzahl").textContent = trPlural(liste.length, "{anzahl} Rezept", "{anzahl} Rezepte");
+  if (!liste.length) {
+    var leer = document.createElement("li");
+    leer.className = "leer";
+    leer.textContent = tr("Keine Rezepte gefunden.");
+    ul.appendChild(leer);
+  }
+}
+
+function waehle(id) {
+  var r = DB.find(function (x) { return x.id === id; });
+  if (!r) return;
+  aktuellerId = id;
+  portionenFaktor = 1;
+  rendereListe();
+  rendereRezept(r);
+}
+
+/* Wählt eine Kategorie im Filter aus (Dropdown + Variable) und zeigt die
+ * gefilterte Liste an. */
+function waehleKategorie(kat) {
+  filterKat = kat;
+  var sel = document.getElementById("filterKat");
+  if (sel) sel.value = kat;
+  rendereListe();
+}
+
+/* Ändert die Portionenzahl um +/-1 (ganze Portion, intuitiver als Faktor-
+ * Schritte) und leitet daraus den neuen Skalierungsfaktor ab. */
+function aendrePortionen(r, delta) {
+  var original = r.portionen || 1;
+  var aktuell = Math.round(original * portionenFaktor * 100) / 100;
+  var neu = aktuell + delta;
+  if (neu < 1) neu = 1;
+  portionenFaktor = neu / original;
+  rendereRezept(r);
+}
+
+/* Bindet ein Notiz-Textfeld an localStorage: speichert debounced (600ms
+ * nach letztem Tastendruck) und zeigt kurz "Gespeichert" als Feedback.
+ * Ein leeres Feld löscht den Eintrag komplett statt einen leeren String
+ * zu speichern (hält das Storage-Objekt schlank). */
+function bindeNotizFeld(feld, rezeptId) {
+  feld.addEventListener("input", function () {
+    clearTimeout(notizSpeicherTimeout);
+    var status = document.getElementById("notizStatus");
+    if (status) status.textContent = "";
+    notizSpeicherTimeout = setTimeout(function () {
+      var text = feld.value;
+      if (text.trim()) notizen[rezeptId] = text;
+      else delete notizen[rezeptId];
+      speichere(REZ_NOTIZEN, notizen);
+      var s = document.getElementById("notizStatus");
+      if (s) {
+        s.textContent = tr("Gespeichert ✓");
+        setTimeout(function () { if (s) s.textContent = ""; }, 1500);
+      }
+    }, 600);
+  });
+}
+
+/* ---------------------------------------------------------------
+ * Küchenmodus
+ * --------------------------------------------------------------- */
+var kuecheWakeLock = null;
+var kuecheSchriftStufe = 1; /* Faktor für --kueche-schrift, 0.85..1.6 */
+var kuecheAktuell = null;   /* Rezept im offenen Küchenmodus (für Timer-Namen) */
+
+function rendereKueche(r) {
+  var titel = document.getElementById("kuecheTitel");
+  titel.textContent = "🥘 " + r.name;
+
+  var html = "";
+  var zutaten = r.zutaten || [];
+  if (zutaten.length) {
+    html += "<h3>" + tr("Zutaten") + "</h3><ul class=\"kueche-zutaten\">";
+    zutaten.forEach(function (z) {
+      var menge = skaliereMenge(mengeText(z), portionenFaktor);
+      html += "<li><span class=\"kueche-menge\">" + escapeHtml(menge) + "</span>" +
+        "<span>" + escapeHtml(z.name || "") + "</span></li>";
+    });
+    html += "</ul>";
+  }
+
+  var schritte = r.zubereitung || [];
+  html += "<h3>" + tr("Zubereitung") + "</h3>";
+  if (schritte.length) {
+    html += '<ol class="kueche-schritte">' + schritte.map(function (s, i) {
+      var wecker = leseWeckerMinuten(s);
+      var text = escapeHtml(ohneWeckerMarker(s));
+      if (!wecker) return "<li>" + text + "</li>";
+      return "<li>" + text +
+        ' <button class="btn-link kueche-schritt-wecker" data-min="' + wecker +
+        '" data-key="' + escapeHtml(r.id) + ":" + i +
+        '" title="' + tr("Küchen-Wecker starten") + '">⏰ ' + wecker + " " + tr("min") + "</button></li>";
+    }).join("") + "</ol>";
+  } else {
+    html += '<p class="leer">' + tr("Keine Zubereitung angegeben.") + '</p>';
+  }
+
+  document.getElementById("kuecheInhalt").innerHTML = html;
+}
+
+var KUECHE_SCHRIFT_KEY = "rezepte.kuecheSchrift";
+
+function setzeKuecheSchrift(stufe) {
+  /* Runden gegen Float-Drift durch wiederholtes +/-0.1 */
+  kuecheSchriftStufe = Math.round(Math.max(0.85, Math.min(1.6, stufe)) * 100) / 100;
+  document.getElementById("kueche").style.setProperty("--kueche-schrift", kuecheSchriftStufe);
+  try { localStorage.setItem(KUECHE_SCHRIFT_KEY, String(kuecheSchriftStufe)); } catch (e) { /* ignorieren */ }
+}
+
+/* Gespeicherte Schriftstufe beim Laden wiederherstellen - bleibt so über
+ * Seitenaufrufe hinaus erhalten, bis sie neu verstellt wird. */
+(function () {
+  var gespeichert = null;
+  try { gespeichert = parseFloat(localStorage.getItem(KUECHE_SCHRIFT_KEY)); } catch (e) { /* ignorieren */ }
+  if (!isNaN(gespeichert)) setzeKuecheSchrift(gespeichert);
+})();
+
+function oeffneKueche(r) {
+  kuecheAktuell = r;
+  rendereKueche(r);
+  /* Gemerkte Schriftstufe anwenden (früher: Reset auf 1 bei jedem Öffnen) */
+  setzeKuecheSchrift(kuecheSchriftStufe);
+  document.getElementById("kuecheBackdrop").classList.add("offen");
+  document.getElementById("kueche").classList.add("offen");
+  document.getElementById("kuecheInhalt").scrollTop = 0;
+  fordereWakeLockAn();
+  rendereKuecheTimer(); /* laufende Timer bleiben beim Schließen/Öffnen erhalten */
+}
+
+function schliesseKueche() {
+  document.getElementById("kuecheBackdrop").classList.remove("offen");
+  document.getElementById("kueche").classList.remove("offen");
+  gebWakeLockFrei();
+}
+
+/* Fordert einen Screen Wake Lock an, damit der Bildschirm während des
+ * Kochens nicht einschläft. Nicht alle Browser unterstützen das (z. B.
+ * ältere Safari-Versionen) - dann bleibt der Küchenmodus trotzdem
+ * nutzbar, nur ohne die Wachhalte-Funktion. */
+function fordereWakeLockAn() {
+  if (!("wakeLock" in navigator)) return;
+  navigator.wakeLock.request("screen").then(function (lock) {
+    kuecheWakeLock = lock;
+    lock.addEventListener("release", function () { kuecheWakeLock = null; });
+  }).catch(function () { kuecheWakeLock = null; /* z. B. Akkusparmodus - stillschweigend ignorieren */ });
+}
+function gebWakeLockFrei() {
+  if (kuecheWakeLock) { kuecheWakeLock.release().catch(function () {}); kuecheWakeLock = null; }
+}
+/* Der Wake Lock wird vom Browser automatisch freigegeben, sobald der Tab
+ * in den Hintergrund wechselt (z. B. App-Wechsel). Kommt Julia zurück,
+ * während der Küchenmodus noch offen ist, fordern wir ihn erneut an. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible" && document.getElementById("kueche").classList.contains("offen")) {
+    fordereWakeLockAn();
+  }
+});
+
+/* ---------------------------------------------------------------
+ * Küchen-Timer
+ * Mehrere Kurzzeitwecker parallel möglich (z. B. Nudeln + Sauce).
+ * Läuft rein im Speicher (kein localStorage) - beim Neuladen der
+ * Seite sind laufende Timer bewusst wieder weg, das ist für einen
+ * Kurzzeitwecker beim Kochen ok.
+ * --------------------------------------------------------------- */
+var kuecheTimerListe = []; /* { id, endeZeit, dauerSek, abgelaufen, intervallId } */
+var kuecheTimerZaehler = 0;
+var kuecheTimerAudioCtx = null;
+
+function kuecheTimerPopoverUmschalten(erzwingeZu) {
+  var pop = document.getElementById("kuecheTimerPopover");
+  if (erzwingeZu) { pop.classList.remove("offen"); return; }
+  pop.classList.toggle("offen");
+  if (pop.classList.contains("offen")) {
+    setzeKuecheTimerWert(Number(document.getElementById("kuecheTimerSlider").value) || 10);
+    var eingabe = document.getElementById("kuecheTimerName");
+    setTimeout(function () { eingabe.focus(); }, 30);
+  }
+}
+
+/* Formatiert eine Minutenzahl lesbar für die große Anzeige im Popover,
+ * z. B. 90 -> "1 Std 30 min", 45 -> "45 min". */
+function formatiereMinutenLesbar(minuten) {
+  var h = Math.floor(minuten / 60), m = minuten % 60;
+  if (h === 0) return m + " " + tr("min");
+  if (m === 0) return h + " " + tr("Std");
+  return h + " " + tr("Std") + " " + m + " " + tr("min");
+}
+
+/* Hält Slider, Zahlenfeld und Live-Anzeige synchron. */
+function setzeKuecheTimerWert(minuten, vomFeld) {
+  minuten = Math.max(1, Math.min(180, Math.round(minuten) || 1));
+  document.getElementById("kuecheTimerSlider").value = minuten;
+  if (!vomFeld) document.getElementById("kuecheTimerMin").value = minuten;
+  document.getElementById("kuecheTimerAnzeige").textContent = formatiereMinutenLesbar(minuten);
+}
+
+/* Läuft für diesen Schritt-Chip (Schlüssel) noch ein Timer? */
+function kuecheTimerLaeuft(schluessel) {
+  return schluessel != null && kuecheTimerListe.some(function (t) {
+    return t.schluessel === schluessel && !t.abgelaufen && t.endeZeit > Date.now();
+  });
+}
+
+function starteKuecheTimer(minuten, nameErzwungen, schluessel) {
+  minuten = Math.max(1, Math.min(180, Math.round(minuten)));
+  var nameFeld = document.getElementById("kuecheTimerName");
+  /* Vorgefertigte Wecker (Schritt-Chip) bringen ihren eigenen Namen mit,
+   * das Popover-Eingabefeld bleibt dann unangetastet. */
+  var name = (nameErzwungen != null && String(nameErzwungen).trim() !== "")
+    ? String(nameErzwungen).trim()
+    : (nameFeld ? nameFeld.value.trim() : "");
+  /* Derselbe Schritt-Chip erneut geklickt: Läuft der Timer schon, bleibt
+   * er unangetastet (Nachschauen darf nichts kaputt machen) und es wird
+   * false gemeldet -> Aufrufer zeigt den Kurz-Hinweis. Nur abgelaufene
+   * Reste desselben Schritts werden aufgeräumt. Manuelle Popover-Timer
+   * (ohne schluessel) stapeln weiterhin. */
+  if (schluessel) {
+    if (kuecheTimerLaeuft(schluessel)) return false;
+    kuecheTimerListe = kuecheTimerListe.filter(function (t) { return t.schluessel !== schluessel; });
+  }
+  kuecheTimerZaehler++;
+  var eintrag = {
+    id: kuecheTimerZaehler,
+    name: name,
+    dauerSek: minuten * 60,
+    endeZeit: Date.now() + minuten * 60000,
+    abgelaufen: false,
+    schluessel: schluessel || null
+  };
+  kuecheTimerListe.push(eintrag);
+  kuecheTimerPopoverUmschalten(true);
+  setzeKuecheTimerWert(10);
+  if (nameFeld) nameFeld.value = "";
+  rendereKuecheTimer();
+  if (!kuecheTimerIntervall) starteKuecheTimerUhr();
+  return true;
+}
+
+function entferneKuecheTimer(id) {
+  kuecheTimerListe = kuecheTimerListe.filter(function (t) { return t.id !== id; });
+  rendereKuecheTimer();
+  if (!kuecheTimerListe.length && kuecheTimerIntervall) {
+    clearInterval(kuecheTimerIntervall);
+    kuecheTimerIntervall = null;
+  }
+}
+
+function formatiereRestzeit(sek) {
+  sek = Math.max(0, Math.round(sek));
+  var m = Math.floor(sek / 60), s = sek % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+/* Abgelaufene Wecker sichtbar halten: Der Küchenmodus-Knopf in der
+ * Rezeptansicht blinkt rot, solange ein Timer abgelaufen und noch nicht
+ * weggeklickt ist - auch wenn die Küche gerade geschlossen ist. */
+function setzeKuecheAlarm() {
+  var alarm = kuecheTimerListe.some(function (t) { return t.abgelaufen; });
+  document.querySelectorAll("#btnKuecheAn").forEach(function (b) {
+    b.classList.toggle("alarm-blinkt", alarm);
+  });
+}
+
+function rendereKuecheTimer() {
+  var wrap = document.getElementById("kuecheTimerListe");
+  wrap.innerHTML = kuecheTimerListe.map(function (t) {
+    var restSek = t.abgelaufen ? 0 : (t.endeZeit - Date.now()) / 1000;
+    var anteil = t.dauerSek > 0 ? Math.max(0, Math.min(1, restSek / t.dauerSek)) : 0;
+    /* Farbstufen: kurze Timer bleiben prozentual wie bisher, lange Timer
+     * kappen auf max. 5 min Orange und max. 2 min Rot Restzeit - sonst
+     * waere der Chip bei großen Zeiten fast eine Stunde "kritisch". */
+    var rotAb = Math.min(t.dauerSek * 0.29, 120);
+    var orangeAb = Math.min(t.dauerSek * 0.5, 300);
+    var stufe = t.abgelaufen || restSek < rotAb ? "rot" : (restSek < orangeAb ? "orange" : "gruen");
+    var nameHtml = t.name ? '<span class="name">' + escapeHtml(t.name) + '</span>' : "";
+    return '<span class="kueche-timer-chip stufe-' + stufe + (t.abgelaufen ? " abgelaufen" : "") + '" data-id="' + t.id + '">' +
+      '<span class="kueche-timer-progress" style="width:' + Math.round(anteil * 100) + '%"></span>' +
+      nameHtml +
+      '<span class="zeit">' + (t.abgelaufen ? tr("Fertig! ⏰") : formatiereRestzeit(restSek)) + '</span>' +
+      '<button style="background: #fff; color: red; border: 3px solid #000;" type="button" data-id="' + t.id + '" data-i18n-title="Timer entfernen" title="' + tr("Timer entfernen") + '">✕</button>' +
+      '</span>';
+  }).join("");
+  setzeKuecheAlarm();
+}
+
+var kuecheTimerIntervall = null;
+function starteKuecheTimerUhr() {
+  kuecheTimerIntervall = setInterval(function () {
+    var jemandNeuAbgelaufen = false;
+    kuecheTimerListe.forEach(function (t) {
+      if (!t.abgelaufen && Date.now() >= t.endeZeit) {
+        t.abgelaufen = true;
+        jemandNeuAbgelaufen = true;
+      }
+    });
+    rendereKuecheTimer();
+    if (jemandNeuAbgelaufen) kuecheTimerSignal();
+  }, 1000);
+}
+
+/* Signalisiert das Timer-Ende per Ton (Web Audio, kein Audiofile nötig)
+ * und Vibration (nur auf unterstützten Geräten, z. B. Android). */
+function kuecheTimerSignal() {
+  try {
+    if (!kuecheTimerAudioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) kuecheTimerAudioCtx = new Ctx();
+    }
+    if (kuecheTimerAudioCtx) {
+      var ctx = kuecheTimerAudioCtx;
+      [0, 0.35, 0.7].forEach(function (verzoegerung) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + verzoegerung);
+        gain.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + verzoegerung + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + verzoegerung + 0.28);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + verzoegerung);
+        osc.stop(ctx.currentTime + verzoegerung + 0.3);
+      });
+    }
+  } catch (e) { /* Web Audio nicht verfügbar - stillschweigend ignorieren */ }
+  if ("vibrate" in navigator) {
+    try { navigator.vibrate([200, 100, 200, 100, 200]); } catch (e) { /* ignorieren */ }
+  }
+}
+
+function offneEditor() {
+  var thema = document.documentElement.getAttribute("data-theme") || "hell";
+  var url = aktuellerId
+    ? "rezepte_bearbeiten.html?id=" + encodeURIComponent(aktuellerId) + "&theme=" + thema + "&lang=" + sprache
+    : "rezepte_bearbeiten.html?theme=" + thema + "&lang=" + sprache;
+  window.open(url, "rezepteditor");
+}
+
+function offneWochenplan() {
+  var thema = document.documentElement.getAttribute("data-theme") || "hell";
+  location.href = urlMitSprache("wochenplan.html?theme=" + thema);
+}
+
+/* ---------------------------------------------------------------
+ * TCM – 5 Elemente
+ * --------------------------------------------------------------- */
+var TCM_AUF_KEY = "tcm_bereich_offen_v1";   /* merkt sich, ob der TCM-Bereich aufgeklappt ist */
+/* Anzeige-Zuordnung: Slug (aus ZUTATEN_TCM) -> [deutscher Schlüssel, Punkfarbe].
+ * Die deutschen Schlüssel werden über tr() übersetzt. */
+var TCM_ANZEIGE = {
+  element: {
+    holz:   ["Holz",   "#5ba83b"],
+    feuer:  ["Feuer",  "#d9534f"],
+    erde:   ["Erde",   "#c9a227"],
+    metall: ["Metall", "#8fa0ad"],
+    wasser: ["Wasser", "#3f7fb0"]
+  },
+  geschmack: {
+    sauer:  ["sauer"],
+    bitter: ["bitter"],
+    suess:  ["süß"],
+    scharf: ["scharf"],
+    salzig: ["salzig"]
+  },
+  thermik: {
+    heiss:   ["heiß",   "#d9534f"],
+    warm:    ["warm",   "#e89a3d"],
+    neutral: ["neutral","#b3a48d"],
+    kuehl:   ["kühl",   "#5ba8d9"],
+    kalt:    ["kalt",   "#3f7fb0"]
+  }
+};
+
+function tcmNorm(s) {
+  return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/* Normalisierter Index (tcmNorm(Schlüssel) -> Eintrag), damit "Eier" und
+ * "eier" denselben Treffer finden. Wird einmalig on demand aufgebaut. */
+var tcmIndex = null;
+function tcmLookupTabelle() {
+  if (tcmIndex) return tcmIndex;
+  tcmIndex = {};
+  if (typeof ZUTATEN_TCM === "undefined") return tcmIndex;
+  Object.keys(ZUTATEN_TCM).forEach(function (k) {
+    var e = ZUTATEN_TCM[k];
+    tcmIndex[tcmNorm(k)] = e;
+    /* Namens-Varianten ("namen": weitere Sprachen) mit aufnehmen */
+    ((e && e.namen) || []).forEach(function (v) {
+      var nv = tcmNorm(v);
+      if (nv && !tcmIndex[nv]) tcmIndex[nv] = e;
+    });
+  });
+  /* Overlay aus dem Pflege-Modul (rezepte_bearbeiten.html): eigene
+   * Zutaten-Zuordnungen haben Vorrang vor der mitgelieferten Datei. */
+  try {
+    var overlay = JSON.parse(localStorage.getItem("zutaten_tcm_v1") || "{}");
+    Object.keys(overlay).forEach(function (k) {
+      tcmIndex[tcmNorm(k)] = overlay[k];
+    });
+  } catch (e) { /* ignorieren */ }
+  return tcmIndex;
+}
+
+/* Findet den TCM-Eintrag einer Zutat: erst exakt (normalisiert), dann ohne
+ * Klammer-Zusätze wie "(à 150 g)" bzw. ohne abschließendes ", …". */
+function tcmZuZutat(name) {
+  var index = tcmLookupTabelle();
+  var n = tcmNorm(name);
+  if (index[n]) return index[n];
+  var basis = n.replace(/\s*\([^)]*\)\s*/g, " ").replace(/,\s*$/, "").replace(/\s+/g, " ").trim();
+  if (basis && index[basis]) return index[basis];
+  return null;
+}
+
+function tcmPush(arr, w) { if (w && arr.indexOf(w) === -1) arr.push(w); }
+
+/* Fasst die TCM-Werte aller Zutaten eines Rezepts zusammen. */
+function tcmAggregat(r) {
+  var agg = { element: [], geschmack: [], thermik: [], treffer: 0, gesamt: 0 };
+  (r.zutaten || []).forEach(function (z) {
+    agg.gesamt++;
+    var e = tcmZuZutat(z.name);
+    if (!e) return;
+    agg.treffer++;
+    tcmPush(agg.element, e.element);
+    (e.geschmack || []).forEach(function (g) { tcmPush(agg.geschmack, g); });
+    tcmPush(agg.thermik, e.thermik);
+  });
+  return agg;
+}
+
+/* Liefert die übersetzten Anzeige-Texte einer Wertegruppe ("element", …). */
+function tcmAnzeige(typ, slugListe) {
+  var m = TCM_ANZEIGE[typ] || {};
+  return (slugListe || []).map(function (s) {
+    var e = m[s];
+    return e ? tr(e[0]) : String(s);
+  });
+}
+
+/* Chips einer Gruppe; element/thermik bekommen einen Farbpunkt. Klickbare
+ * Chips (data-tcm="<typ>:<slug>") setzen den TCM-Filter. */
+function tcmChipsHtml(typ, slugListe) {
+  var m = TCM_ANZEIGE[typ] || {};
+  var titel = tr("Nach 5 Elementen filtern (TCM)");
+  return slugListe.map(function (s) {
+    var e = m[s] || [s];
+    var dot = e[1] ? '<span class="tcm-dot" style="background:' + e[1] + '"></span>' : "";
+    return '<span class="tcm-chip" tabindex="0" role="button" data-tcm="' + typ + ":" + s +
+      '" title="' + escapeHtml(titel) + '" aria-label="' + escapeHtml(tr(e[0])) + '">' +
+      dot + escapeHtml(tr(e[0])) + "</span>";
+  }).join(" ");
+}
+
+function tcmZeileHtml(label, inhalt) {
+  return '<div class="tcm-zeile"><span class="tcm-label">' + escapeHtml(label) + "</span>" +
+    '<span class="tcm-chips">' + (inhalt || '<span class="tcm-leer">–</span>') + "</span></div>";
+}
+
+function rendereTcm(r) {
+  var agg = tcmAggregat(r);
+  if (!agg.gesamt) return "";
+  var offen = false;
+  try { offen = localStorage.getItem(TCM_AUF_KEY) === "1"; } catch (e) { /* ignorieren */ }
+  return '<details class="bereich tcm-bereich"' + (offen ? " open" : "") + "><summary>" + escapeHtml(tr("🌿 5 Elemente")) + "</summary>" +
+    '<p class="hinweis">' +
+      tr("Abgeleitet aus den Rezeptzutaten – ohne Therapie-Anspruch, nur zur Orientierung.") +
+    "</p>" +
+    '<div class="tcm">' +
+      tcmZeileHtml(tr("Elemente:"), tcmChipsHtml("element", agg.element)) +
+      tcmZeileHtml(tr("Geschmack:"), tcmChipsHtml("geschmack", agg.geschmack)) +
+      tcmZeileHtml(tr("Thermik:"), tcmChipsHtml("thermik", agg.thermik)) +
+    "</div>" +
+    '<p class="tcm-fuss">' +
+      tr("Abgeleitet aus {treffer} von {gesamt} Zutaten.", { treffer: agg.treffer, gesamt: agg.gesamt }) +
+    "</p></details>";
+}
+
+/* Merkt sich den Aufklapp-Zustand dauerhaft. "toggle" bubblt nicht,
+ * daher wird die Capture-Phase benutzt. */
+document.addEventListener("toggle", function (e) {
+  var t = e.target;
+  if (t && t.classList && t.classList.contains("tcm-bereich")) {
+    try { localStorage.setItem(TCM_AUF_KEY, t.open ? "1" : "0"); } catch (err) { /* ignorieren */ }
+  }
+}, true);
+
+/* Optionen für das TCM-Filter-Dropdown (ein Select mit Gruppen). */
+function tcmFilterOptionen() {
+  var gruppen = [
+    [tr("Elemente:"), "element"],
+    [tr("Geschmack:"), "geschmack"],
+    [tr("Thermik:"), "thermik"]
+  ];
+  var html = '<option value="">' + tr("Alle Elemente & Geschmäcker (TCM)") + "</option>";
+  gruppen.forEach(function (g) {
+    html += '<optgroup label="' + escapeHtml(g[0]) + '">';
+    Object.keys(TCM_ANZEIGE[g[1]]).forEach(function (slug) {
+      html += '<option value="' + g[1] + ":" + slug + '">' + escapeHtml(tr(TCM_ANZEIGE[g[1]][slug][0])) + "</option>";
+    });
+    html += "</optgroup>";
+  });
+  return html;
+}
+
+/* ---------------------------------------------------------------
+ * Rezept-Ansicht
+ * --------------------------------------------------------------- */
+function nahrKarte(label, einheit, wert) {
+  var v = wert == null || isNaN(wert) ? "–" : wert + " " + einheit;
+  return '<div class="nahr"><span class="nahr-wert">' + escapeHtml(String(v)) + "</span>" +
+    '<span class="nahr-label">' + escapeHtml(label) + "</span></div>";
+}
+
+function rendereRezept(r) {
+  var main = document.getElementById("bereich");
+  var original = r.portionen || 1;
+  var aktuell = Math.round(original * portionenFaktor * 100) / 100;
+  var html =
+    '<article class="rezept">' +
+      '<div class="rezept-kopf">' +
+        '<div class="titel">' +
+          '<span class="kategorie" role="button" tabindex="0" data-i18n-title="Nach Kategorie filtern" title="Nach Kategorie filtern">' + escapeHtml(r.kategorie || tr("Ohne Kategorie")) + "</span>" +
+          "<h2>" + escapeHtml(r.name) + "</h2>" +
+        "</div>" +
+        '<div class="rezept-kopf-aktionen">' +
+          '<button id="btnRezeptExport" class="small" data-i18n-title="Rezept als HTML-Datei exportieren (zum Versenden per E-Mail)" title="Rezept als HTML-Datei exportieren (zum Versenden per E-Mail)">' + tr("📧 Als HTML") + '</button>' +
+          '<button id="btnKuecheAn" class="small" data-i18n-title="Großansicht zum Kochen, Bildschirm bleibt wach" title="Großansicht zum Kochen, Bildschirm bleibt wach">' + tr("🥘 Küchenmodus") + '</button>' +
+        "</div>" +
+      "</div>";
+
+  var n = r.nahrwerte || {};
+    html += '<div class="nahrwerte">' +
+      nahrKarte(tr("Kalorien"), "kcal", n.kcal) +
+      nahrKarte(tr("Kohlenhydrate"), "g", n.kohlenhydrate) +
+      nahrKarte(tr("Eiweiß"), "g", n.eiweiss) +
+      nahrKarte(tr("Ballaststoffe"), "g", n.ballaststoffe) +
+      nahrKarte(tr("Fette"), "g", n.fette) +
+      "</div>" +
+      '<p class="nahr-quelle"><button id="btnNahrQuelle" class="nahr-quelle-btn" ' +
+        'data-i18n-title="Tabelle der Zutaten-Nährwerte öffnen" title="Tabelle der Zutaten-Nährwerte öffnen">ⓘ ' +
+        tr("Zutaten-Basis: Nährwerte pro 100 g/ml") + "</button></p>";
+
+  html += rendereTcm(r);
+
+  var bilder = r.bilder || [];
+  if (bilder.length) {
+    html += '<div class="rezept-bilder">' +
+      bilder.map(function (src) {
+        return '<img class="rezept-bild" src="' + escapeHtml(src) +
+          '" alt="' + escapeHtml(r.name) + '" loading="lazy">';
+      }).join("") +
+      "</div>";
+  }
+
+  html += '<section class="bereich"><h3>' + tr("Zutaten") + '</h3>' +
+    '<p class="untertitel portionen-regler">' + tr("Für ") +
+      '<button id="btnPortWeniger" class="port-btn" data-i18n-title="Weniger Portionen" title="Weniger Portionen" ' +
+        (aktuell <= 1 ? "disabled" : "") + ">−</button>" +
+      '<span id="portAnzeige" class="port-zahl">' + formatiereZahlLocale(aktuell) + "</span>" +
+      '<button id="btnPortMehr" class="port-btn" data-i18n-title="Mehr Portionen" title="Mehr Portionen">+</button>' +
+      " " + trPlural(aktuell, "Portion", "Portionen") +
+      (portionenFaktor !== 1
+        ? ' <button id="btnPortZuruecksetzen" class="port-reset" title="' +
+            tr("Auf Original ({original}) zurücksetzen", { original: original }) + '">' + tr("↺ Original") + '</button>'
+        : "") +
+    "</p>" +
+    '<p class="hinweis">' + tr("Hake Zutaten an, um sie der Einkaufsliste hinzuzufügen.") +
+    ' <br><a id="alleAuswaehlen">' + tr("Alle auswählen") + '</a>' +
+    ' <a id="alleAbwaehlen">' + tr("Alle abwählen") + '</a></p>';
+  html += '<table class="zutaten"><thead><tr>' +
+    '<th class="check"></th><th class="menge">' + tr("Menge") + '</th><th>' + tr("Zutat") + '</th>' +
+    "</tr></thead><tbody>";
+  (r.zutaten || []).forEach(function (z, i) {
+    var key = "r:" + r.id + ":" + i;
+    var an = refs.indexOf(key) !== -1;
+    var mengeAnzeige = skaliereMenge(mengeText(z), portionenFaktor);
+    html += "<tr>" +
+      '<td class="check"><input type="checkbox" class="zut" data-key="' + escapeHtml(key) + '"' + (an ? " checked" : "") + "></td>" +
+      '<td class="menge">' + escapeHtml(mengeAnzeige) + "</td>" +
+      '<td>' + escapeHtml(z.name || "") + "</td>" +
+      "</tr>";
+  });
+  html += "</tbody></table>";
+  if (!(r.zutaten || []).length) html += '<p class="leer">' + tr("Keine Zutaten angegeben.") + '</p>';
+  html += "</section>";
+
+  html += '<section class="bereich"><h3>' + tr("Zubereitung") + '</h3>';
+  var schritte = r.zubereitung || [];
+  if (schritte.length) {
+    html += '<ol class="schritte">' + schritte.map(function (s, i) {
+      var wecker = leseWeckerMinuten(s);
+      var text = escapeHtml(ohneWeckerMarker(s));
+      if (!wecker) return "<li>" + text + "</li>";
+      return "<li>" + text +
+        ' <button class="btn-link schritt-wecker-start" data-min="' + wecker +
+        '" data-key="' + escapeHtml(r.id) + ":" + i +
+        '" title="' + tr("Küchen-Wecker starten") + '">⏰ ' + wecker + " " + tr("min") + "</button></li>";
+    }).join("") + "</ol>";
+  } else {
+    html += '<p class="leer">' + tr("Keine Zubereitung angegeben.") + '</p>';
+  }
+  html += "</section>";
+
+  var notizText = notizen[r.id] || "";
+  html += '<section class="bereich notizen-bereich">';
+  if (notizText) {
+    html += '<h3>' + tr("📝 Notizen") + '</h3>' +
+      '<textarea id="notizFeld" class="notiz-feld" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '">' +
+      escapeHtml(notizText) + "</textarea>" +
+      '<p class="notiz-status" id="notizStatus">&nbsp;</p>';
+  } else {
+    html += '<button id="btnNotizOeffnen" class="btn-link notiz-oeffnen">' + tr("📝 Notiz hinzufügen") + '</button>';
+  }
+  html += "</section>";
+
+  html += '<div class="nav-rezept">' +
+    '<button id="btnVor" class="small">' + tr("← Vorheriges") + '</button>' +
+    '<button id="btnNach" class="small">' + tr("Nächstes →") + '</button>' +
+    "</div>";
+
+  html += "</article>";
+  main.innerHTML = html;
+  uebersetzeDOM(main);
+
+  /* Klick auf ein Rezeptbild: vergrößern / zurück. Klick zwischen den
+   * Bildern schließt einen offenen Zoom wieder. */
+  var bilderBox = main.querySelector(".rezept-bilder");
+  if (bilderBox) {
+    bilderBox.addEventListener("click", function (ev) {
+      var img = ev.target.closest(".rezept-bild");
+      var offen = bilderBox.querySelectorAll(".rezept-bild.gross");
+      if (!img) { offen.forEach(function (b) { b.classList.remove("gross"); }); return; }
+      var war = img.classList.contains("gross");
+      offen.forEach(function (b) { b.classList.remove("gross"); });
+      if (!war) img.classList.add("gross");
+    });
+  }
+
+  var katChip = main.querySelector(".kategorie");
+  if (katChip) {
+    var katWert = r.kategorie || "Ohne Kategorie";
+    katChip.addEventListener("click", function () { waehleKategorie(katWert); });
+    katChip.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        waehleKategorie(katWert);
+      }
+    });
+  }
+
+  main.querySelectorAll(".tcm-chip[data-tcm]").forEach(function (chip) {
+    function tcmFiltern() {
+      var v = chip.getAttribute("data-tcm");
+      filterTcm = filterTcm === v ? "" : v;
+      if (filterTcmSel) filterTcmSel.value = filterTcm;
+      rendereListe();
+    }
+    chip.addEventListener("click", tcmFiltern);
+    chip.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        tcmFiltern();
+      }
+    });
+  });
+
+  main.querySelectorAll(".zut").forEach(function (cb) {
+    cb.addEventListener("change", function () {
+      var i = parseInt(cb.dataset.key.split(":")[2], 10);
+      var z = (r.zutaten || [])[i];
+      var mengeSkaliert = z ? skaliereMenge(mengeText(z), portionenFaktor) : "";
+      zutatUmschalten(cb.dataset.key, mengeSkaliert);
+    });
+  });
+
+  function setzeAlleZutaten(wert) {
+    main.querySelectorAll(".zut").forEach(function (cb) {
+      if (cb.checked !== wert) { cb.checked = wert; cb.dispatchEvent(new Event("change")); }
+    });
+  }
+  var btnAlleAus = main.querySelector("#alleAuswaehlen");
+  var btnAlleAb = main.querySelector("#alleAbwaehlen");
+  if (btnAlleAus) btnAlleAus.addEventListener("click", function () { setzeAlleZutaten(true); });
+  if (btnAlleAb) btnAlleAb.addEventListener("click", function () { setzeAlleZutaten(false); });
+
+  var btnPortWeniger = main.querySelector("#btnPortWeniger");
+  var btnPortMehr = main.querySelector("#btnPortMehr");
+  var btnPortZuruecksetzen = main.querySelector("#btnPortZuruecksetzen");
+  if (btnPortWeniger) btnPortWeniger.addEventListener("click", function () { aendrePortionen(r, -1); });
+  if (btnPortMehr) btnPortMehr.addEventListener("click", function () { aendrePortionen(r, 1); });
+  if (btnPortZuruecksetzen) btnPortZuruecksetzen.addEventListener("click", function () {
+    portionenFaktor = 1;
+    rendereRezept(r);
+  });
+
+  var btnNotizOeffnen = main.querySelector("#btnNotizOeffnen");
+  if (btnNotizOeffnen) {
+    btnNotizOeffnen.addEventListener("click", function () {
+      var bereich = btnNotizOeffnen.closest(".notizen-bereich");
+      bereich.innerHTML = '<h3>' + tr("📝 Notizen") + '</h3>' +
+        '<textarea id="notizFeld" class="notiz-feld" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '"></textarea>' +
+        '<p class="notiz-status" id="notizStatus">&nbsp;</p>';
+      var feld = bereich.querySelector("#notizFeld");
+      feld.focus();
+      bindeNotizFeld(feld, r.id);
+    });
+  }
+  var notizFeld = main.querySelector("#notizFeld");
+  if (notizFeld) bindeNotizFeld(notizFeld, r.id);
+
+  var liste = anzeigeListe().sort(function (a, b) { return a.name.localeCompare(b.name, sprachTag()); });
+  var pos = liste.findIndex(function (x) { return x.id === r.id; });
+  var btnVor = main.querySelector("#btnVor");
+  var btnNach = main.querySelector("#btnNach");
+  btnVor.onclick = function () { if (pos > 0) { window.scrollTo(0, 0); waehle(liste[pos - 1].id); } };
+  btnNach.onclick = function () { if (pos < liste.length - 1) { window.scrollTo(0, 0); waehle(liste[pos + 1].id); } };
+  btnVor.disabled = pos <= 0;
+  btnNach.disabled = pos >= liste.length - 1;
+
+  var btnRezeptExport = main.querySelector("#btnRezeptExport");
+  if (btnRezeptExport) btnRezeptExport.addEventListener("click", exportiereRezeptHtml);
+
+  var btnKuecheAn = main.querySelector("#btnKuecheAn");
+  if (btnKuecheAn) btnKuecheAn.addEventListener("click", function () { oeffneKueche(r); });
+  /* Frisch gerenderter Knopf soll einen bereits laufenden Alarm übernehmen. */
+  setzeKuecheAlarm();
+
+  /* Wecker-Chip am Schritt: Küchenmodus auf, Timer läuft sofort – oder
+   * (falls er schon läuft) bleibt er stehen und der Kurz-Hinweis erscheint. */
+  main.querySelectorAll(".schritt-wecker-start").forEach(function (b) {
+    b.addEventListener("click", function () {
+      oeffneKueche(r);
+      if (!starteKuecheTimer(Number(b.dataset.min), r.name, b.dataset.key)) {
+        zeigeKuecheTimerHinweis();
+      }
+    });
+  });
+
+  var btnNahrQuelle = main.querySelector("#btnNahrQuelle");
+  if (btnNahrQuelle) btnNahrQuelle.addEventListener("click", oeffneNahrQuelle);
+
+  aktualisiereBadge();
+}
+
+/* ---------------------------------------------------------------
+ * Einkaufsliste
+ * --------------------------------------------------------------- */
+function anzahlRefs() { return refs.length + extras.length; }
+
+function aktualisiereBadge() {
+  document.getElementById("ekBadge").textContent = "(" + anzahlRefs() + ")";
+  document.getElementById("ekAnzahl").textContent = trPlural(anzahlRefs(), "{anzahl} Position", "{anzahl} Positionen");
+}
+
+function zutatUmschalten(key, mengeSkaliert) {
+  var idx = refs.indexOf(key);
+  if (idx === -1) {
+    refs.push(key);
+    /* Nur speichern, wenn tatsächlich skaliert wurde -> sonst kommt beim
+     * Anzeigen automatisch die Original-Menge aus der DB zum Einsatz. */
+    if (mengeSkaliert != null && portionenFaktor !== 1) {
+      refSkalen[key] = mengeSkaliert;
+    }
+  } else {
+    refs.splice(idx, 1);
+    delete refSkalen[key];
+  }
+  speichere(EK_REFS, refs);
+  speichere(EK_SKALEN, refSkalen);
+  aktualisiereBadge();
+  rendereEinkaufsliste();
+}
+
+function rendereAktiveZutaten() {
+  document.querySelectorAll(".zut").forEach(function (cb) {
+    cb.checked = refs.indexOf(cb.dataset.key) !== -1;
+  });
+}
+
+function gruppiereEinkauf() {
+  var items = [];
+  refs.forEach(function (key) {
+    var teile = key.split(":");
+    if (teile.length < 3) return;
+    var r = DB.find(function (x) { return x.id === teile[1]; });
+    if (!r) return;
+    var z = (r.zutaten || {})[parseInt(teile[2], 10)];
+    if (!z) return;
+    var menge = refSkalen[key] != null ? refSkalen[key] : mengeText(z);
+    items.push({ key: key, menge: menge, name: z.name || "", norm: slugNorm(z.name) });
+  });
+  extras.forEach(function (e) {
+    items.push({ key: e.key, menge: e.menge || "", name: e.name || "", norm: slugNorm(e.name) });
+  });
+  var gruppen = {}, reihenfolge = [];
+  items.forEach(function (it) {
+    var norm = it.norm || "?";
+    if (!gruppen[norm]) {
+      gruppen[norm] = { name: it.name, keys: [], mengen: [] };
+      reihenfolge.push(norm);
+    }
+    gruppen[norm].keys.push(it.key);
+    gruppen[norm].mengen.push(it.menge || "—");
+  });
+  return reihenfolge.map(function (norm) {
+    var g = gruppen[norm];
+    return { name: g.name, keys: g.keys, mengen: g.mengen, summe: bildeGesamt(g.mengen) };
+  });
+}
+
+/* Zerlegt eine Mengenangabe in ein Intervall [min, max] + (normalisierte)
+ * Einheit. Einzelwerte (z. B. "1 EL") ergeben min === max; Bereiche wie
+ * "1-2 EL" oder "1 1/2 – 2 TL" ein echtes Intervall. Brüche und gemischte
+ * Brüche ("1/2 TL", "1 1/2 TL") werden erkannt. Liefert null, wenn keine
+ * saubere Zahl vorliegt (z. B. "etwas", "? ml"). */
+var _einheitenNorm = null;
+function einheitenNorm() {
+  if (_einheitenNorm) return _einheitenNorm;
+  _einheitenNorm = {
+    "st": "St.", "stk": "St.", "stück": "St.", "stücke": "St.", "stueck": "St.", "stuecke": "St.",
+    "g": "g", "gramm": "g", "gr": "g", "kg": "kg",
+    "ml": "ml", "l": "Liter", "liter": "Liter",
+    "el": "EL", "tl": "TL",
+    "glas": "Gläser", "gläser": "Gläser",
+    "zehe": "Zehen", "zehen": "Zehen",
+    "bund": "Bund", "prise": "Prise", "tropfen": "Tropfen", "cm": "cm", "pck": "Pck."
+  };
+  if (typeof EINHEITEN_ANZEIGE !== "undefined") {
+    var sprachen = Object.keys(EINHEITEN_ANZEIGE);
+    for (var i = 0; i < sprachen.length; i++) {
+      var map = EINHEITEN_ANZEIGE[sprachen[i]];
+      for (var de in map) {
+        var val = String(map[de]).toLowerCase().replace(/\./g, "").trim();
+        if (val && !_einheitenNorm[val]) _einheitenNorm[val] = de;
+      }
+    }
+  }
+  return _einheitenNorm;
+}
+
+function parseMengeIntervall(m) {
+  var s = String(m == null ? "" : m).trim()
+    .replace(/^ca\.?\s*/i, "").replace(/^mind\.?\s*/i, "");
+  if (!s) return null;
+  var qM = s.match(/^(\d+(?:[.,]\d+)?(?:\s*\/\s*\d+)?(?:\s+\d+\s*\/\s*\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?(?:\s+\d+\s*\/\s*\d+)?)?)/);
+  if (!qM) return null;
+  var werte = qM[1].split(/\s*[-–]\s*/).map(zahlAusMenge);
+  if (werte.some(function (v) { return v == null; })) return null;
+  /* Alles nach der Zahl ist die Einheit – auch mehrteilige wie "c. à café"
+   * (FR) oder "ст. л." (RU), die ein reines Wort-Regex am Stringende nicht
+   * vollständig erfassen würde. Punkte werden wie in einheitenNorm() global
+   * entfernt, damit der Lookup zuverlässig trifft. */
+  var rest = s.slice(qM[1].length).trim();
+  var unitKey = rest.toLowerCase().replace(/\./g, "").trim();
+  var norm = einheitenNorm()[unitKey];
+  return { min: Math.min.apply(null, werte), max: Math.max.apply(null, werte), unit: norm || rest || "" };
+}
+
+/* Wandelt eine Zahl als Text in einen Wert um: "1", "1,5", "1/2", "1 1/2". */
+function zahlAusMenge(t) {
+  t = t.trim();
+  var gemischt = t.match(/^(\d+(?:[.,]\d+)?)\s+(\d+)\s*\/\s*(\d+)$/);
+  if (gemischt) {
+    var g = parseFloat(gemischt[1].replace(",", ".")) + parseFloat(gemischt[2]) / parseFloat(gemischt[3]);
+    return isNaN(g) ? null : g;
+  }
+  var bruch = t.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (bruch) {
+    var b = parseFloat(bruch[1]) / parseFloat(bruch[2]);
+    return isNaN(b) ? null : b;
+  }
+  var v = parseFloat(t.replace(",", "."));
+  return isNaN(v) ? null : v;
+}
+
+/* Skaliert eine einzelne Mengenangabe mit einem Faktor, z. B. "450 g" bei
+ * Faktor 0.5 -> "225 g". Erkennt Zahl (inkl. Bruch wie "1/2") + optionale
+ * Einheit am Ende. Texte ohne erkennbare Zahl (z. B. "etwas") bleiben
+ * unangetastet. Bereiche ("1-2 EL") werden beide Seiten skaliert. */
+function skaliereMenge(m, faktor) {
+  var s = String(m == null ? "" : m).trim();
+  if (!s || faktor === 1) return s;
+
+  /* Bereich wie "1-2 EL" oder "1 - 2 EL": beide Zahlen skalieren */
+  var bereichM = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)(\s.*)?$/);
+  if (bereichM) {
+    var a = formatiereZahlBruch(parseFloat(bereichM[1].replace(",", ".")) * faktor);
+    var b = formatiereZahlBruch(parseFloat(bereichM[2].replace(",", ".")) * faktor);
+    return a + "-" + b + (bereichM[3] || "");
+  }
+
+  /* Einzelwert, ggf. mit Bruch ("1/2 TL") */
+  var numM = s.match(/^(\d+(?:[.,]\d+)?)(?:\s*\/\s*(\d+))?(\s.*)?$/);
+  if (!numM) return s; /* keine erkennbare Zahl -> unverändert lassen */
+  var num = numM[2] != null
+    ? parseFloat(numM[1].replace(",", ".")) / parseFloat(numM[2])
+    : parseFloat(numM[1].replace(",", "."));
+  if (isNaN(num)) return s;
+  var rest = numM[3] || "";
+  return formatiereZahlBruch(num * faktor) + rest;
+}
+
+/* Rundet auf max. 2 Nachkommastellen und formatiert sprachgerecht. */
+function formatiereZahl(n) {
+  return formatiereZahlLocale(n);
+}
+
+/* Größter gemeinsamer Teiler (zum Kürzen von Brüchen). */
+function ggT(a, b) {
+  while (b) { var t = a % b; a = b; b = t; }
+  return a;
+}
+
+/* Formatiert eine Zahl bevorzugt als "schöner" Bruch ("3/4", "1 1/2"), wenn
+ * sich der Wert exakt mit kleinem Nenner darstellen lässt (z. B. 1/2 + 1/4 =
+ * 3/4). Sonst normale Locale-Darstellung. */
+function formatiereZahlBruch(n) {
+  if (!isFinite(n)) return formatiereZahl(n);
+  var ganz = Math.round(n);
+  if (Math.abs(n - ganz) < 1e-9) return formatiereZahl(n);
+  var vorzeichen = n < 0 ? "-" : "";
+  var abs = Math.abs(n);
+  var ganze = Math.floor(abs);
+  var rest = abs - ganze;
+  for (var d = 2; d <= 16; d++) {
+    var z = Math.round(rest * d);
+    if (z >= d) continue;
+    if (Math.abs(rest - z / d) < 1e-9) {
+      var g = ggT(z, d);
+      z /= g; d /= g;
+      return ganze > 0
+        ? vorzeichen + ganze + " " + z + "/" + d
+        : vorzeichen + z + "/" + d;
+    }
+  }
+  return formatiereZahl(n);
+}
+
+/* Summiert Mengen je Einheit zu Intervallen und zeigt getrennte Einheiten als
+ * Summe an. Einzelwerte werden zusammengezählt, Bereiche als Intervall
+ * ("1 EL" + "1-2 EL" -> "2-3 EL"). Nicht zusammenfassbare Angaben ("etwas",
+ * "? ml") werden nicht verworfen, sondern separat berücksichtigt: Sobald
+ * wenigstens zwei zusammenfassbare Werte vorliegen, entsteht die Summe plus
+ * die übrigen Einzelnennungen (mit Anzahl, z. B. "3× ? g"). Nur wenn gar
+ * nichts zusammenfassbar ist, bleibt null (Anzeige der einzelnen Mengen). */
+function bildeGesamt(mengen) {
+  if (mengen.length < 2) return null;
+  var summen = {}, reihenfolge = [], rest = [];
+  mengen.forEach(function (m) {
+    var p = parseMengeIntervall(m);
+    if (!p) {
+      var r = String(m).trim();
+      if (r) rest.push(r);
+      return;
+    }
+    var u = p.unit || "";
+    if (summen[u] == null) { summen[u] = { min: 0, max: 0 }; reihenfolge.push(u); }
+    summen[u].min += p.min;
+    summen[u].max += p.max;
+  });
+  if (!reihenfolge.length) return null; /* nichts zusammenfassbar */
+  var teile = reihenfolge.map(function (u) {
+    var text = formatiereZahlBruch(summen[u].min);
+    if (summen[u].max > summen[u].min) text += "-" + formatiereZahlBruch(summen[u].max);
+    return text + (u ? " " + einheitAnzeige(u) : "");
+  });
+  var summeText = teile.join(" + ");
+  if (rest.length) {
+    var zaehler = {};
+    rest.forEach(function (r) { zaehler[r] = (zaehler[r] || 0) + 1; });
+    var restText = Object.keys(zaehler).map(function (r) {
+      return (zaehler[r] > 1 ? zaehler[r] + "× " : "") + r;
+    }).join(" · ");
+    return summeText + " + " + restText;
+  }
+  return summeText;
+}
+
+function setzeAnsicht(a) {
+  ansicht = a;
+  try { localStorage.setItem(EK_ANSICHT, a); } catch (e) { /* ignorieren */ }
+  var btnR = document.getElementById("btnAnsRezept");
+  var btnZ = document.getElementById("btnAnsZutat");
+  if (btnR) btnR.classList.toggle("aktiv", a === "rezept");
+  if (btnZ) btnZ.classList.toggle("aktiv", a === "zutat");
+  rendereEinkaufsliste();
+}
+
+/* Baut die Einkaufsliste als Liste von "Abteilen" (Kopf + Einträge).
+ * Ansicht "rezept": pro Rezept ein Abschnitt, plus "Manuell ergänzt".
+ * Ansicht "zutat": ein Abschnitt mit der zusammengefassten Zutatenliste.
+ * Jeder Eintrag trägt die betroffenen Keys, damit Abhaken/Entfernen in
+ * beiden Ansichten identisch funktioniert. */
+function baueEinkaufsAbteile() {
+  var abteile = [];
+  /* Einträge alphabetisch nach Name sortieren (A→Z, der aktuellen Sprache
+   * entsprechend, z. B. "ä" ≈ "a" im Deutschen). */
+  var nachName = function (a, b) { return a.name.localeCompare(b.name, sprachTag()); };
+  if (ansicht === "rezept") {
+    DB.forEach(function (r) {
+      var eintraege = [];
+      (r.zutaten || []).forEach(function (z, i) {
+        var basis = "r:" + r.id + ":" + i;
+        /* Findet den normalen Key ("r:id:i") sowie evtl. Instanz-Varianten
+         * ("r:id:i:2", "r:id:i:3", …), die entstehen, wenn dasselbe Rezept
+         * mehrfach in der Wochenplan-Einkaufsliste gebraucht wird. */
+        refs.forEach(function (key) {
+          if (key !== basis && key.indexOf(basis + ":") !== 0) return;
+          var menge = refSkalen[key] != null ? refSkalen[key] : mengeText(z);
+          eintraege.push({ keys: [key], name: z.name || "", menge: menge });
+        });
+      });
+      if (eintraege.length) abteile.push({ id: r.id, kopf: r.name, eintraege: eintraege.sort(nachName) });
+    });
+    abteile.sort(function (a, b) { return a.kopf.localeCompare(b.kopf, sprachTag()); });
+    if (extras.length) {
+      abteile.push({ kopf: tr("Manuell ergänzt"), eintraege: extras.map(function (e) {
+        return { keys: [e.key], name: e.name || "", menge: e.menge || "" };
+      }).sort(nachName) });
+    }
+    return abteile;
+  }
+  abteile.push({ kopf: null, eintraege: gruppiereEinkauf().map(function (g) {
+    return {
+      keys: g.keys,
+      name: g.name + (g.keys.length > 1 ? " " + tr("({anzahl} Pos.)", { anzahl: g.keys.length }) : ""),
+      menge: (g.keys.length > 1 && g.summe ? tr("Gesamt {summe}", { summe: g.summe }) : g.mengen.join(" · "))
+    };
+  }).sort(nachName) });
+  return abteile;
+}
+
+function rendereEinkaufsliste() {
+  var el = document.getElementById("ekInhalt");
+  var abteile = baueEinkaufsAbteile();
+  aktualisiereBadge();
+  var gesamt = 0;
+  abteile.forEach(function (ab) { gesamt += ab.eintraege.length; });
+  if (!gesamt) {
+    el.innerHTML = '<div class="ek-leer">' + tr("Noch nichts auf der Liste.") + "<br>" + tr("Hake Zutaten in einem Rezept an.") + '</div>';
+    return;
+  }
+  var html = "";
+  abteile.forEach(function (ab) {
+    if (ab.kopf) {
+      var titel = escapeHtml(ab.kopf) +
+        " <small>" + tr("({anzahl} Pos.)", { anzahl: ab.eintraege.length }) + "</small>";
+      if (ab.id) {
+        /* Rezept-Kopf klickbar: öffnet das Rezept direkt */
+        html += '<div class="ek-rezept-kopf klick" role="button" tabindex="0" data-rezept="' + escapeHtml(ab.id) + '" title="' + tr("Rezept öffnen") + '">' + titel + "</div>";
+      } else {
+        html += '<div class="ek-rezept-kopf">' + titel + "</div>";
+      }
+    }
+    ab.eintraege.forEach(function (e) {
+      var gk = e.keys.join("|");
+      html += '<div class="ek-eintrag">' +
+        '<div class="ek-info">' +
+          '<span class="ek-name">' + escapeHtml(e.name) + "</span>" +
+          (e.menge ? '<span class="ek-menge">' + escapeHtml(e.menge) + "</span>" : "") +
+        "</div>" +
+        '<button class="small danger ek-weg" data-weg="' + escapeHtml(gk) + '" title="' + tr("Entfernen") + '">✕</button>' +
+        "</div>";
+    });
+  });
+  el.innerHTML = html;
+
+  /* Klick auf den Rezept-Namen im Einkaufs-Drawer öffnet das Rezept */
+  el.querySelectorAll(".ek-rezept-kopf[data-rezept]").forEach(function (kopf) {
+    function oeffneRezept() {
+      var rid = kopf.dataset.rezept;
+      var r = DB.find(function (x) { return String(x.id) === String(rid); });
+      if (r) { schliesseEinkauf(); waehle(r.id); }
+    }
+    kopf.addEventListener("click", oeffneRezept);
+    kopf.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); oeffneRezept(); }
+    });
+  });
+
+  el.querySelectorAll(".ek-weg").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var ks = btn.dataset.weg.split("|");
+      ks.forEach(function (k) {
+        if (k.indexOf("r:") === 0) {
+          var i = refs.indexOf(k);
+          if (i !== -1) refs.splice(i, 1);
+        } else {
+          extras = extras.filter(function (e) { return e.key !== k; });
+        }
+      });
+      speichere(EK_REFS, refs);
+      speichere(EK_EXTRAS, extras);
+      rendereEinkaufsliste();
+      rendereAktiveZutaten();
+    });
+  });
+}
+
+function zeigeEinkauf() {
+  rendereEinkaufsliste();
+  document.getElementById("ekBackdrop").classList.add("offen");
+  document.getElementById("ekDrawer").classList.add("offen");
+}
+function schliesseEinkauf() {
+  document.getElementById("ekBackdrop").classList.remove("offen");
+  document.getElementById("ekDrawer").classList.remove("offen");
+}
+
+function addiereExtra() {
+  var name = document.getElementById("ekNeuName").value.trim();
+  var menge = document.getElementById("ekNeuMenge").value.trim();
+  if (!name) { melden(tr("Bitte eine Zutat eingeben."), true); return; }
+  extras.push({ key: "m:" + Date.now(), menge: menge, name: name });
+  document.getElementById("ekNeuName").value = "";
+  document.getElementById("ekNeuMenge").value = "";
+  speichere(EK_EXTRAS, extras);
+  rendereEinkaufsliste();
+  melden(tr("Zur Einkaufsliste hinzugefügt: {name}", { name: name }));
+}
+
+function leeren() {
+  if (!anzahlRefs()) { melden(tr("Einkaufsliste ist bereits leer.")); return; }
+  if (!confirm(tr("Einkaufsliste wirklich leeren?"))) return;
+  refs = []; extras = [];
+  speichere(EK_REFS, refs);
+  speichere(EK_EXTRAS, extras);
+  rendereEinkaufsliste();
+  rendereAktiveZutaten();
+  melden(tr("Einkaufsliste geleert."));
+}
+
+function kopierenFallback(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); melden(tr("📋 Einkaufsliste kopiert.")); }
+  catch (e) { melden(tr("Kopieren nicht möglich."), true); }
+  document.body.removeChild(ta);
+}
+
+function kopierenText() {
+  var abteile = baueEinkaufsAbteile();
+  var zeilen = [];
+  abteile.forEach(function (ab) {
+    if (ab.kopf) zeilen.push(ab.kopf.toUpperCase());
+    ab.eintraege.forEach(function (e) {
+      zeilen.push((e.menge && e.menge !== "—" ? e.menge + " " : "") + e.name);
+    });
+  });
+  if (!zeilen.length) { melden(tr("Einkaufsliste ist leer."), true); return; }
+  var heute = new Date();
+  var datumZeit = formatiereDatumKurz(heute) + heute.getFullYear() + " " +
+    String(heute.getHours()).padStart(2, "0") + ":" +
+    String(heute.getMinutes()).padStart(2, "0");
+  var kopf = ekZeitraum ? tr("🛒 Einkaufsliste") + " - " + ekZeitraum
+                        : tr("Einkaufsliste") + " " + datumZeit;
+  var text = kopf + "\n============\n\n" + zeilen.join("\n");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function () { melden(tr("📋 Einkaufsliste kopiert.")); },
+      function () { kopierenFallback(text); }
+    );
+  } else {
+    kopierenFallback(text);
+  }
+}
+
+function download(dateiname, inhalt, typ) {
+  var blob = new Blob([inhalt], { type: typ || "text/html;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = dateiname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+/* Inline-Styles für die exportierte HTML-Datei (bewusst schlicht und
+ * E-Mail-tauglich, ohne Flexbox o. ä.) */
+var EINKAUF_STYLES =
+  "body{margin:0;padding:24px;background:#efe9de;color:#3d3227;" +
+  "font-family:Arial,\"Segoe UI\",sans-serif;font-size:15px;line-height:1.45;}" +
+  ".kopf{border-bottom:3px solid #c9b08f;padding-bottom:12px;margin-bottom:6px;}" +
+  "h1{margin:0;font-size:22px;color:#6d5539;}" +
+  ".kopf p{margin:5px 0 0;color:#8d7a63;font-size:13px;}" +
+  "h2{font-size:15px;color:#6d5539;border-bottom:1px solid #e2d8c9;" +
+  "padding-bottom:4px;margin:18px 0 6px;}" +
+  "ul.liste{list-style:none;margin:0;padding:0;}" +
+  "ul.liste li{padding:6px 0;border-bottom:1px dashed #dccdb4;display:flex;align-items:center;}" +
+  "ul.liste input.box{width:18px;height:18px;margin:0 10px 0 0;flex-shrink:0;accent-color:#3c8a4c;cursor:pointer;}" +
+  "ul.liste label{cursor:pointer;flex:1;}" +
+  "ul.liste .menge{color:#8d7a63;margin-right:6px;}" +
+  "ul.liste input.box:checked ~ label{text-decoration:line-through;opacity:.55;}" +
+  "ul.liste input.box:checked ~ label::after{content:\" ✅\";text-decoration:none;}" +
+  "#hideErledigte:checked ~ ul.liste li:has(input.box:checked){display:none;}" +
+  "#hideErledigte{margin:4px 4px 8px 0;accent-color:#3c8a4c;cursor:pointer;vertical-align:middle;}" +
+  ".hide-label{font-size:13px;color:#8d7a63;cursor:pointer;vertical-align:middle;}" +
+  ".hide-space{height:15px;}" +
+  ".kopf-aktionen{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}" +
+  ".kopf-aktionen .btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;" +
+  "border:1px solid #c9b08f;border-radius:6px;background:#fff;color:#6d5539;" +
+  "font:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;}" +
+  ".kopf-aktionen .btn:hover{background:#f1eade;}" +
+  "@media print{.kopf-aktionen{display:none;}}" +
+  ".fuss{margin-top:24px;color:#b3a48d;font-size:12px;text-align:center;}";
+
+/* Gemeinsame eMail-/Drucken-Leiste für alle HTML-Exporte. */
+function exportAktionen(subjectText, bodyText) {
+  var mailHref = "mailto:mail@example.com?subject=" + encodeURIComponent(subjectText) +
+    "&body=" + encodeURIComponent(bodyText);
+  return '<div class="kopf-aktionen">' +
+    '<a class="btn" href="' + escapeHtml(mailHref) + '" title="' + escapeHtml(tr("Per E-Mail versenden")) + '">📧 ' +
+    escapeHtml(tr("E-Mail")) + "</a>" +
+    '<button class="btn" type="button" onclick="window.print()" title="' + escapeHtml(tr("Drucken")) + '">🖨️ ' +
+    escapeHtml(tr("Drucken")) + "</button>" +
+    "</div>";
+}
+
+/* Textfassung der Einkaufsliste für den mailto:-Body (kopf = Überschrift,
+ * wird wie im Betreff vorangestellt). */
+function einkaufMailText(abteile, kopf) {
+  var zeilen = [];
+  if (kopf) zeilen.push(kopf, "");
+  abteile.forEach(function (ab) {
+    if (ab.kopf) zeilen.push(ab.kopf);
+    ab.eintraege.forEach(function (e) {
+      zeilen.push("  • " + (e.menge ? e.menge + " " : "") + e.name);
+    });
+    zeilen.push("");
+  });
+  zeilen.push(tr("Die HTML-Datei kann als Anhang hier beigefügt werden."));
+  return zeilen.join("\n");
+}
+
+/* Textfassung eines Rezepts als mailto:-Body plus Aktionsleiste. */
+function rezeptMailAktionen(r, portionen, nahrPaare) {
+  var zeilen = [r.name, r.kategorie || tr("Ohne Kategorie")];
+  if (r.portionen) zeilen.push(trPlural(portionen, "Für {anzahl} Portion", "Für {anzahl} Portionen"));
+  zeilen.push("");
+  if (nahrPaare.length) {
+    zeilen.push(tr("Nährwerte (pro Portion)") + ":");
+    nahrPaare.forEach(function (p) { zeilen.push("  • " + p[0] + ": " + p[1] + " " + p[2]); });
+    zeilen.push("");
+  }
+  var tcmAgg = tcmAggregat(r);
+  if (tcmAgg.gesamt && (tcmAgg.element.length || tcmAgg.geschmack.length || tcmAgg.thermik.length)) {
+    zeilen.push(tr("🌿 5 Elemente (TCM)") + ":");
+    if (tcmAgg.element.length) {
+      zeilen.push("  • " + tr("Elemente:") + " " + tcmAnzeige("element", tcmAgg.element).join(", "));
+    }
+    if (tcmAgg.geschmack.length) {
+      zeilen.push("  • " + tr("Geschmack:") + " " + tcmAnzeige("geschmack", tcmAgg.geschmack).join(", "));
+    }
+    if (tcmAgg.thermik.length) {
+      zeilen.push("  • " + tr("Thermik:") + " " + tcmAnzeige("thermik", tcmAgg.thermik).join(", "));
+    }
+    zeilen.push(tr("Abgeleitet aus {treffer} von {gesamt} Zutaten – ohne Therapie-Anspruch, nur zur Orientierung.",
+      { treffer: tcmAgg.treffer, gesamt: tcmAgg.gesamt }));
+    zeilen.push("");
+  }
+  if ((r.zutaten || []).length) {
+    zeilen.push(tr("Zutaten") + ":");
+    r.zutaten.forEach(function (z) {
+      zeilen.push("  • " + skaliereMenge(mengeText(z), portionenFaktor) + " " + (z.name || ""));
+    });
+    zeilen.push("");
+  }
+  if ((r.zubereitung || []).length) {
+    zeilen.push(tr("Zubereitung") + ":");
+    r.zubereitung.forEach(function (s, i) { zeilen.push("  " + (i + 1) + ". " + ohneWeckerMarker(s)); });
+    zeilen.push("");
+  }
+  zeilen.push(tr("Die HTML-Datei kann als Anhang hier beigefügt werden."));
+  return exportAktionen(r.name + " – " + tr("Rezept"), zeilen.join("\n"));
+}
+
+function exportiereEinkaufHtml() {
+  var abteile = baueEinkaufsAbteile();
+  var gesamt = 0;
+  abteile.forEach(function (ab) { gesamt += ab.eintraege.length; });
+  if (!gesamt) { melden(tr("Einkaufsliste ist leer."), true); return; }
+
+  var heute = new Date();
+  var datum = String(heute.getDate()).padStart(2, "0") + "-" +
+    String(heute.getMonth() + 1).padStart(2, "0") + "-" + heute.getFullYear();
+  var uhrzeit = String(heute.getHours()).padStart(2, "0") + "-" +
+    String(heute.getMinutes()).padStart(2, "0") + "-" +
+    String(heute.getSeconds()).padStart(2, "0");
+  var dateiname = "Einkaufsliste_" + datum + "_" + uhrzeit + ".html";
+  var ansichtLabel = tr(ansicht === "rezept" ? "Nach Rezept" : "Nach Zutat");
+
+  var inhalt = "";
+  var zeilenZaehler = 0;
+  abteile.forEach(function (ab) {
+    if (ab.kopf) inhalt += "<h2>" + escapeHtml(ab.kopf) + "</h2>";
+    inhalt += "<ul class=\"liste\">";
+    ab.eintraege.forEach(function (e) {
+      var cid = "pos" + (++zeilenZaehler);
+      inhalt += '<li>' +
+        '<input type="checkbox" id="' + cid + '" class="box">' +
+        '<label for="' + cid + '">' +
+        (e.menge ? '<span class="menge">' + escapeHtml(e.menge) + "</span>" : "") +
+        "<span>" + escapeHtml(e.name) + "</span>" +
+        "</label></li>";
+    });
+    inhalt += "</ul>";
+  });
+
+  var einkaufBetreff = tr("🛒 Einkaufsliste") + " " + datum.replace(/-/g, ".");
+
+  var html =
+      "<!DOCTYPE html>\n<html lang=\"" + sprachTag() + "\">\n<head>\n" +
+    "<meta charset=\"UTF-8\">\n" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+    "<title>" + tr("Einkaufsliste") + " " + datum + "</title>\n" +
+    "<style>" + EINKAUF_STYLES + "</style>\n</head>\n<body>\n" +
+    '<div class="kopf">\n<h1>' + tr("🛒 Einkaufsliste") +
+    (ekZeitraum ? " - " + escapeHtml(ekZeitraum) : "") + '</h1>\n' +
+    "<p>" + datum + " " + uhrzeit.replace(/-/g, ":") + " · " +
+    trPlural(gesamt, "{anzahl} Position", "{anzahl} Positionen") +
+    " · " + tr("Ansicht: {ansicht}", { ansicht: ansichtLabel }) + "</p>\n" +
+    "</div>\n" +
+    '<input type="checkbox" id="hideErledigte">\n' +
+    '<label for="hideErledigte" class="hide-label">' + tr("Erledigte ausblenden") + '</label>\n' +
+    (ansicht === "zutat" ? '<div class="hide-space"></div>\n' : "") +
+    inhalt +
+    exportAktionen(einkaufBetreff, einkaufMailText(abteile, einkaufBetreff)) +
+    '<p class="fuss">Erstellt mit Julia\'s Rezepte-Sammlung</p>\n' +
+    "</body>\n</html>";
+
+  download(dateiname, html, "text/html;charset=utf-8");
+  melden(tr("{dateiname} wurde heruntergeladen – gut für E-Mail!", { dateiname: dateiname }));
+}
+
+/* ---------------------------------------------------------------
+ * Rezept-Export (HTML)
+ * --------------------------------------------------------------- */
+/* Inline-Styles für das exportierte Rezept – warme Optik, analog zur
+ * Einkaufsliste, bewusst schlicht und E-Mail-tauglich (ohne Flexbox). */
+var REZEPT_STYLES =
+  "body{margin:0;padding:24px;background:#efe9de;color:#3d3227;" +
+  "font-family:Arial,\"Segoe UI\",sans-serif;font-size:15px;line-height:1.45;}" +
+  ".kopf{border-bottom:3px solid #c9b08f;padding-bottom:12px;margin-bottom:6px;}" +
+  "h1{margin:0;font-size:24px;color:#6d5539;}" +
+  ".kopf p{margin:5px 0 0;color:#8d7a63;font-size:13px;}" +
+  "h2{font-size:15px;color:#6d5539;border-bottom:1px solid #e2d8c9;" +
+  "padding-bottom:4px;margin:18px 0 6px;}" +
+  "table{width:100%;border-collapse:collapse;margin-top:4px;}" +
+  "table.nahr{width:auto;}" +
+  "table th{text-align:left;font-size:12.5px;color:#8d7a63;font-weight:600;" +
+  "padding:6px 8px;border-bottom:1px solid #e2d8c9;}" +
+  "table td{padding:6px 8px;border-bottom:1px dashed #dccdb4;vertical-align:top;}" +
+  "table td.menge{color:#8d7a63;white-space:nowrap;width:130px;}" +
+  "table td.nahr-label{color:#8d7a63;white-space:nowrap;}" +
+  "ol.schritte{margin:8px 0 0;padding:0 0 0 24px;}" +
+  "ol.schritte li{padding:3px 0 3px 4px;}" +
+  ".tcm{color:#6d5539;font-size:13px;}" +
+  ".tcm .tcm-hinweis{color:#b3a48d;font-size:11.5px;}" +
+  ".bilder img{width:250px;height:150px;max-width:100%;object-fit:cover;border-radius:8px;" +
+  "border:1px solid #e2d8c9;box-shadow:0 2px 6px rgba(0,0,0,.12);margin:4px 4px 0 0;background:#fff;}" +
+  ".notiz{white-space:pre-wrap;background:#f1eade;border-radius:8px;padding:10px 14px;margin-top:4px;}" +
+  ".kopf-aktionen{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}" +
+  ".kopf-aktionen .btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;" +
+  "border:1px solid #c9b08f;border-radius:6px;background:#fff;color:#6d5539;" +
+  "font:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;}" +
+  ".kopf-aktionen .btn:hover{background:#f1eade;}" +
+  "@media print{.kopf-aktionen{display:none;}}" +
+  ".fuss{margin-top:24px;color:#b3a48d;font-size:12px;text-align:center;}";
+
+/* Macht den Rezeptnamen für einen Dateinamen verwendbar. */
+function dateinameTeil(s) {
+  return String(s == null ? "" : s)
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim() || "Rezept";
+}
+
+/* Versucht, ein Bild als Data-URL einzubetten, damit der Export
+ * selbstständig funktioniert. Schlägt das fehl (z. B. Chrome blockiert
+ * den Zugriff auf lokale Dateien über file://), bleibt der Original-Pfad. */
+function betteBildEin(src) {
+  return new Promise(function (resolve) {
+    if (typeof src === "string" && src.indexOf("data:") === 0) { resolve(src); return; }
+    fetch(src).then(function (res) {
+      if (!res.ok) throw new Error("Status " + res.status);
+      return res.blob();
+    }).then(function (blob) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(fr.result); };
+      fr.onerror = function () { resolve(src); };
+      fr.readAsDataURL(blob);
+    }).catch(function () {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var c = document.createElement("canvas");
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          c.getContext("2d").drawImage(img, 0, 0);
+          resolve(c.toDataURL("image/jpeg", 0.85));
+        } catch (e) { resolve(src); }
+      };
+      img.onerror = function () { resolve(src); };
+      img.src = src;
+    });
+  });
+}
+
+function exportiereRezeptHtml() {
+  var r = DB.find(function (x) { return x.id === aktuellerId; });
+  if (!r) return;
+
+  var aktuellePortionen = Math.round((r.portionen || 1) * portionenFaktor * 100) / 100;
+
+  var heute = new Date();
+  var datum = String(heute.getDate()).padStart(2, "0") + "-" +
+    String(heute.getMonth() + 1).padStart(2, "0") + "-" + heute.getFullYear();
+  var uhrzeit = String(heute.getHours()).padStart(2, "0") + "-" +
+    String(heute.getMinutes()).padStart(2, "0") + "-" +
+    String(heute.getSeconds()).padStart(2, "0");
+  var dateiname = "Rezept_" + dateinameTeil(r.name) + "_" + datum + "_" + uhrzeit + ".html";
+
+  var vorne = "";
+
+  var n = r.nahrwerte || {};
+  var nahrPaare = [
+    [tr("Kalorien"), n.kcal, "kcal"],
+    [tr("Kohlenhydrate"), n.kohlenhydrate, "g"],
+    [tr("Eiweiß"), n.eiweiss, "g"],
+    [tr("Ballaststoffe"), n.ballaststoffe, "g"],
+    [tr("Fette"), n.fette, "g"]
+  ].filter(function (p) { return p[1] != null && !isNaN(p[1]); });
+  if (nahrPaare.length) {
+    vorne += "<h2>" + tr("Nährwerte (pro Portion)") + "</h2>\n<table class=\"nahr\"><tr>";
+    nahrPaare.forEach(function (p) {
+      vorne += '<td class="nahr-label">' + escapeHtml(p[0]) + "</td>";
+    });
+    vorne += "</tr><tr>";
+    nahrPaare.forEach(function (p) {
+      vorne += "<td>" + escapeHtml(p[1] + " " + p[2]) + "</td>";
+    });
+    vorne += "</tr></table>\n";
+  }
+
+  var aggTcm = tcmAggregat(r);
+  if (aggTcm.gesamt) {
+    var tcmDaten = [];
+    if (aggTcm.element.length) {
+      tcmDaten.push("<strong>" + tr("Elemente:") + "</strong> " +
+        escapeHtml(tcmAnzeige("element", aggTcm.element).join(" · ")));
+    }
+    if (aggTcm.geschmack.length) {
+      tcmDaten.push("<strong>" + tr("Geschmack:") + "</strong> " +
+        escapeHtml(tcmAnzeige("geschmack", aggTcm.geschmack).join(" · ")));
+    }
+    if (aggTcm.thermik.length) {
+      tcmDaten.push("<strong>" + tr("Thermik:") + "</strong> " +
+        escapeHtml(tcmAnzeige("thermik", aggTcm.thermik).join(" · ")));
+    }
+    vorne += "<h2>" + tr("🌿 5 Elemente (TCM)") + "</h2>\n<p class=\"tcm\">" +
+      tcmDaten.join("<br>\n") +
+      '<br>\n<span class="tcm-hinweis">' +
+        tr("Abgeleitet aus {treffer} von {gesamt} Zutaten – ohne Therapie-Anspruch, nur zur Orientierung.",
+          { treffer: aggTcm.treffer, gesamt: aggTcm.gesamt }) +
+      "</span></p>\n";
+  }
+
+  var hinten = "<h2>" + tr("Zutaten") + "</h2>\n<table><thead><tr>" +
+    "<th>" + tr("Menge") + "</th><th>" + tr("Zutat") + "</th></tr></thead><tbody>";
+  (r.zutaten || []).forEach(function (z) {
+    var menge = skaliereMenge(mengeText(z), portionenFaktor);
+    hinten += "<tr><td class=\"menge\">" + escapeHtml(menge) + "</td>" +
+      "<td>" + escapeHtml(z.name || "") + "</td></tr>";
+  });
+  hinten += "</tbody></table>\n";
+
+  hinten += "<h2>" + tr("Zubereitung") + "</h2>\n";
+  var schritte = r.zubereitung || [];
+  if (schritte.length) {
+    hinten += "<ol class=\"schritte\">" + schritte.map(function (s) {
+      return "<li>" + escapeHtml(ohneWeckerMarker(s)) + "</li>";
+    }).join("") + "</ol>\n";
+  } else {
+    hinten += "<p>" + tr("Keine Zubereitung angegeben.") + "</p>\n";
+  }
+
+  var notizText = notizen[r.id] || "";
+  if (notizText.trim()) {
+    hinten += "<h2>" + tr("📝 Notizen") + "</h2>\n<p class=\"notiz\">" + escapeHtml(notizText) + "</p>\n";
+  }
+
+  var bilder = r.bilder || [];
+  Promise.all(bilder.map(betteBildEin)).then(function (eingebettet) {
+    var mitte = "";
+    if (bilder.length) {
+      mitte += "<h2>" + tr("Bilder") + "</h2>\n<div class=\"bilder\">";
+      eingebettet.forEach(function (src) {
+        mitte += '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(r.name) + '">';
+      });
+      mitte += "</div>\n";
+    }
+
+    var html =
+    "<!DOCTYPE html>\n<html lang=\"" + sprachTag() + "\">\n<head>\n" +
+      "<meta charset=\"UTF-8\">\n" +
+      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+      "<title>" + escapeHtml(r.name) + " – " + tr("Rezept") + "</title>\n" +
+      "<style>" + REZEPT_STYLES + "</style>\n</head>\n<body>\n" +
+      '<div class="kopf">\n<h1>' + escapeHtml(r.name) + "</h1>\n" +
+      "<p>" + escapeHtml(r.kategorie || tr("Ohne Kategorie")) +
+      (r.portionen ? " · " + trPlural(aktuellePortionen, "Für {anzahl} Portion", "Für {anzahl} Portionen") : "") +
+      " · " + datum.replace(/-/g, ".") + " " + uhrzeit.replace(/-/g, ":") + "</p>\n" +
+      "</div>\n" +
+      vorne + mitte + hinten +
+      rezeptMailAktionen(r, aktuellePortionen, nahrPaare) +
+      '<p class="fuss">Erstellt mit Julia\'s Rezepte-Sammlung</p>\n' +
+      "</body>\n</html>";
+
+    download(dateiname, html, "text/html;charset=utf-8");
+
+    var offen = eingebettet.filter(function (s) { return s.indexOf("data:") !== 0; }).length;
+    if (offen) {
+      melden(tr(offen === 1
+        ? "{dateiname} wurde heruntergeladen. {anzahl} Bild nur als Pfad eingebunden – per E-Mail nicht sichtbar."
+        : "{dateiname} wurde heruntergeladen. {anzahl} Bilder nur als Pfad eingebunden – per E-Mail nicht sichtbar.",
+        { dateiname: dateiname, anzahl: offen }));
+    } else {
+      melden(tr("{dateiname} wurde heruntergeladen – gut für E-Mail!", { dateiname: dateiname }));
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+ * Ereignisse
+ * --------------------------------------------------------------- */
+document.getElementById("btnEinkauf").onclick = zeigeEinkauf;
+document.getElementById("btnBearbeiten").onclick = offneEditor;
+document.getElementById("btnWochenplan").onclick = offneWochenplan;
+document.getElementById("btnTheme").onclick = toggleThema;
+document.getElementById("btnEkZu").onclick = schliesseEinkauf;
+document.getElementById("ekBackdrop").onclick = schliesseEinkauf;
+document.getElementById("btnKuecheZu").onclick = schliesseKueche;
+document.getElementById("kuecheBackdrop").onclick = schliesseKueche;
+document.getElementById("btnKuecheSchriftPlus").onclick = function () { setzeKuecheSchrift(kuecheSchriftStufe + 0.1); };
+document.getElementById("btnKuecheSchriftMinus").onclick = function () { setzeKuecheSchrift(kuecheSchriftStufe - 0.1); };
+
+document.getElementById("btnKuecheTimer").onclick = function (e) {
+  e.stopPropagation();
+  kuecheTimerPopoverUmschalten();
+};
+document.getElementById("kuecheTimerSlider").addEventListener("input", function () {
+  setzeKuecheTimerWert(Number(this.value));
+});
+document.getElementById("kuecheTimerMin").addEventListener("input", function () {
+  var val = Math.max(1, Math.min(180, Math.round(Number(this.value)) || 1));
+  setzeKuecheTimerWert(val, true);
+});
+document.getElementById("kuecheTimerForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var val = Number(document.getElementById("kuecheTimerMin").value);
+  if (val > 0) starteKuecheTimer(val);
+});
+document.getElementById("kuecheTimerPopover").addEventListener("click", function (e) { e.stopPropagation(); });
+document.addEventListener("click", function () { kuecheTimerPopoverUmschalten(true); });
+
+/* Wecker-Chips an Zubereitungsschritten im Küchenmodus: ein Klick startet
+ * den Timer sofort mit dem im Schritt gespeicherten Wert. Läuft der Wecker
+ * dieses Schritts schon, bleibt er unangetastet und ein Kurz-Hinweis
+ * erscheint über der Timer-Liste (Nachschauen ohne Nebenwirkung). */
+document.getElementById("kuecheInhalt").addEventListener("click", function (e) {
+  var ziel = e.target.closest ? e.target.closest(".kueche-schritt-wecker") : null;
+  if (!ziel) return;
+  if (!starteKuecheTimer(Number(ziel.dataset.min), kuecheAktuell ? kuecheAktuell.name : "", ziel.dataset.key)) {
+    zeigeKuecheTimerHinweis();
+  }
+});
+
+/* Kurzer Hinweis "läuft bereits": blendet über der Timer-Liste ein und
+ * nach ~2,5 s von selbst wieder aus; erneute Klicks starten die Frist neu. */
+var kuecheTimerHinweisTimeout = null;
+function zeigeKuecheTimerHinweis() {
+  var el = document.getElementById("kuecheTimerHinweis");
+  if (!el) return;
+  el.textContent = "⏰ " + tr("Dieser Wecker läuft bereits!");
+  el.hidden = false;
+  el.classList.add("offen");
+  if (kuecheTimerHinweisTimeout) clearTimeout(kuecheTimerHinweisTimeout);
+  kuecheTimerHinweisTimeout = setTimeout(function () {
+    el.classList.remove("offen");
+    el.hidden = true;
+    kuecheTimerHinweisTimeout = null;
+  }, 2500);
+}
+document.getElementById("kuecheTimerListe").addEventListener("click", function (e) {
+  var btn = e.target.closest("button[data-id]");
+  if (btn) entferneKuecheTimer(Number(btn.dataset.id));
+});
+document.getElementById("btnKopieren").onclick = kopierenText;
+document.getElementById("btnExportHTML").onclick = exportiereEinkaufHtml;
+document.getElementById("btnLeeren").onclick = leeren;
+document.getElementById("btnAnsRezept").onclick = function () { setzeAnsicht("rezept"); };
+document.getElementById("btnAnsZutat").onclick = function () { setzeAnsicht("zutat"); };
+document.getElementById("btnEkNeu").onclick = addiereExtra;
+document.getElementById("ekNeuName").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") addiereExtra();
+});
+document.getElementById("ekNeuMenge").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") addiereExtra();
+});
+document.addEventListener("keydown", function (ev) {
+  if (ev.key === "Escape") {
+    if (document.getElementById("kueche").classList.contains("offen")) { schliesseKueche(); return; }
+    schliesseEinkauf();
+    return;
+  }
+  if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+    var tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    var items = Array.from(document.querySelectorAll("#rezeptliste li:not(.leer)"));
+    if (!items.length) return;
+    var idx = items.findIndex(function (li) { return li.classList.contains("aktiv"); });
+    if (ev.key === "ArrowDown") {
+      idx = idx < items.length - 1 ? idx + 1 : 0;
+    } else {
+      idx = idx > 0 ? idx - 1 : items.length - 1;
+    }
+    var id = items[idx].dataset.id;
+    if (id) {
+      ev.preventDefault();
+      waehle(id);
+      var neu = document.querySelector("#rezeptliste li.aktiv");
+      var ul = document.getElementById("rezeptliste");
+      if (neu && ul) {
+        requestAnimationFrame(function () {
+          var liMitte = neu.offsetTop + neu.offsetHeight / 2;
+          ul.scrollTop = liMitte - ul.clientHeight / 2;
+        });
+      }
+    }
+  }
+});
+
+document.getElementById("suche").addEventListener("input", function () {
+  suchtext = this.value;
+  document.getElementById("sucheLeeren").hidden = !this.value;
+  rendereListe();
+});
+document.getElementById("sucheLeeren").onclick = function () {
+  document.getElementById("suche").value = "";
+  suchtext = "";
+  this.hidden = true;
+  rendereListe();
+  document.getElementById("suche").focus();
+};
+document.getElementById("filterKat").addEventListener("change", function () {
+  filterKat = this.value;
+  rendereListe();
+});
+var filterTcmSel = document.getElementById("filterTcm");
+filterTcmSel.addEventListener("change", function () {
+  filterTcm = this.value;
+  rendereListe();
+});
+
+/* ---------------------------------------------------------------
+ * Start
+ * --------------------------------------------------------------- */
+function setzeEkDatum() {
+  var heute = new Date();
+  document.getElementById("ekDatum").textContent =
+    new Intl.DateTimeFormat(sprachTag(), { day: "2-digit", month: "2-digit", year: "numeric" }).format(heute);
+}
+setzeThema(anfangsThema());
+setzeTitel(titelIndex());
+initSprachWahl();
+uebersetzeDOM();
+/* Fußzeilen-"Credits": eigener Tooltip - Hover per CSS, Klick/Tippen und
+ * Tastatur (Enter/Leertaste) per JS. Das Wort ist bewusst kein Link. */
+(function () {
+  var el = document.getElementById("creditsAnzeige");
+  if (!el) return;
+  var tip = document.createElement("div");
+  tip.className = "credits-tip";
+  tip.textContent = tr(el.getAttribute("data-tooltip") || "");
+  el.appendChild(tip);
+  el.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    el.classList.toggle("sichtbar");
+  });
+  el.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      el.classList.toggle("sichtbar");
+    }
+  });
+  document.addEventListener("click", function (ev) {
+    if (!el.contains(ev.target)) el.classList.remove("sichtbar");
+  });
+})();
+
+/* Klick außerhalb des Bildbereichs schließt einen offenen Bild-Zoom
+ * (einmalig registriert – die Bilder-Box wird je Rezept neu gerendert). */
+document.addEventListener("click", function (ev) {
+  if (ev.target.closest(".rezept-bilder")) return;
+  document.querySelectorAll(".rezept-bild.gross").forEach(function (b) { b.classList.remove("gross"); });
+});
+/* Übernimmt einen Themenwechsel auch bei Rücknavigation (Zurück-Knopf/
+ * bfcache) sowie bei Änderung in anderen Tabs */
+window.addEventListener("pageshow", function () { setzeThema(anfangsThema()); });
+window.addEventListener("storage", function (ev) {
+  if (ev.key === THEME_KEY) setzeThema(anfangsThema());
+  if (ev.key === "rezepte_neu_laden") location.reload();
+});
+/* Bekannter Fenstername: rezepte_bearbeiten.html kann dieses Fenster so über
+ * window.open("rezepte.html", name) wiederverwenden und in den Vordergrund holen */
+window.name = "julias_rezepte_ansicht";
+messeKopfHoehe();
+window.addEventListener("resize", messeKopfHoehe);
+laden();
+setzeAnsicht(ansicht);
+setzeEkDatum();
+
+var sel = document.getElementById("filterKat");
+sel.innerHTML = '<option value="">' + tr("Alle Kategorien") + '</option>' + kategorien().map(function (k) {
+  return '<option value="' + escapeHtml(k) + '">' + escapeHtml(k === "Ohne Kategorie" ? tr("Ohne Kategorie") : k) + "</option>";
+}).join("");
+filterTcmSel.innerHTML = tcmFilterOptionen();
+
+rendereListe();
+if (DB.length) {
+  var urlId = new URLSearchParams(location.search).get("id");
+  var startId = urlId && DB.some(function (x) { return x.id === urlId; }) ? urlId : DB[0].id;
+  waehle(startId);
+  melden(trPlural(DB.length, "Bereit – {anzahl} Rezept geladen.", "Bereit – {anzahl} Rezepte geladen."));
+} else {
+  rendereListe();
+  melden(tr("Keine Rezepte gefunden. Prüfe, ob rezepte.js im Ordner assets liegt."), true);
+}
+if (new URLSearchParams(location.search).get("einkauf") === "1") {
+  zeigeEinkauf();
+}
+
+/* Übernimmt Rezepte aus dem Wochenplan in die Einkaufsliste: Parameter
+ * "plan" ist eine kommagetrennte Liste von Rezept-IDs, ein Rezept kann
+ * mehrfach vorkommen (z. B. Montag UND Mittwoch dasselbe Gericht) - dann
+ * werden dessen Zutaten auch mehrfach angehakt, damit die Mengen korrekt
+ * mitsummiert werden. Vorhandene Einkaufsliste wird dabei geleert. */
+var planParam = new URLSearchParams(location.search).get("plan");
+if (planParam) {
+  var rezeptIds = planParam.split(",").filter(Boolean);
+  refs = [];
+  extras = [];
+  refSkalen = {};
+  var zaehler = {}; /* rezeptId -> wie oft schon vorgekommen, für Instanz-Suffix */
+  rezeptIds.forEach(function (rid) {
+    var r = DB.find(function (x) { return x.id === rid; });
+    if (!r) return;
+    zaehler[rid] = (zaehler[rid] || 0) + 1;
+    var instanz = zaehler[rid];
+    (r.zutaten || []).forEach(function (z, i) {
+      var basis = "r:" + rid + ":" + i;
+      var key = instanz === 1 ? basis : basis + ":" + instanz;
+      refs.push(key);
+    });
+  });
+  speichere(EK_REFS, refs);
+  speichere(EK_EXTRAS, extras);
+  speichere(EK_SKALEN, refSkalen);
+  var ekZeitraumParam = new URLSearchParams(location.search).get("ekZeitraum");
+  if (ekZeitraumParam) {
+    ekZeitraum = ekZeitraumParam;
+    document.getElementById("ekDatum").textContent = "- " + ekZeitraum;
+  }
+  aktualisiereBadge();
+  zeigeEinkauf();
+  melden(tr("{anzahl} Rezepte aus dem Wochenplan in die Einkaufsliste übernommen.", { anzahl: rezeptIds.length }));
+  history.replaceState(null, "", location.pathname + location.hash);
+}
+
+/* ===== Modal „Zutaten-Nährwerte“ – Datenbasis der Nährwert-Berechnung
+ * (assets/zutaten-naehrwerte.js, generiert aus zutaten-naehrwerte.json) ===== */
+
+function oeffneNahrQuelle() {
+  var huelle = document.getElementById("nahrQuelleModal");
+  if (!huelle || typeof ZUTATEN_NAEHRWERTE === "undefined") return;
+  var hinweis = document.getElementById("nahrQuelleHinweis");
+  if (hinweis) hinweis.textContent = tr("Alle Werte je 100 g bzw. 100 ml (Flüssigkeiten), gerundet.");
+  rendereNahrQuelleTabelle();
+  var suche = document.getElementById("nahrSuche");
+  if (suche) { suche.value = ""; try { suche.focus(); } catch (e) { /* ignorieren */ } }
+  huelle.hidden = false;
+}
+
+function schliesseNahrQuelle() {
+  var huelle = document.getElementById("nahrQuelleModal");
+  if (huelle) huelle.hidden = true;
+}
+
+/* Namens-Varianten aus ZUTATEN_TCM ("namen"): vollständig übersetzte Einträge
+ * (7 Varianten) folgen der festen Reihenfolge EN, RU, ES, FR, JA, KO, ZH_CN.
+ * Teil-Übersetzungen werden über die Schrift erkannt (kyrillisch=ru,
+ * Kana=ja, Hangul=ko, CJK ohne Kana=zh_CN); Latein ist dort nicht eindeutig
+ * (en/es/fr) – dann zeigt das Modal den deutschen Namen. Gesucht wird immer
+ * über alle Varianten, sortiert nach dem angezeigten Namen. */
+var NAHR_QUELLE_SLOT = { en: 0, ru: 1, es: 2, fr: 3, ja: 4, ko: 5, zh_CN: 6 };
+
+function nahrQuelleAnzeigeName(kanonisch) {
+  var sprache = aktuelleSprache();
+  if (!sprache || sprache === "de") return kanonisch;
+  var slot = NAHR_QUELLE_SLOT[sprache];
+  if (slot == null) return kanonisch;
+  var eintrag = (typeof ZUTATEN_TCM !== "undefined" && ZUTATEN_TCM) ? ZUTATEN_TCM[kanonisch] : null;
+  var namen = (eintrag && eintrag.namen) || [];
+  if (namen.length === 7) {
+    var v = namen[slot];
+    if (v) return String(v);
+  }
+  var muster = { ru: /[\u0400-\u04FF]/, ja: /[\u3040-\u30FF]/, ko: /[\uAC00-\uD7AF]/ }[sprache];
+  if (muster) {
+    for (var i = 0; i < namen.length; i++) {
+      if (muster.test(String(namen[i]))) return String(namen[i]);
+    }
+  } else if (sprache === "zh_CN") {
+    for (var j = 0; j < namen.length; j++) {
+      var s = String(namen[j]);
+      if (/[\u3400-\u4DBF\u4E00-\u9FFF]/.test(s) && !/[\u3040-\u30FF]/.test(s)) return s;
+    }
+  }
+  return kanonisch;
+}
+
+function nahrQuelleZeilen(suchtext) {
+  var t = String(suchtext || "").trim().toLowerCase();
+  /* BCP-47-Tag ("zh_CN" -> "zh-CN") – Roh-Code wirft RangeError in localeCompare */
+  var sprache = (typeof sprachTag === "function" && sprachTag()) || "de";
+  var alle = Object.keys(ZUTATEN_NAEHRWERTE).filter(function (name) {
+    return name.charAt(0) !== "_";
+  });
+  var zeilen = t ? alle.filter(function (name) {
+    if (name.toLowerCase().indexOf(t) !== -1) return true;
+    var eintrag = (typeof ZUTATEN_TCM !== "undefined" && ZUTATEN_TCM) ? ZUTATEN_TCM[name] : null;
+    var namen = (eintrag && eintrag.namen) || [];
+    for (var i = 0; i < namen.length; i++) {
+      if (String(namen[i]).toLowerCase().indexOf(t) !== -1) return true;
+    }
+    return false;
+  }) : alle;
+  return zeilen.sort(function (a, b) {
+    return nahrQuelleAnzeigeName(a).localeCompare(nahrQuelleAnzeigeName(b), sprache);
+  });
+}
+
+function rendereNahrQuelleTabelle() {
+  var tabelle = document.getElementById("nahrTabelle");
+  if (!tabelle || typeof ZUTATEN_NAEHRWERTE === "undefined") return;
+  var suche = document.getElementById("nahrSuche");
+  var zeilen = nahrQuelleZeilen(suche ? suche.value : "");
+  if (!zeilen.length) {
+    tabelle.innerHTML = "<tbody><tr><td>" + escapeHtml(tr("Keine Treffer")) + "</td></tr></tbody>";
+    return;
+  }
+  function z(v) { return typeof v === "number" ? escapeHtml(formatiereZahlLocale(v)) : "–"; }
+  var html = "<thead><tr><th>" + escapeHtml(tr("Zutat")) +
+    '</th><th class="zahl">kcal</th><th class="zahl">' + escapeHtml(tr("Kohlenhydrate")) +
+    '</th><th class="zahl">' + escapeHtml(tr("Eiweiß")) +
+    '</th><th class="zahl">' + escapeHtml(tr("Ballaststoffe")) +
+    '</th><th class="zahl">' + escapeHtml(tr("Fette")) + "</th></tr></thead><tbody>";
+  zeilen.forEach(function (name) {
+    var w = ZUTATEN_NAEHRWERTE[name] || {};
+    html += '<tr><td title="' + escapeHtml(name) + '">' + escapeHtml(nahrQuelleAnzeigeName(name)) +
+      '</td><td class="zahl">' + z(w.kcal) +
+      '</td><td class="zahl">' + z(w.kh) +
+      '</td><td class="zahl">' + z(w.ew) +
+      '</td><td class="zahl">' + z(w.bs) +
+      '</td><td class="zahl">' + z(w.fe) + "</td></tr>";
+  });
+  tabelle.innerHTML = html + "</tbody>";
+}
+
+(function initNahrQuelleModal() {
+  var huelle = document.getElementById("nahrQuelleModal");
+  if (!huelle) return;
+  var zu = document.getElementById("btnNahrQuelleZu");
+  if (zu) zu.addEventListener("click", schliesseNahrQuelle);
+  huelle.addEventListener("click", function (e) { if (e.target === huelle) schliesseNahrQuelle(); });
+  var suche = document.getElementById("nahrSuche");
+  if (suche) suche.addEventListener("input", rendereNahrQuelleTabelle);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !huelle.hidden) schliesseNahrQuelle();
+  });
+})();
+</script>
+</body>
+</html>
