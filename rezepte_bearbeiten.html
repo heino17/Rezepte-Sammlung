@@ -244,6 +244,27 @@
   .export-dropdown button:hover .menu-unter { color: inherit; opacity: .85; }
   .export-dropdown button:hover { background: var(--gruen-hell); color: var(--gruen-hover); }
   .export-dropdown button.alarm { background: var(--rot); color: #fff; }
+
+  /* Drag & Drop: Datei übers Fenster ziehen */
+  .drop-zone {
+    position: fixed; inset: 0; z-index: 3000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(30, 50, 35, .55); pointer-events: none;
+  }
+  /* hidden-Attribut muss trotz display:flex weiterwirken */
+  .drop-zone[hidden] { display: none; }
+  /* Wahl-Modal nach dem Drop */
+  .drop-frage { opacity: .85; margin-top: -4px; }
+  .drop-inhalt {
+    text-align: center; color: #fff;
+    padding: 34px 48px; border-radius: 18px;
+    border: 3px dashed rgba(255, 255, 255, .85);
+    background: rgba(20, 40, 25, .75);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .45);
+  }
+  .drop-icon { display: block; font-size: 52px; margin-bottom: 8px; }
+  .drop-inhalt strong { display: block; font-size: 22px; margin-bottom: 6px; }
+  .drop-inhalt small { display: block; opacity: .9; max-width: 460px; }
   .export-dropdown button.alarm:hover { background: var(--rot); color: #fff; }
 
   #btnExportToggle.alarm {
@@ -497,14 +518,32 @@
     object-fit: cover; border-radius: 10px; border: 1px solid var(--linie);
     box-shadow: 0 2px 6px rgba(0,0,0,.14);
     background: #fff; display: block;
+    cursor: zoom-in;
+    transition: transform .18s ease, box-shadow .18s ease;
   }
   .rezept-bild:hover { border-color: var(--gruen); }
+  /* Klick-Zoom wie in rezepte.html: height:auto zeigt das GANZE Bild statt
+     des 150px-Ausschnitts; min/max kappen Extreme, contain haelt sie ganz
+     sichtbar. position:relative ist hier noetig, damit z-index greift (das
+     Bild ist kein direktes Flex-Kind wie im Viewer) und der Zoom ueber die
+     positionierten Nachbar-Wrapper malt. */
+  .rezept-bild.gross {
+    position: relative;
+    height: auto; min-height: 150px; max-height: 85vh;
+    object-fit: contain;
+    transform: scale(1.8);
+    image-rendering: auto;
+    z-index: 30;
+    box-shadow: 0 10px 28px rgba(0,0,0,.6);
+    cursor: zoom-out;
+  }
+  .rezept-bild.gross ~ .bild-aktionen { display: none; }
   .rezept-bild-wrap .bild-aktionen {
     position: absolute; top: 6px; right: 6px;
     display: flex; gap: 4px;
   }
   .rezept-bild-wrap .bild-aktionen button {
-    background: rgba(60,40,20,.6); color: #fff; border-radius: 6px;
+    background: rgba(60,40,20,.6); border: 1px solid #aba7a7; color: #fff; border-radius: 6px;
     padding: 3px 7px; font-size: 12px; line-height: 1;
   }
   .rezept-bild-wrap .bild-aktionen button.bild-verschieben:hover { background: var(--gruen-hover); color: #fff; }
@@ -644,8 +683,74 @@
   .modal-alle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
   .modal-alle input { width: auto; margin: 0; }
   .modal-hinweis { margin: 10px 0 0; font-size: 13px; color: var(--gruen); }
+
+  /* Modal: 🌐 Import von TheMealDB / Wikibooks-Kochbuch */
+  .mdb-box { max-width: 600px; }
+  .mdb-quellen { display: flex; gap: 8px; margin-bottom: 10px; }
+  .mdb-quelle {
+    flex: 1; padding: 7px 10px; font-size: 13px; font-weight: 700;
+    border: 1px solid var(--linie); border-radius: 9px;
+    background: #fffdf9; color: var(--text); cursor: pointer;
+  }
+  .mdb-quelle.aktiv { background: var(--gruen-hell); color: var(--gruen-hover); }
+  .mdb-hinweis { margin: -2px 0 12px; font-size: 12.5px; color: var(--grau); }
+  .mdb-hinweis a { color: var(--gruen-hover); font-weight: 700; }
+  .mdb-suche { display: flex; gap: 8px; }
+  .mdb-suche input {
+    flex: 1; min-width: 0; font: inherit; font-size: 14px;
+    border: 1px solid var(--linie); border-radius: 9px;
+    background: #fffdf9; color: var(--text); padding: 8px 12px;
+  }
+  .mdb-liste {
+    max-height: 320px; overflow-y: auto;
+    border: 1px solid var(--linie); border-radius: 9px;
+    margin-top: 12px; background: #fffdf9;
+  }
+  .mdb-treffer {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; cursor: pointer;
+    border-bottom: 1px solid var(--linie);
+  }
+  .mdb-treffer:last-child { border-bottom: none; }
+  .mdb-treffer:hover, .mdb-treffer:focus-visible { background: var(--grau-hell); outline: none; }
+  .mdb-treffer img {
+    width: 64px; height: 44px; object-fit: cover; flex-shrink: 0;
+    border-radius: 6px; background: #fff; border: 1px solid var(--linie);
+  }
+  /* Wikibooks-Treffer haben kein Vorschaubild -> Buch-Platzhalter */
+  .mdb-treffer .mdb-buch {
+    width: 64px; height: 44px; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; font-size: 22px;
+    border-radius: 6px; background: #fff; border: 1px solid var(--linie);
+  }
+  .mdb-treffer .mdb-name { font-weight: 600; font-size: 14px; min-width: 0; }
+  .mdb-treffer small { display: block; color: var(--grau); font-size: 12px; font-weight: 400; }
+  .mdb-status { text-align: center; color: var(--grau); padding: 26px 12px; font-size: 13.5px; }
+  .mdb-vorschau { display: flex; gap: 12px; align-items: flex-start; margin-top: 4px; }
+  .mdb-vorschau > img {
+    width: 160px; height: 104px; object-fit: cover; flex-shrink: 0;
+    border-radius: 9px; border: 1px solid var(--linie); background: #fff;
+  }
+  .mdb-info { min-width: 0; }
+  .mdb-info h4 { margin: 0 0 5px; font-size: 15.5px; color: var(--text); }
+  .mdb-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
+  .mdb-chip {
+    background: var(--gruen-hell); color: var(--gruen-hover);
+    font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+  }
+  .mdb-meta { font-size: 12.5px; color: var(--grau); }
+  .mdb-zutaten {
+    max-height: 170px; overflow-y: auto; margin-top: 10px;
+    background: var(--grau-hell); border-radius: 9px; padding: 8px 12px;
+    font-size: 13px; columns: 2; column-gap: 18px;
+  }
+  .mdb-zutaten div { break-inside: avoid; padding: 1.5px 0; }
   html[data-theme="dunkel"] .modal-box { background: #383228; }
   html[data-theme="dunkel"] .modal-vergleich { background: #4a4235; }
+  html[data-theme="dunkel"] .mdb-suche input,
+  html[data-theme="dunkel"] .mdb-liste,
+  html[data-theme="dunkel"] .mdb-quelle,
+  html[data-theme="dunkel"] .mdb-treffer .mdb-buch { background: #3a332c; }
 
   /* Hilfe-Modal: exakt so groß wie sein Inhalt */
   .modal-box.hilfe { width: max-content; min-width: 300px; max-width: min(90vw, 560px); }
@@ -689,11 +794,26 @@
           <span class="menu-titel" data-i18n="📂 Andere 5-Elemente-Liste laden">📂 Andere 5-Elemente-Liste laden</span>
           <small class="menu-unter" data-i18n="gilt nur für diese Sitzung">gilt nur für diese Sitzung</small>
         </button>
+        <button id="btnImportMealDb" data-i18n-title="Rezepte online von themealdb.com suchen und in die Sammlung übernehmen (Internet nötig)">
+          <span class="menu-titel" data-i18n="🌐 Von TheMealDB importieren">🌐 Von TheMealDB importieren</span>
+          <small class="menu-unter" data-i18n="Online bei themealdb.com suchen & ins eigene Format umwandeln">Online bei themealdb.com suchen &amp; ins eigene Format umwandeln</small>
+        </button>
+        <button id="btnImportWikibooks" data-i18n-title="Rezepte online aus dem Wikibooks-Kochbuch suchen und in die Sammlung übernehmen (Internet nötig)">
+          <span class="menu-titel" data-i18n="🌐 Aus dem Wikibooks-Kochbuch importieren">🌐 Aus dem Wikibooks-Kochbuch importieren</span>
+          <small class="menu-unter" data-i18n="Online deutsche Rezepte suchen & ins eigene Format umwandeln">Online deutsche Rezepte suchen &amp; ins eigene Format umwandeln</small>
+        </button>
       </div>
     </div>
     <input type="file" id="fileImport" accept=".json,.js" hidden>
     <input type="file" id="tcmFileImport" accept=".json" hidden>
     <input type="file" id="fileImportDB" accept=".json,.js" hidden>
+    <div id="dropZone" class="drop-zone" hidden>
+      <div class="drop-inhalt">
+        <span class="drop-icon">📂</span>
+        <strong data-i18n="Loslassen zum Importieren">Loslassen zum Importieren</strong>
+        <small data-i18n="Rezepte-Datei (.json/.js) fallen lassen – sie wird zur Arbeits-Datenbank hinzugefügt.">Rezepte-Datei (.json/.js) fallen lassen – sie wird zur Arbeits-Datenbank hinzugefügt.</small>
+      </div>
+    </div>
     <button id="btnReset" class="danger" data-i18n-title="Verwirft alle Änderungen (Browser-Speicher) und lädt den Stand von rezepte.js neu">🗘</button>
     <button id="btnHilfe" title="Anleitung zum speichern öffnen" data-i18n-title="Anleitung zum speichern öffnen" data-i18n-aria="Anleitung zum speichern öffnen" class="hilfe">❓</button>
     <button id="btnTheme" class="btn-link" data-i18n-title="Helles/Dunkles Design umschalten">🌙 Dunkel</button>
@@ -736,7 +856,7 @@
 </div>
 
 <footer>
-  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.0.0</small></div>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.1.0</small></div>
   <div>❤️</div>
   <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
 </footer>
@@ -1381,6 +1501,25 @@ function fussKnopfLeiste(pr, extra) {
   );
 }
 
+/* Eigene Notizen aus der Rezeptansicht (rezept_notizen_v1, gleiche Daten wie
+ * rezepte.html): Der Editor uebernimmt sie beim Bearbeiten als Startwert des
+ * Formulars und loescht den lokalen Eintrag beim Speichern - danach sind die
+ * Rezeptdaten die alleinige Quelle. Absichtlich mit Literal-Key und ohne
+ * externe Abhaengigkeiten, damit der Code auch isoliert (Tests) laeuft. */
+function leseViewerNotizen() {
+  try {
+    var o = JSON.parse(localStorage.getItem("rezept_notizen_v1") || "{}");
+    return (o && typeof o === "object" && !Array.isArray(o)) ? o : {};
+  } catch (e) { return {}; }
+}
+function notizFuerFormular(r) {
+  var eigene = String((leseViewerNotizen()[r.id] || "")).trim();
+  var daten = r.notiz || "";
+  if (!eigene) return daten;
+  if (!daten.trim() || eigene === daten.trim()) return eigene;
+  return eigene + "\n\n" + daten;
+}
+
 function rendereFormular(r) {
   vergissFormularAenderung();   /* frisches Formular = keine ungespeicherten Eingaben */
   var main = document.getElementById("formbereich");
@@ -1454,7 +1593,7 @@ function rendereFormular(r) {
       '<div class="bereich">' +
         '<h3>' + tr("📝 Eigene Notizen") + '</h3>' +
         '<div class="feld"><textarea id="fNotiz" rows="4" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '">' +
-          escapeHtml(r.notiz || "") + "</textarea></div>" +
+          escapeHtml(notizFuerFormular(r)) + "</textarea></div>" +
       "</div>" +
 
       fussKnopfLeiste("btn") +
@@ -1716,6 +1855,16 @@ function nahrfeld(id, label, wert) {
 }
 
 /* Bilder */
+/* Klick außerhalb der Bildergalerie schließt den Bild-Zoom. Einmalig auf
+ * Dokumentebene registriert - rendereBilder laeuft bei jeder Aenderung neu
+ * und wuerde sonst Haufen doppelter Listener erzeugen. */
+document.addEventListener("click", function (ev) {
+  if (ev.target.closest(".rezept-bilder")) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".rezept-bild.gross"), function (b) {
+    b.classList.remove("gross");
+  });
+});
+
 function rendereBilder(r) {
   var el = document.getElementById("bilderListe");
   if (!el) return;
@@ -1732,6 +1881,14 @@ function rendereBilder(r) {
       img.alt = tr("Rezeptbild");
       img.src = src;
       img.addEventListener("error", function () { img.style.display = "none"; });
+      /* Klick-Zoom: nochmal klicken (oder daneben) schliesst wieder. */
+      img.addEventListener("click", function () {
+        var war = img.classList.contains("gross");
+        Array.prototype.forEach.call(thumbs.querySelectorAll(".rezept-bild.gross"), function (b) {
+          b.classList.remove("gross");
+        });
+        if (!war) img.classList.add("gross");
+      });
 
       var aktionen = document.createElement("span");
       aktionen.className = "bild-aktionen";
@@ -2129,6 +2286,16 @@ function leseAktuelles() {
   var notizText = document.getElementById("fNotiz").value.trim();
   if (notizText === "") delete r.notiz;
   else r.notiz = notizText;
+  /* Die Viewer-Notiz steckt jetzt im Formular (und damit in den Daten) -
+   * den lokalen Schatten entfernen, sonst verdeckt er kuenftig die frisch
+   * gesicherte Notiz und wuerde beim naechsten Oeffnen doppelt erscheinen. */
+  try {
+    var vn = leseViewerNotizen();
+    if (Object.prototype.hasOwnProperty.call(vn, r.id)) {
+      delete vn[r.id];
+      localStorage.setItem("rezept_notizen_v1", JSON.stringify(vn));
+    }
+  } catch (e) { /* keine localStorage verfuegbar - nicht schlimm */ }
 
   if (!r.nahrwerte) r.nahrwerte = {};
   var n = r.nahrwerte;
@@ -2471,10 +2638,9 @@ function zeigeHilfe() {
   document.addEventListener("keydown", escFangen);
 }
 
-document.getElementById("fileImport").addEventListener("change", async function () {
-  var file = this.files[0];
-  this.value = "";
-  if (!file) return;
+/* Rezeptliste (.json/.js) einlesen und mit der Arbeits-Datenbank verschmelzen;
+ * wird vom Datei-Dialog UND vom Drag & Drop genutzt. */
+async function importiereRezeptDatei(file) {
   var leser = new FileReader();
   leser.onload = async function () {
     try {
@@ -2535,6 +2701,13 @@ document.getElementById("fileImport").addEventListener("change", async function 
     }
   };
   leser.readAsText(file);
+}
+
+document.getElementById("fileImport").addEventListener("change", function () {
+  var file = this.files[0];
+  this.value = "";
+  if (!file) return;
+  importiereRezeptDatei(file);
 });
 
 /* Andere Datenbank importieren: ersetzt die aktuelle Arbeits-Datenbank
@@ -2542,17 +2715,16 @@ document.getElementById("fileImport").addEventListener("change", async function 
 document.getElementById("btnImportDB").onclick = function () {
   document.getElementById("fileImportDB").click();
 };
-document.getElementById("fileImportDB").addEventListener("change", function () {
-  var file = this.files[0];
-  this.value = "";
-  if (!file) return;
+
+function importiereDatenbankDatei(file, ohneRueckfrage) {
   var leser = new FileReader();
   leser.onload = function () {
     try {
       var text = leser.result;
       var daten = JSON.parse(extrahiereListe(text));
       if (!Array.isArray(daten)) throw new Error(tr("Keine Liste gefunden"));
-      if (!confirm(tr("Aktuelle Datenbank durch die importierte ersetzen? Die Datei enthält {anzahl} Rezepte.", { anzahl: daten.length }))) return;
+      if (!ohneRueckfrage &&
+          !confirm(tr("Aktuelle Datenbank durch die importierte ersetzen? Die Datei enthält {anzahl} Rezepte.", { anzahl: daten.length }))) return;
       daten.forEach(function (r) {
         r.zutaten = r.zutaten || [];
         r.zubereitung = r.zubereitung || [];
@@ -2583,7 +2755,895 @@ document.getElementById("fileImportDB").addEventListener("change", function () {
     }
   };
   leser.readAsText(file);
+}
+
+document.getElementById("fileImportDB").addEventListener("change", function () {
+  var file = this.files[0];
+  this.value = "";
+  if (!file) return;
+  importiereDatenbankDatei(file);
 });
+
+/* ---------------------------------------------------------------
+ * Drag & Drop: Rezept-.json/.js direkt ins Browserfenster ziehen.
+ * Nach dem Drop wählt eine kleine Modal-Box, was mit der Datei
+ * geschieht: als Datenbank ÖFFNEN (ersetzt die aktuelle, wie
+ * btnImportDB) oder zur Arbeits-Datenbank HINZUFÜGEN (Merge wie
+ * über den Datei-Dialog). Andere Dateitypen werden abgewiesen.
+ * --------------------------------------------------------------- */
+var dropZaehler = 0;
+
+function dropHatDateien(e) {
+  if (!e.dataTransfer) return false;
+  var typen = e.dataTransfer.types || [];
+  for (var i = 0; i < typen.length; i++) {
+    if (typen[i] === "Files") return true;
+  }
+  return false;
+}
+
+function dropOverlay(zeigen) {
+  document.getElementById("dropZone").hidden = !zeigen;
+}
+
+window.addEventListener("dragenter", function (e) {
+  if (!dropHatDateien(e)) return;
+  e.preventDefault();
+  dropZaehler++;
+  dropOverlay(true);
+});
+window.addEventListener("dragover", function (e) {
+  if (!dropHatDateien(e)) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "copy";
+});
+window.addEventListener("dragleave", function (e) {
+  if (!dropHatDateien(e)) return;
+  dropZaehler--;
+  if (dropZaehler <= 0) {
+    dropZaehler = 0;
+    dropOverlay(false);
+  }
+});
+window.addEventListener("drop", function (e) {
+  if (!dropHatDateien(e)) return;
+  e.preventDefault();
+  dropZaehler = 0;
+  dropOverlay(false);
+  var datei = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!datei) return;
+  if (!/\.(json|js)$/i.test(datei.name)) {
+    melden(tr("Nur .json- und .js-Dateien können gedroppt werden."), true);
+    return;
+  }
+  zeigeDropWahl(datei);
+});
+
+/* Wahl-Modal nach dem Drop: Datei einmal einlesen (für die Rezeptzahl),
+ * dann ÖFFNEN (ersetzen) oder HINZUFÜGEN (Merge) lassen. */
+async function zeigeDropWahl(file) {
+  var daten;
+  try {
+    var text = await new Promise(function (res, rej) {
+      var leser = new FileReader();
+      leser.onload = function () { res(String(leser.result)); };
+      leser.onerror = rej;
+      leser.readAsText(file);
+    });
+    daten = JSON.parse(extrahiereListe(text));
+    if (!Array.isArray(daten)) throw new Error(tr("Keine Liste gefunden"));
+  } catch (e) {
+    melden(tr("Import fehlgeschlagen: {message}", { message: e.message }), true);
+    return;
+  }
+
+  var container = document.getElementById("modalContainer");
+  container.innerHTML =
+    '<div class="modal-overlay" id="dropOverlay"><div class="modal-box">' +
+      "<h3>" + escapeHtml(tr("Gedroppte Datei: {name}", { name: file.name })) + "</h3>" +
+      '<p class="drop-frage">' + escapeHtml(tr("Was möchtest du mit den {anzahl} Rezepten machen?", { anzahl: daten.length })) + "</p>" +
+      '<div class="modal-aktionen">' +
+        '<button class="primary" id="dropOeffnen">' + escapeHtml(tr("📂 Als Datenbank öffnen (ersetzt die aktuelle)")) + "</button>" +
+        '<button id="dropHinzufuegen">' + escapeHtml(tr("➕ Der aktuellen Datenbank hinzufügen")) + "</button>" +
+        '<button class="ghost" id="dropAbbrechen">' + tr("Abbrechen") + "</button>" +
+      "</div>" +
+    "</div></div>";
+
+  function schliessen() {
+    container.innerHTML = "";
+    document.removeEventListener("keydown", escFangen);
+  }
+  function escFangen(ev) {
+    if (ev.key === "Escape") schliessen();
+  }
+  document.addEventListener("keydown", escFangen);
+  document.getElementById("dropOverlay").addEventListener("click", function (ev) {
+    if (ev.target === this) schliessen();
+  });
+  document.getElementById("dropAbbrechen").onclick = schliessen;
+  document.getElementById("dropOeffnen").onclick = function () {
+    schliessen();
+    importiereDatenbankDatei(file, true); /* Wahl war explizit -> keine zweite Rückfrage */
+  };
+  document.getElementById("dropHinzufuegen").onclick = function () {
+    schliessen();
+    importiereRezeptDatei(file);
+  };
+}
+
+/* ---------------------------------------------------------------
+ * 🌐 Import von TheMealDB (themealdb.com) – optionale Online-Funktion
+ * Rezepte suchen (search.php), ansehen (lookup.php), ins eigene
+ * Format umwandeln ({ menge, einheit, name }, nummerierte Schritte,
+ * Bilder als Data-URL) und wie beim Dazuladen übernehmen.
+ * Nur auf Knopfdruck online – die App selbst bleibt offline-fähig;
+ * API und Bildserver erlauben CORS (access-control-allow-origin: *).
+ * --------------------------------------------------------------- */
+var MEALDB_API = "https://www.themealdb.com/api/json/v1/1/";
+
+async function mealdbFetch(pfad) {
+  var antwort;
+  try {
+    antwort = await fetch(MEALDB_API + pfad);
+  } catch (e) {
+    throw new Error(tr("Netzwerkfehler – ist das Gerät online?"));
+  }
+  if (!antwort.ok) throw new Error("HTTP " + antwort.status);
+  return antwort.json();
+}
+
+/* EN->DE Mengen-Einheiten: [Muster, DE-Einheit, Mehrzahl?, Umrechnungsfaktor?].
+ * Einträge mit Faktor rechnen um (oz -> g, fl oz -> ml …); Reihenfolge
+ * zählt, "fl oz" muss vor "oz" geprüft werden! Ohne Faktor wird nur
+ * übersetzt (tsp -> TL). Das Muster wird gegen das ganze Einheiten-Wort
+ * geprüft (vollständige Übereinstimmung). */
+var MEALDB_EINHEITEN = [
+  ["fl\\.?\\s*oz|fluidounces?", "ml", null, 29.57],
+  ["oz|ounces?", "g", null, 28.35],
+  ["lbs?|pounds?", "g", null, 453.59],
+  ["pints?|pts?", "ml", null, 473.18],
+  ["quarts?|qts?", "ml", null, 946.35],
+  ["gallons?|gal", "Liter", null, 3785.41],
+  ["g|grams?|grammes?", "g"],
+  ["kg|kilograms?", "kg"],
+  ["ml|milliliters?|millilitres?", "ml"],
+  ["l|liters?|litres?", "Liter"],
+  ["tsp|teaspoons?", "TL"],
+  ["tbsp|tbsps?|tbs|tablespoons?", "EL"],
+  ["pinch(es)?", "Prise", "Prisen"],
+  ["dash(es)?", "Spritzer"],
+  ["cup(s)?", "Tasse", "Tassen"],
+  ["clove(s)?", "Zehe", "Zehen"],
+  ["slice(s)?", "Scheibe", "Scheiben"],
+  ["bunch(es)?", "Bund"],
+  ["stick(s)?", "Stange", "Stangen"],
+  ["sprig(s)?", "Zweig", "Zweige"],
+  ["leaves|leafs?", "Blatt"],
+  ["handfuls?", "Handvoll"],
+  ["heads?", "Kopf", "Köpfe"],
+  ["packets?|packs?|envelopes?", "Pck."],
+  ["cans?|tins?", "Dose", "Dosen"],
+  ["jar(s)?", "Glas", "Gläser"],
+  ["bottle(s)?", "Flasche", "Flaschen"],
+  ["pieces?|pcs", "Stück"],
+  ["cubes?", "Würfel"],
+  ["drop(s)?", "Tropfen"]
+].map(function (e) {
+  return { re: new RegExp("^(?:" + e[0] + ")$", "i"), de: e[1], plural: e[2] || null, faktor: e[3] || null };
+});
+
+/* Häufige TheMealDB-Kategorien auf Deutsch (Kategorien sind freie Texte) */
+var MEALDB_KATEGORIEN = {
+  "Beef": "Rind", "Chicken": "Hähnchen", "Dessert": "Dessert", "Lamb": "Lamm",
+  "Miscellaneous": "Sonstiges", "Pasta": "Pasta", "Pork": "Schwein",
+  "Seafood": "Meeresfrüchte", "Side": "Beilage", "Starter": "Vorspeise",
+  "Vegan": "Vegan", "Vegetarian": "Vegetarisch", "Breakfast": "Frühstück", "Goat": "Ziege"
+};
+
+/* "1 1/2" -> 1.5, "0.5" -> 0.5, "3/4" -> 0.75; sonst null */
+function mealdbZahlWert(s) {
+  s = String(s == null ? "" : s).trim().replace(",", ".");
+  if (!s) return null;
+  var gemischt = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if (gemischt) return +gemischt[1] + (+gemischt[2] / +gemischt[3]);
+  var bruch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (bruch) return +bruch[1] / +bruch[2];
+  if (/^\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+  return null;
+}
+
+/* Zahl -> kompakter Text: Brüche bleiben lesbar (1.5 -> "1 1/2"),
+ * Dezimalstellen mit Komma (deutsche Datenbank-Konvention). */
+function mealdbZahlText(w) {
+  var ganz = Math.floor(w);
+  var rest = w - ganz;
+  if (rest > 0.01 && rest < 0.99 && w < 10) {
+    var naeherstes = [[0.25, "1/4"], [0.33, "1/3"], [0.5, "1/2"], [0.67, "2/3"], [0.75, "3/4"]];
+    for (var i = 0; i < naeherstes.length; i++) {
+      if (Math.abs(rest - naeherstes[i][0]) < 0.05) return (ganz ? ganz + " " : "") + naeherstes[i][1];
+    }
+  }
+  return String(Math.round(w * 10) / 10).replace(".", ",");
+}
+
+/* Zerlegt eine englische Mengenangabe ("1 1/2 lbs", "200g", "to taste")
+ * in { menge, einheit, rest }: rest sind Qualifizierer wie "chopped",
+ * die als Klammer-Zusatz in den Zutatennamen wandern. */
+function mealdbParseMenge(mass) {
+  var s = String(mass == null ? "" : mass)
+    .replace(/½/g, "1/2").replace(/¼/g, "1/4").replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3").replace(/⅔/g, "2/3").trim();
+  if (!s) return { menge: "", einheit: "", rest: "" };
+  /* "a pinch" -> "pinch": unbestimmter Artikel fällt weg */
+  s = s.replace(/^(?:an?\s+)/i, "");
+  /* "… to taste" ohne jede Zahl -> "?" (bleibt beim Skalieren unverändert) */
+  if (!/\d/.test(s) && /to taste/i.test(s)) {
+    var uebrig = s.replace(/to taste/i, "").replace(/^[\s,.:;-]+|[\s,.:;-]+$/g, "");
+    return { menge: "?", einheit: "", rest: uebrig };
+  }
+  var ergebnis = { menge: "", einheit: "", rest: "" };
+  /* Mengenausdruck am Anfang: Ziffern, Komma/Punkt, Brüche, Bereiche */
+  var m = s.match(/^([\d.,\s\/-]*\d[\d.,\s\/-]*)\s*(.*)$/);
+  var mengeText = m ? m[1].replace(/\s+/g, " ").trim() : "";
+  var rest = m ? m[2].trim() : s;
+  if (rest) {
+    var teile = rest.split(/\s+/);
+    /* Einheiten-Wort erkennen: erst Zweier-Kombination ("fl oz"),
+     * dann Einzelwort ("oz", "tbsp", …); Satzzeichen am Ende weg. */
+    var kandidaten = [
+      { wort: (teile[0] + " " + (teile[1] || "")).trim(), weiteres: teile.slice(2).join(" ") },
+      { wort: String(teile[0]), weiteres: teile.slice(1).join(" ") }
+    ];
+    for (var k = 0; k < kandidaten.length && !ergebnis.einheit; k++) {
+      var wort = kandidaten[k].wort.replace(/[.,;:]$/, "");
+      var weiteres = kandidaten[k].weiteres.trim();
+      for (var i = 0; i < MEALDB_EINHEITEN.length && !ergebnis.einheit; i++) {
+        var e = MEALDB_EINHEITEN[i];
+        if (!e.re.test(wort)) continue;
+        if (e.faktor != null) {
+          var werte = mengeText.split(/\s*[-–]\s*/).map(mealdbZahlWert);
+          if (werte.some(function (w) { return w == null; })) continue; /* unverstanden -> nächstes Muster */
+          ergebnis.menge = werte.map(function (w) { return mealdbZahlText(w * e.faktor); }).join("-");
+          ergebnis.einheit = e.de;
+        } else {
+          ergebnis.menge = mengeText;
+          ergebnis.einheit = e.de;
+          if (e.plural) {
+            var oberste = String(mengeText).split(/\s*[-–]\s*/).map(mealdbZahlWert);
+            var hoechster = oberste.filter(function (w) { return w != null; }).pop();
+            if (hoechster != null && hoechster >= 2) ergebnis.einheit = e.plural;
+          }
+        }
+        rest = weiteres;
+      }
+    }
+  }
+  /* Rest ohne Buchstaben ("-") ist kein sinnvoller Qualifizierer */
+  if (!/[a-zA-Zäöüß]/i.test(rest)) rest = "";
+  /* Weder Zahl noch bekannte Einheit -> ganzer Text als Qualifizierer */
+  if (!m && !ergebnis.einheit) {
+    return { menge: "", einheit: "", rest: /[a-zA-Zäöüß]/i.test(s) ? s : "" };
+  }
+  /* Zahl ohne (bekannte) Einheit: Menge wenigstens erhalten ("3 large") */
+  if (!ergebnis.menge && mengeText) ergebnis.menge = mengeText;
+  ergebnis.rest = rest;
+  return ergebnis;
+}
+
+/* Freitext-Anleitung in Schritte zerlegen: Aufzählungszeichen (▢, -, •)
+ * und Nummerierung ("STEP 1.", "1.") entfernen, Leerzeilen weg. */
+function mealdbZerlegeSchritte(text) {
+  var roh = String(text == null ? "" : text);
+  var teile = roh.split(/\r?\n+/).map(function (z) {
+    z = z.replace(/^\s*(?:step\s*\d+\s*[.:)]?|\d+\s*[.)])\s*/i, "");
+    z = z.replace(/^[\s•▪◦○▢□*·\-–—]+/, "");
+    return z.replace(/\s+/g, " ").trim();
+  }).filter(function (z) {
+    return z && !/^instructions?:?$/i.test(z);
+  });
+  if (!teile.length && roh.trim()) teile = [roh.replace(/\s+/g, " ").trim()];
+  return teile;
+}
+
+/* Bild von themealdb.com laden und als Data-URL einbetten (max. 300 px,
+ * JPEG 85% – wie liesBildDatei). crossOrigin nötig, sonst wirft der
+ * Canvas beim Export einen SecurityError. Fehler -> cb(null). */
+function mealdbBildEinbetten(url, cb) {
+  var img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onerror = function () { cb(null); };
+  img.onload = function () {
+    try {
+      var max = 300;
+      var skala = Math.min(1, max / Math.max(img.width || max, img.height || max));
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.round((img.width || max) * skala);
+      canvas.height = Math.round((img.height || max * 0.66) * skala);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      cb(canvas.toDataURL("image/jpeg", 0.85));
+    } catch (e) { cb(null); }
+  };
+  img.src = url;
+}
+
+/* TheMealDB-Meal -> Rezept der Sammlung. bilder ist bereits fertig
+ * (Data-URL oder Remote-URL als Rückfallebene). */
+function mealdbKonvertiere(meal, bilder) {
+  var zutaten = [];
+  for (var i = 1; i <= 20; i++) {
+    var zName = String(meal["strIngredient" + i] || "").trim();
+    if (!zName || /^null$/i.test(zName)) continue;
+    var p = mealdbParseMenge(meal["strMeasure" + i]);
+    zutaten.push({
+      menge: p.menge,
+      einheit: p.einheit,
+      name: zName + (p.rest ? " (" + p.rest + ")" : "")
+    });
+  }
+  var schritte = mealdbZerlegeSchritte(meal.strInstructions);
+  return {
+    id: neuerId(slugify(String(meal.strMeal || "mealdb"))),
+    name: String(meal.strMeal || "").trim(),
+    kategorie: MEALDB_KATEGORIEN[meal.strCategory] || String(meal.strCategory || "").trim(),
+    portionen: 4,
+    bilder: bilder || [],
+    zutaten: zutaten.length ? zutaten : [{ menge: "", einheit: "", name: "" }],
+    zubereitung: schritte.length ? schritte : [""],
+    nahrwerte: {},
+    notiz: "Quelle: TheMealDB · https://www.themealdb.com/meal/" + meal.idMeal
+  };
+}
+
+/* ---------------------------------------------------------------
+ * 📚 Import aus dem Wikibooks-Kochbuch (de.wikibooks.org)
+ * Deutsche, frei lizenzierte Rezepte (CC BY-SA) über die MediaWiki-API.
+ * Suche (list=search), Seiteninhalt (parse/wikitext), Bildprüfung
+ * (imageinfo) – API und upload.wikimedia.org erlauben CORS (origin=*).
+ * --------------------------------------------------------------- */
+var WIKIBOOKS_API = "https://de.wikibooks.org/w/api.php";
+
+async function wikibooksFetch(params) {
+  var teile = Object.keys(params).map(function (k) {
+    return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+  });
+  var antwort;
+  try {
+    antwort = await fetch(WIKIBOOKS_API + "?" + teile.join("&") + "&format=json&origin=*");
+  } catch (e) {
+    throw new Error(tr("Netzwerkfehler – ist das Gerät online?"));
+  }
+  if (!antwort.ok) throw new Error("HTTP " + antwort.status);
+  return antwort.json();
+}
+
+/* HTML-Kommentare raus (kleben oft an Vorlagenwerten) */
+function wbBereinige(wikitext) {
+  return String(wikitext == null ? "" : wikitext).replace(/<!--[\s\S]*?-->/g, "");
+}
+
+/* Parameter der Vorlage _RezeptBox lesen: {{:…/_RezeptBox |Key = Wert …}} */
+function wbTemplateParams(wikitext) {
+  var m = wbBereinige(wikitext).match(/\{\{\s*:[^{}]*_RezeptBox\b([^{}]*)\}\}/);
+  var params = {};
+  if (!m) return params;
+  m[1].split("|").forEach(function (teil) {
+    var p = teil.match(/^\s*([^=]+?)\s*=(.*)/); /* kein $-Anker: Zeilen enden mit \n */
+    if (p) params[p[1].trim()] = p[2].trim();
+  });
+  return params;
+}
+
+/* Inhalt eines == Abschnitts ==: ab erster passender Überschrift bis zur
+ * nächsten; Vorlagenreste und [[Kategorie:]]-Zeilen werden übersprungen,
+ * Struktur-Vorlagen ({{:…}}) beenden den Abschnitt sicher. */
+function wbAbschnitt(wikitext, musterStart) {
+  var zeilen = String(wikitext || "").split(/\r?\n/);
+  var re = new RegExp(musterStart, "i");
+  var raus = [], drin = false;
+  for (var i = 0; i < zeilen.length; i++) {
+    var z = zeilen[i];
+    if (/^\s*==.+==\s*$/.test(z)) {
+      if (drin) break;
+      if (re.test(z)) drin = true;
+      continue;
+    }
+    if (/^\s*\{\{:/.test(z)) { if (drin) break; continue; }
+    if (drin) {
+      if (/^\s*\{\{.*\}\}\s*$/.test(z)) continue;
+      if (/^\s*\[\[Kategorie:/.test(z)) continue;
+      raus.push(z);
+    }
+  }
+  return raus.join("\n").trim();
+}
+
+/* Wiki-Syntax auflösen: [[Ziel|Anzeige]] -> Anzeige, [[Ziel]] -> Ziel
+ * (ohne "Kochbuch/"-Präfix), fett/kursiv (''', ''') weg. */
+function wbWikilinks(s) {
+  s = String(s || "")
+    .replace(/\[\[\s*Kochbuch\s*\/\s*([^\]|]+?)\s*\]\]/g, "$1")
+    .replace(/\[\[(?:[^\]|]+\|)\s*([^\]|]+?)\s*\]\]/g, "$1")
+    .replace(/\[\[([^\]|]+)\]\]/g, function (_, ziel) {
+      return ziel.replace(/^\s*Kochbuch\s*\/\s*/i, "").trim();
+    })
+    .replace(/''{2,3}(.*?)''{2,3}/g, "$1");
+  return s.trim();
+}
+
+/* Deutsche Einheiten (schon metrisch -> nur übersetzen, keine Umrechnung).
+ * Aufbau wie MEALDB_EINHEITEN: [Muster, DE-Einheit, Mehrzahl?] */
+var WB_EINHEITEN = [
+  ["st\\.?|stücke?", "Stück"],
+  ["kg|kilo(?:gramm)?", "kg"],
+  ["g|gr|gramm", "g"],
+  ["ml|milliliter", "ml"],
+  ["l|liter", "Liter"],
+  ["el|esslöffel", "EL"],
+  ["tl|teelöffel", "TL"],
+  ["pck\\.?|päckchen|packungen?", "Pck."],
+  ["gläser|glaser?|glass?", "Glas", "Gläser"],
+  ["flasche[n]?", "Flasche", "Flaschen"],
+  ["dose[n]?", "Dose", "Dosen"],
+  ["becher", "Becher"],
+  ["tüte[n]?", "Tüte", "Tüten"],
+  ["tube[n]?", "Tube", "Tuben"],
+  ["büchse[n]?", "Dose", "Dosen"],
+  ["tasse[n]?", "Tasse", "Tassen"],
+  ["bund|bünde", "Bund"],
+  ["prise[n]?", "Prise", "Prisen"],
+  ["zehe[n]?", "Zehe", "Zehen"],
+  ["scheibe[n]?", "Scheibe", "Scheiben"],
+  ["würfel", "Würfel"],
+  ["handvoll", "Handvoll"],
+  ["zweig(?:e|en)?", "Zweig", "Zweige"],
+  ["blätter|blatt", "Blatt", "Blätter"],
+  ["spritzer", "Spritzer"]
+].map(function (e) {
+  return { re: new RegExp("^(?:" + e[0] + ")$", "i"), de: e[1], plural: e[2] || null };
+});
+
+/* Zutatenzeile zerlegen: "ca. 100 ml Olivenöl", "1000 g Mehl (kalt)",
+ * "2-3 St.", "etwas Salz", "1 1/2 kg Mehl" */
+function wbParseMenge(zeile) {
+  var s = String(zeile == null ? "" : zeile)
+    .replace(/½/g, "1/2").replace(/¼/g, "1/4").replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3").replace(/⅔/g, "2/3")
+    .replace(/^\s*(?:[*#•▪◦○▢□·\-–—:]+)\s*/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  s = s.replace(/^(?:ca\.?\s*|etwa\s+|circa\s+)/i, "");
+  if (!/\d/.test(s)) return { menge: "", einheit: "", rest: s };
+  var ergebnis = { menge: "", einheit: "", rest: "" };
+  /* Mengenausdruck am Anfang: Zahlen, Komma/Punkt, Brüche, Bereiche (2-3, 2–3) */
+  var m = s.match(/^([\d.,\s\/\-–]*\d[\d.,\s\/\-–]*)\s*(.*)$/);
+  var mengeText = m ? m[1].replace(/\s+/g, " ").replace(/\s*–\s*/g, "-").trim() : "";
+  var rest = m ? m[2].trim() : s;
+  if (rest) {
+    var teile = rest.split(/\s+/);
+    var wort = String(teile[0]).replace(/[.,;:]$/, "");
+    for (var i = 0; i < WB_EINHEITEN.length && !ergebnis.einheit; i++) {
+      var e = WB_EINHEITEN[i];
+      if (!e.re.test(wort)) continue;
+      ergebnis.menge = mengeText;
+      ergebnis.einheit = e.de;
+      if (e.plural) {
+        var oberste = String(mengeText).split(/\s*-\s*/).map(mealdbZahlWert);
+        var hoechster = oberste.filter(function (w) { return w != null; }).pop();
+        if (hoechster != null && hoechster >= 2) ergebnis.einheit = e.plural;
+      }
+      rest = teile.slice(1).join(" ").trim();
+    }
+  }
+  if (!/[a-zA-Zäöüß]/i.test(rest)) rest = "";
+  if (!ergebnis.menge && mengeText) ergebnis.menge = mengeText;
+  ergebnis.rest = rest;
+  return ergebnis;
+}
+
+/* "== Zutaten …=="-Abschnitt in {menge, einheit, name}-Objekte zerlegen */
+function wbZerlegeZutaten(block) {
+  return String(block || "").split(/\r?\n/)
+    .map(function (z) { return wbWikilinks(z.replace(/^\s*[*#]+\s*/, "")); })
+    .filter(Boolean)
+    .map(function (z) {
+      var p = wbParseMenge(z);
+      var name = String(p.rest || "");
+      /* Reine Klammer-Zutaten "*(Aroma)" -> Klammern ablegen */
+      if (/^\(.+\)$/.test(name)) name = name.slice(1, -1).trim();
+      return { menge: p.menge, einheit: p.einheit, name: name };
+    })
+    .filter(function (z) { return z.name; });
+}
+
+/* Erste Zahl eines Vorlagenwerts ("für 4 Personen" -> 4, "ca. 30 Stück" -> 30) */
+function wbZahlAusParam(v) {
+  var m = String(v == null ? "" : v).match(/\d+(?:[.,]\d+)?/);
+  if (!m) return null;
+  var w = mealdbZahlWert(m[0]);
+  return w == null ? null : w;
+}
+
+/* Portionen: Vorlagenwert -> Überschrift ("für 6 Portionen") -> 4 */
+function wbPortionen(params, wikitext) {
+  var w = wbZahlAusParam(params.Portionen != null ? params.Portionen : params.Menge);
+  if (w != null) return mealdbZahlText(w);
+  var h = String(wikitext || "").match(/=\s*Zutaten[^=\n]*für\s+(\d+)/i);
+  if (h) return h[1];
+  return "4";
+}
+
+/* Nährwerte aus den Vorlagenfeldern, wenn Zahlen drinstehen */
+function wbNahrwerte(params) {
+  var nw = {}, zuordnung = [
+    ["Brennwert", "kcal"], ["Kohlenhydrate", "kohlenhydrate"],
+    ["Eiweiß", "eiweiss"], ["Fett", "fette"]
+  ];
+  zuordnung.forEach(function (p) {
+    var z = wbZahlAusParam(params[p[0]]);
+    if (z != null) nw[p[1]] = mealdbZahlText(z);
+  });
+  return nw;
+}
+
+/* Bild-Kandidat: Vorlagenfeld "Bild" oder erster Foto-Link (jpg/png/webp,
+ * keine svg-Deko); Existenz wird separat per imageinfo geprüft. */
+function wbBildKandidat(wikitext) {
+  var params = wbTemplateParams(wikitext);
+  var kandidat = String(params.Bild || "").trim();
+  if (!kandidat) {
+    var m = String(wikitext || "").match(/\[\[\s*(?:Datei|Bild)\s*:\s*([^\]|]+\.(?:jpe?g|png|webp))\s*(?:\|[^\]]*)?\]\]/i);
+    kandidat = m ? m[1] : "";
+  }
+  return kandidat.split("/").pop().trim();
+}
+
+async function wbBildUrl(wikitext) {
+  var kandidat = wbBildKandidat(wikitext);
+  if (!kandidat) return "";
+  try {
+    var daten = await wikibooksFetch({
+      action: "query", prop: "imageinfo", iiprop: "url",
+      iiurlwidth: "330", titles: "Datei:" + kandidat
+    });
+    var seiten = (daten && daten.query && daten.query.pages) || {};
+    var ids = Object.keys(seiten);
+    for (var i = 0; i < ids.length; i++) {
+      var ii = seiten[ids[i]] && seiten[ids[i]].imageinfo && seiten[ids[i]].imageinfo[0];
+      if (ii) return String(ii.thumburl || ii.url || "");
+    }
+  } catch (e) { /* Bild bleibt optional */ }
+  return "";
+}
+
+async function wbSuche(suche) {
+  var daten = await wikibooksFetch({
+    action: "query", list: "search", srsearch: suche, srlimit: "20"
+  });
+  var alle = (daten && daten.query && daten.query.search) || [];
+  return alle.filter(function (t) {
+    return /^Kochbuch\//i.test(String(t.title || ""));
+  }).slice(0, 10);
+}
+
+/* Wikibooks-Seite -> Rezept der Sammlung. bilder ist bereits fertig
+ * (Data-URL oder Remote-URL als Rückfallebene). */
+function wbKonvertiere(seite, rohWikitext, bilder) {
+  var wikitext = wbBereinige(rohWikitext);
+  var params = wbTemplateParams(wikitext);
+  var titel = String(seite || "").replace(/^\s*Kochbuch\s*\/\s*/i, "").trim() || "Wikibooks-Rezept";
+  var zutatenBlock = wbAbschnitt(wikitext, "^=+\\s*Zutaten");
+  var schrittBlock = wbAbschnitt(wikitext, "^=+\\s*(?:Zubereitung|Anleitung)");
+  var tippsBlock = wbAbschnitt(wikitext, "^=+\\s*Tipp");
+  var zutaten = wbZerlegeZutaten(zutatenBlock);
+  var schritte = mealdbZerlegeSchritte(wbWikilinks(schrittBlock));
+  /* Fußnoten abschneiden: ab "Erfasst von:" gehört nichts mehr zum Rezept,
+   * Wikipedia-Kreditzeilen fliegen ganz raus. */
+  for (var i = 0; i < schritte.length; i++) {
+    if (/^'?erfasst von\b/i.test(schritte[i])) { schritte = schritte.slice(0, i); break; }
+  }
+  schritte = schritte.filter(function (s) { return !/^\(aus wikipedia/i.test(s); });
+  if (tippsBlock) {
+    mealdbZerlegeSchritte(wbWikilinks(tippsBlock)).forEach(function (t) {
+      schritte.push("💡 " + t);
+    });
+  }
+  var kategorie = String(params.Kategorie || "").replace(/^\s*Kochbuch\s*\/\s*/i, "").trim();
+  return {
+    id: neuerId(slugify(titel)),
+    name: titel,
+    kategorie: kategorie,
+    portionen: wbPortionen(params, wikitext),
+    bilder: bilder || [],
+    zutaten: zutaten.length ? zutaten : [{ menge: "", einheit: "", name: "" }],
+    zubereitung: schritte.length ? schritte : [""],
+    nahrwerte: wbNahrwerte(params),
+    notiz: "Quelle: Wikibooks-Kochbuch (CC BY-SA) · https://de.wikibooks.org/wiki/" +
+      encodeURIComponent(String(seite || "").replace(/ /g, "_"))
+  };
+}
+
+document.getElementById("btnImportMealDb").onclick = function () {
+  zeigeImportModal("mealdb");
+};
+document.getElementById("btnImportWikibooks").onclick = function () {
+  zeigeImportModal("wikibooks");
+};
+
+/* Texte der beiden Import-Quellen (link = klickbarer Verweis auf die jeweilige
+ * Online-Sammlung; wort wird im übersetzten Hinweis ersetzt). */
+var MDB_QUELLEN = {
+  mealdb: {
+    tab: "TheMealDB",
+    titel: function () { return tr("Von TheMealDB importieren"); },
+    hinweis: function () { return tr("Online-Rezeptdatenbank themealdb.com: Die Inhalte sind Englisch, Nährwerte fehlen, Portionen werden mit 4 angenommen."); },
+    link: { wort: "themealdb.com", href: "https://www.themealdb.com/", text: "themealdb.com" }
+  },
+  wikibooks: {
+    tab: "📚 Wikibooks",
+    titel: function () { return tr("🌐 Aus dem Wikibooks-Kochbuch importieren"); },
+    hinweis: function () { return tr("Online-Kochbuch de.wikibooks.org: Deutsche, frei lizenzierte Rezepte (CC BY-SA). Nährwerte nur teilweise vorhanden, Portionen aus der Vorlage."); },
+    link: { wort: "de.wikibooks.org", href: "https://de.wikibooks.org/wiki/Kochbuch", text: "de.wikibooks.org/wiki/Kochbuch" }
+  }
+};
+
+/* Letzte Suchbegriffe je Quelle (überleben auch das Schließen und Neuöffnen
+ * des Modals) – "↩ Zurück zur Suche" und der Quellen-Wechsel füllen sie wieder
+ * ein. */
+var IMPORT_LETZTE_SUCHE = { mealdb: "", wikibooks: "" };
+
+/* Modal mit Quellen-Umschalter und zwei Phasen: Trefferliste (Suche) <->
+ * Vorschau des konvertierten Rezepts. Übernehmen fügt es der Arbeits-Datenbank
+ * hinzu. */
+function zeigeImportModal(startQuelle) {
+  var quelle = startQuelle === "wikibooks" ? "wikibooks" : "mealdb";
+  var container = document.getElementById("modalContainer");
+  container.innerHTML =
+    '<div class="modal-overlay" id="mdbOverlay"><div class="modal-box mdb-box">' +
+      '<h3 id="mdbTitel"></h3>' +
+      '<div class="mdb-quellen">' +
+        '<button type="button" class="mdb-quelle" id="mdbQuelleMealdb"></button>' +
+        '<button type="button" class="mdb-quelle" id="mdbQuelleWikibooks"></button>' +
+      "</div>" +
+      '<p class="mdb-hinweis" id="mdbHinweisText"></p>' +
+      '<div id="mdbKoerper"></div>' +
+      '<div class="modal-fuss">' +
+        '<button class="ghost" id="mdbZu">' + tr("Abbrechen") + '</button>' +
+      "</div>" +
+    "</div></div>";
+
+  var koerper = document.getElementById("mdbKoerper");
+
+  function schliessen() {
+    container.innerHTML = "";
+    document.removeEventListener("keydown", escFangen);
+  }
+  function escFangen(ev) {
+    if (ev.key === "Escape") schliessen();
+  }
+  document.getElementById("mdbZu").onclick = schliessen;
+  document.getElementById("mdbOverlay").addEventListener("click", function (ev) {
+    if (ev.target === this) schliessen();
+  });
+  document.addEventListener("keydown", escFangen);
+
+  function setzeQuelle(q) {
+    quelle = q;
+    document.getElementById("mdbQuelleMealdb").classList.toggle("aktiv", q === "mealdb");
+    document.getElementById("mdbQuelleWikibooks").classList.toggle("aktiv", q === "wikibooks");
+    document.getElementById("mdbQuelleMealdb").textContent = MDB_QUELLEN.mealdb.tab;
+    document.getElementById("mdbQuelleWikibooks").textContent = MDB_QUELLEN.wikibooks.tab;
+    document.getElementById("mdbTitel").textContent = MDB_QUELLEN[q].titel();
+    var hinweisFeld = document.getElementById("mdbHinweisText");
+    var hinweisHtml = escapeHtml(MDB_QUELLEN[q].hinweis());
+    var linkDef = MDB_QUELLEN[q].link;
+    if (linkDef) {
+      /* Quelle als echten Link auszeichnen (Klick/Rechtsklick -> neuer Tab);
+       * erst escapen, dann unseren kontrollierten Anker einsetzen. */
+      hinweisHtml = hinweisHtml.replace(linkDef.wort,
+        '<a href="' + linkDef.href + '" target="_blank" rel="noopener">' + linkDef.text + "</a>");
+    }
+    hinweisFeld.innerHTML = hinweisHtml;
+    phaseSuche();
+  }
+  document.getElementById("mdbQuelleMealdb").onclick = function () { setzeQuelle("mealdb"); };
+  document.getElementById("mdbQuelleWikibooks").onclick = function () { setzeQuelle("wikibooks"); };
+
+  /* Status- und Fehlermeldungen landen IMMER nur im Ergebnis-Bereich
+   * (#mdbErgebnis) - niemals über den ganzen Modal-Körper schreiben,
+   * sonst würde das Suchformular samt Container während der laufenden
+   * Anfrage vernichtet und die Antwort hätte kein Ziel mehr. */
+  function status(text) {
+    var ziel = document.getElementById("mdbErgebnis");
+    if (!ziel) return;
+    ziel.innerHTML = '<p class="mdb-status">' + escapeHtml(text) + "</p>";
+  }
+
+  function fehler(e) {
+    var ziel = document.getElementById("mdbErgebnis") || koerper;
+    ziel.innerHTML =
+      '<p class="mdb-status">' + escapeHtml(tr("Übernehmen fehlgeschlagen: {message}", { message: e.message })) + "</p>" +
+      '<div class="modal-aktionen"><button class="ghost" id="mdbZurueck">' + tr("↩ Zurück zur Suche") + "</button></div>";
+    document.getElementById("mdbZurueck").onclick = function () { zurueckZurSuche(); };
+  }
+
+  /* "↩ Zurück zur Suche": Formular mit dem gemerkten Suchbegriff zeigen und –
+   * wenn einer steht – die Suche automatisch gleich wieder ausführen,
+   * damit die Trefferliste sofort wieder da ist. */
+  function zurueckZurSuche() {
+    phaseSuche();
+    var suchwort = IMPORT_LETZTE_SUCHE[quelle];
+    if (!suchwort) return;
+    if (quelle === "wikibooks") starteSucheWikibooks(suchwort);
+    else starteSuche(suchwort);
+  }
+
+  /* Vorschau-Karte + Übernehmen sind für beide Quellen gleich */
+  function baueVorschau(rezept, zusatzChips) {
+    var chips = "";
+    if (rezept.kategorie) chips += '<span class="mdb-chip">' + escapeHtml(rezept.kategorie) + "</span>";
+    (zusatzChips || []).forEach(function (c) {
+      if (c) chips += '<span class="mdb-chip">' + escapeHtml(c) + "</span>";
+    });
+    var meta = tr("Zutaten") + ": " + rezept.zutaten.filter(function (z) { return z.name; }).length +
+      " · " + tr("Schritte") + ": " + rezept.zubereitung.filter(Boolean).length +
+      " · " + tr("Portionen") + ": " + (rezept.portionen != null ? rezept.portionen : 4);
+    koerper.innerHTML =
+      '<div class="mdb-vorschau">' +
+        (rezept.bilder[0] ? '<img alt="" src="' + escapeHtml(rezept.bilder[0]) + '">' : "") +
+        '<div class="mdb-info">' +
+          "<h4>" + escapeHtml(rezept.name) + "</h4>" +
+          '<div class="mdb-chips">' + chips + "</div>" +
+          '<div class="mdb-meta">' + escapeHtml(meta) + "</div>" +
+        "</div>" +
+      "</div>" +
+      '<div class="mdb-zutaten">' +
+        rezept.zutaten.filter(function (z) { return z.name; }).map(function (z) {
+          var menge = (z.menge ? z.menge : "") + (z.menge && z.einheit ? " " : "") + (z.einheit ? z.einheit : "");
+          return "<div><b>" + escapeHtml(menge) + "</b> " + escapeHtml(z.name) + "</div>";
+        }).join("") +
+      "</div>" +
+      '<div class="modal-aktionen" style="margin-top:14px">' +
+        '<button class="primary" id="mdbUebernehmen">' + tr("⬇ In die Sammlung übernehmen") + "</button>" +
+        '<button class="ghost" id="mdbZurueck">' + tr("↩ Zurück zur Suche") + "</button>" +
+      "</div>";
+
+    document.getElementById("mdbZurueck").onclick = function () { zurueckZurSuche(); };
+    document.getElementById("mdbUebernehmen").onclick = function () {
+      try {
+        DB.push(rezept);
+        speichernLocal();
+        markiereUnexportiert();
+        rendereListe();
+        schliessen();
+        waehle(rezept.id);
+        melden(tr("Rezept übernommen: „{name}“", { name: rezept.name }));
+      } catch (e) {
+        melden(tr("Übernehmen fehlgeschlagen: {message}", { message: e.message }), true);
+      }
+    };
+  }
+
+  async function phaseVorschau(id) {
+    status(tr("Rezept wird geladen …"));
+    try {
+      var daten = await mealdbFetch("lookup.php?i=" + encodeURIComponent(id));
+      var meal = daten && daten.meals && daten.meals[0];
+      if (!meal) throw new Error("HTTP 404");
+      var thumb = String(meal.strMealThumb || "");
+      status(tr("Bild wird eingebettet …"));
+      var bildDataUrl = await new Promise(function (res) { mealdbBildEinbetten(thumb, res); });
+      var rezept = mealdbKonvertiere(meal, bildDataUrl ? [bildDataUrl] : (thumb ? [thumb] : []));
+      baueVorschau(rezept, [meal.strArea]);
+    } catch (e) {
+      fehler(e);
+    }
+  }
+
+  async function phaseVorschauWikibooks(seite) {
+    status(tr("Rezept wird geladen …"));
+    try {
+      var daten = await wikibooksFetch({ action: "parse", page: seite, prop: "wikitext" });
+      var roh = daten && daten.parse && daten.parse.wikitext && daten.parse.wikitext["*"];
+      if (!roh) throw new Error("HTTP 404");
+      status(tr("Bild wird eingebettet …"));
+      var bildUrl = await wbBildUrl(roh);
+      var bildDataUrl = bildUrl ? await new Promise(function (res) { mealdbBildEinbetten(bildUrl, res); }) : null;
+      var rezept = wbKonvertiere(seite, roh, bildDataUrl ? [bildDataUrl] : (bildUrl ? [bildUrl] : []));
+      baueVorschau(rezept, []);
+    } catch (e) {
+      fehler(e);
+    }
+  }
+
+  async function starteSuche(suche) {
+    var knopf = document.querySelector("#mdbForm button[type='submit']");
+    if (knopf) knopf.disabled = true; /* kein Doppel-Feuern bei erneutem Enter */
+    try {
+      status(tr("Suche läuft …"));
+      var daten = await mealdbFetch("search.php?s=" + encodeURIComponent(suche));
+      var meals = (daten && daten.meals) || [];
+      var ziel = document.getElementById("mdbErgebnis");
+      if (!ziel) return;
+      if (!meals.length) {
+        ziel.innerHTML = '<p class="mdb-status">' + escapeHtml(tr("Keine Treffer für „{suche}“.", { suche: suche })) + "</p>";
+        return;
+      }
+      ziel.innerHTML =
+        '<div class="mdb-liste">' + meals.map(function (m) {
+          return '<div class="mdb-treffer" data-id="' + escapeHtml(m.idMeal) + '" tabindex="0">' +
+            '<img alt="" loading="lazy" src="' + escapeHtml(String(m.strMealThumb || "") + "/small") + '">' +
+            '<span class="mdb-name">' + escapeHtml(m.strMeal || "") +
+              "<small>" + escapeHtml([m.strCategory, m.strArea].filter(Boolean).join(" · ")) + "</small></span>" +
+          "</div>";
+        }).join("") + "</div>";
+      Array.prototype.forEach.call(ziel.querySelectorAll(".mdb-treffer"), function (el) {
+        function oeffnen() { phaseVorschau(el.dataset.id); }
+        el.onclick = oeffnen;
+        el.onkeydown = function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); oeffnen(); } };
+      });
+    } catch (e) {
+      fehler(e);
+    } finally {
+      if (knopf) knopf.disabled = false;
+    }
+  }
+
+  async function starteSucheWikibooks(suche) {
+    var knopf = document.querySelector("#mdbForm button[type='submit']");
+    if (knopf) knopf.disabled = true;
+    try {
+      status(tr("Suche läuft …"));
+      var treffer = await wbSuche(suche);
+      var ziel = document.getElementById("mdbErgebnis");
+      if (!ziel) return;
+      if (!treffer.length) {
+        ziel.innerHTML = '<p class="mdb-status">' + escapeHtml(tr("Keine Treffer für „{suche}“.", { suche: suche })) + "</p>";
+        return;
+      }
+      ziel.innerHTML =
+        '<div class="mdb-liste">' + treffer.map(function (m) {
+          var name = String(m.title || "").replace(/^\s*Kochbuch\s*\/\s*/i, "");
+          var snippet = String(m.snippet || "").replace(/<[^>]*>/g, "");
+          return '<div class="mdb-treffer" data-id="' + escapeHtml(m.title) + '" tabindex="0">' +
+            '<span class="mdb-buch">📖</span>' +
+            '<span class="mdb-name">' + escapeHtml(name) +
+              "<small>" + escapeHtml(snippet) + "</small></span>" +
+          "</div>";
+        }).join("") + "</div>";
+      Array.prototype.forEach.call(ziel.querySelectorAll(".mdb-treffer"), function (el) {
+        function oeffnen() { phaseVorschauWikibooks(el.dataset.id); }
+        el.onclick = oeffnen;
+        el.onkeydown = function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); oeffnen(); } };
+      });
+    } catch (e) {
+      fehler(e);
+    } finally {
+      if (knopf) knopf.disabled = false;
+    }
+  }
+
+  function phaseSuche() {
+    koerper.innerHTML =
+      '<form class="mdb-suche" id="mdbForm">' +
+        '<input type="search" id="mdbSuche" placeholder="' + escapeHtml(tr("Rezept suchen …")) + '" autocomplete="off">' +
+        '<button type="submit" class="primary">' + tr("Suchen") + "</button>" +
+      "</form>" +
+      '<div id="mdbErgebnis"></div>';
+    var feld = document.getElementById("mdbSuche");
+    feld.value = IMPORT_LETZTE_SUCHE[quelle];
+    feld.focus();
+    document.getElementById("mdbForm").onsubmit = function (ev) {
+      ev.preventDefault();
+      var suche = feld.value.trim();
+      if (!suche) return;
+      IMPORT_LETZTE_SUCHE[quelle] = suche;
+      if (quelle === "wikibooks") starteSucheWikibooks(suche);
+      else starteSuche(suche);
+    };
+  }
+
+  setzeQuelle(quelle);
+}
 
 /* Zurücksetzen auf die in rezepte.js enthaltenen Daten */
 document.getElementById("btnReset").onclick = function () {

@@ -442,6 +442,7 @@ console.log("\n== Schritt-Wecker: Marker & Zeiterkennung ==");
   tctx.clearInterval = function () {};
   tctx.setTimeout = function () { return 7; };    /* Hinweis-Ausblendung nicht feuern */
   tctx.clearTimeout = function () {};
+  tctx.DB = [{ id: "kuchen", name: "Apfelkuchen" }];   /* Herkunftsrezept fuer den Chip-Sprung */
   vm.createContext(tctx);
   vm.runInContext(fs.readFileSync(FILE, "utf8"), tctx);
   vm.runInContext(rzSrc.slice(tAnfang, tEnde), tctx);
@@ -457,6 +458,20 @@ console.log("\n== Schritt-Wecker: Marker & Zeiterkennung ==");
     tctx.kuecheTimerLaeuft("kuchen:2") === true && tctx.kuecheTimerLaeuft("x:9") === false);
   tctx.starteKuecheTimer(5, "Nudeln", "kuchen:0");
   prufe("Anderer Schritt bekommt eigenen Timer", tctx.kuecheTimerListe.length === 2);
+
+  /* Chip-Sprung: Rezept vorhanden -> Name wird Klickknopf mit data-rezept;
+   * Frei-Timer (ohne schluessel) bleiben normaler Text. */
+  tctx.rendereKuecheTimer();
+  prufe("Chip-Name wird Sprungknopf zum Herkunftsrezept",
+    elCache.kuecheTimerListe.innerHTML.indexOf("kueche-timer-sprung") !== -1 &&
+    elCache.kuecheTimerListe.innerHTML.indexOf('data-rezept="kuchen"') !== -1);
+  const freiListe = tctx.kuecheTimerListe;
+  tctx.kuecheTimerListe = [{ id: 998, name: "Frei", dauerSek: 60,
+    endeZeit: Date.now() + 30000, abgelaufen: false, schluessel: null }];
+  tctx.rendereKuecheTimer();
+  prufe("Frei-Timer bleibt normaler Text (kein Sprung)",
+    elCache.kuecheTimerListe.innerHTML.indexOf("kueche-timer-sprung") === -1);
+  tctx.kuecheTimerListe = freiListe;
 
   /* Alarm-Blinken am Küchenmodus-Knopf bei abgelaufenem Wecker */
   tctx.document.getElementById("btnKuecheAn");   /* Knopf existiert (Detailansicht offen) */
@@ -600,7 +615,7 @@ console.log("\n== Schritt-Wecker: Marker & Zeiterkennung ==");
     !rfBlock.includes("r.zutaten = r.zutaten ||") &&
     !rfBlock.includes("r.zubereitung = r.zubereitung ||") &&
     rfBlock.includes("var nw = r.nahrwerte || {};") &&
-    rfBlock.includes("nw.kcal") && rfBlock.includes('escapeHtml(r.notiz || "")'));
+    rfBlock.includes("nw.kcal") && rfBlock.includes("escapeHtml(notizFuerFormular(r))"));
   const leseCode = ed.slice(ed.indexOf("function leseAktuelles"),
     ed.indexOf("function speichereAktuelles"));
   function baueLeseCtx(domWerte) {
@@ -642,6 +657,108 @@ console.log("\n== Schritt-Wecker: Marker & Zeiterkennung ==");
   eco3.leseAktuelles();
   prufe("Editor: Leere Notiz entfernt das Feld vollstaendig",
     !("notiz" in eco3.DB[0]));
+
+  /* Editor uebernimmt Viewer-Notizen (rezept_notizen_v1) beim Bearbeiten:
+   * Startwert im Formular, Aufraeumen des lokalen Eintrags beim Speichern. */
+  const notizHilfe = ed.slice(ed.indexOf("function leseViewerNotizen"),
+    ed.indexOf("function rendereFormular"));
+  function baueNotizCtx(store, mitLokal) {
+    const ec = baueContext("?lang=de");
+    if (mitLokal !== false) {
+      ec.localStorage = {
+        getItem: k => (k in store ? store[k] : null),
+        setItem: (k, v) => { store[k] = String(v); }
+      };
+    }
+    vm.createContext(ec);
+    return ec;
+  }
+  const storeN = { rezept_notizen_v1: JSON.stringify({ "test-rezept": "Meine Notiz" }) };
+  const nc = baueNotizCtx(storeN);
+  vm.runInContext(notizHilfe, nc);
+  prufe("Editor: Viewer-Notiz wird als Formular-Startwert uebernommen",
+    nc.notizFuerFormular({ id: "test-rezept", notiz: "" }) === "Meine Notiz");
+  prufe("Editor: Ohne Viewer-Notiz gilt die Rezept-Notiz",
+    nc.notizFuerFormular({ id: "x", notiz: "Alt" }) === "Alt");
+  prufe("Editor: Beide Notizen -> eigene zuerst, Rezept-Notiz darunter",
+    nc.notizFuerFormular({ id: "test-rezept", notiz: "Quelle" }) === "Meine Notiz\n\nQuelle");
+  prufe("Editor: Identische Texte erscheinen nicht doppelt",
+    nc.notizFuerFormular({ id: "test-rezept", notiz: "Meine Notiz" }) === "Meine Notiz");
+  const ncOhne = baueNotizCtx(null, false);
+  vm.runInContext(notizHilfe, ncOhne);
+  prufe("Editor: Fehlende localStorage bricht beim Notiz-Lesen nicht",
+    ncOhne.notizFuerFormular({ id: "x", notiz: "Alt" }) === "Alt");
+  const storeC = { rezept_notizen_v1: JSON.stringify({ "test-rezept": "Schattennotiz" }) };
+  const eco4 = baueLeseCtx(Object.assign(EchoDom(basisRezept), { fNotiz: "Neu gesichert" }));
+  eco4.localStorage = {
+    getItem: k => (k in storeC ? storeC[k] : null),
+    setItem: (k, v) => { storeC[k] = String(v); }
+  };
+  eco4.DB = [JSON.parse(JSON.stringify(basisRezept))];
+  eco4.aktuellerId = "test-rezept";
+  vm.runInContext(notizHilfe, eco4);
+  vm.runInContext(leseCode, eco4);
+  eco4.leseAktuelles();
+  prufe("Editor: Speichern raemt die uebernommene Viewer-Notiz weg",
+    !("test-rezept" in JSON.parse(storeC.rezept_notizen_v1)) &&
+    eco4.DB[0].notiz === "Neu gesichert");
+
+  /* Viewer: Reichweiten-Hinweis unter dem Notizfeld (lebt nur in diesem
+   * Browser, kein Teil der Rezeptdaten) - an allen 4 Stellen verdrahtet
+   * (Feld-Status, Hinweis ohne Feld, Klick-Aufbau, Rueckkehr nach
+   * "Gespeichert ✓") und in allen 7 Fremdsprachen uebersetzt. */
+  const nhQuelle = fs.readFileSync(require("path").join(__dirname, "..", "rezepte.html"), "utf8");
+  const nhSchluessel = "Wird nur in diesem Browser gespeichert – dauerhafte Notizen gehören in die Rezeptdaten (Editor).";
+  prufe("Viewer: Notiz-Hinweis an 4 Stellen verdrahtet, 7-fach uebersetzt",
+    nhQuelle.includes("var NOTIZ_HINWEIS") &&
+    nhQuelle.split("tr(NOTIZ_HINWEIS)").length - 1 === 4 &&
+    fs.readFileSync(FILE, "utf8").split(nhSchluessel).length - 1 === 7);
+
+  /* Viewer: Klick-Zoom zeigt das ganze Bild (hoehe folgt dem Seitenverhaeltnis,
+   * Extreme gekappt, contain statt cover - kein Ausschnitt mehr im Zoom). */
+  const zbA = nhQuelle.indexOf(".rezept-bild.gross {");
+  const zbBlock = nhQuelle.slice(zbA, nhQuelle.indexOf("}", zbA));
+  prufe("Viewer: Klick-Zoom mit height:auto + contain + Min/Max-Kappen",
+    zbBlock.includes("height: auto") && zbBlock.includes("min-height: 150px") &&
+    zbBlock.includes("max-height") && zbBlock.includes("object-fit: contain") &&
+    zbBlock.includes("transform: scale(1.8)"));
+
+  /* Editor: gleicher Klick-Zoom, aber mit position:relative (z-index greift
+   * nur an positionierten Elementen - das Bild ist im Editor kein direktes
+   * Flex-Kind), Aktionen (◀▶✕) waehrend des Zooms ausgeblendet, globaler
+   * Schliesser genau einmal registriert. */
+  const edQuelle = fs.readFileSync(require("path").join(__dirname, "..", "rezepte_bearbeiten.html"), "utf8");
+  const ezA = edQuelle.indexOf(".rezept-bild.gross {");
+  const ezBlock = edQuelle.slice(ezA, edQuelle.indexOf("}", ezA));
+  prufe("Editor: Klick-Zoom wie Viewer (Kappen+contain, Stapelung, Aktionen aus, 1x Schliesser)",
+    ezBlock.includes("height: auto") && ezBlock.includes("min-height: 150px") &&
+    ezBlock.includes("max-height") && ezBlock.includes("object-fit: contain") &&
+    ezBlock.includes("transform: scale(1.8)") && ezBlock.includes("position: relative") &&
+    ezBlock.includes("z-index: 30") &&
+    edQuelle.includes(".rezept-bild.gross ~ .bild-aktionen { display: none; }") &&
+    edQuelle.split('classList.add("gross")').length - 1 === 1 &&
+    edQuelle.includes('closest(".rezept-bilder")) return'));
+
+  /* Wecker-Bestaetigung: frisch gestartete Timer zeigen "Neuer Wecker wurde
+   * gestartet!" (alle 3 Start-Stellen), Doppel-Start weiter wie gehabt. */
+  const wkSchluessel = "Neuer Wecker wurde gestartet!";
+  prufe("Viewer: Neuer-Wecker-Hinweis an 3 Stellen, Helfer parametrierbar, 7-fach uebersetzt",
+    nhQuelle.split('zeigeKuecheTimerHinweis("' + wkSchluessel + '")').length - 1 === 3 &&
+    nhQuelle.includes('tr(text || "Dieser Wecker läuft bereits!")') &&
+    fs.readFileSync(FILE, "utf8").split(wkSchluessel).length - 1 === 7);
+
+  /* Timer-Chip-Sprung: Namen von Schritt-Timern sind klickbar (schluessel
+   * enthaelt "rezeptId:Schritt"), Klick schliesst den Küchenmodus und waehlt
+   * das Rezept; Frei-Timer und geloeschte Rezepte bleiben normaler Text. */
+  prufe("Viewer: Timer-Chip-Name verlinkt zum Herkunftsrezept",
+    nhQuelle.includes("kueche-timer-sprung") &&
+    nhQuelle.includes('String(t.schluessel).split(":")[0]') &&
+    nhQuelle.includes("schliesseKueche();\n    waehle(sprung.dataset.rezept);") &&
+    nhQuelle.includes(".name.kueche-timer-sprung:hover") &&
+    nhQuelle.includes('tr("Rezept öffnen")') &&
+    /* Die Quadrat-Regel des runden ✕-Knopfs darf den Namens-Knopf nicht stauchen. */
+    nhQuelle.includes(".kueche-timer-chip button:not(.kueche-timer-sprung)"));
+
   function editorBlock(fname) {
     const fa = ed.indexOf("function " + fname);
     return ed.slice(fa, ed.indexOf("\nfunction ", fa));
@@ -965,6 +1082,149 @@ prufe("Projekt: Alle Quelldateien tragen den Copyright-Header",
     return s.includes("Julia's Rezepte-Sammlung  Copyright (C) 2026 heino17") &&
            s.includes("https://github.com/heino17/Rezepte-Sammlung");
   }));
+
+/* 📚 Import aus dem Wikibooks-Kochbuch: Menü, Modal-Umschalter, i18n und
+ * Konverter (Wikitext -> Rezeptformat) werden direkt in der Sandbox geprüft. */
+(function () {
+  const ebSrc = fs.readFileSync(require("path").join(__dirname, "..", "rezepte_bearbeiten.html"), "utf8");
+
+  /* Menü-Eintrag + Quellen-Umschalter im Modal vorhanden und verdrahtet */
+  prufe("Editor: Menü-Eintrag 'Aus dem Wikibooks-Kochbuch importieren' vorhanden",
+    /id="btnImportWikibooks"/.test(ebSrc) &&
+    /data-i18n="🌐 Aus dem Wikibooks-Kochbuch importieren"/.test(ebSrc) &&
+    /data-i18n="Online deutsche Rezepte suchen & ins eigene Format umwandeln"/.test(ebSrc));
+  prufe("Editor: Quellen-Umschalter (TheMealDB/Wikibooks) im Import-Modal",
+    ebSrc.includes('zeigeImportModal("wikibooks")') &&
+    ebSrc.includes('zeigeImportModal("mealdb")') &&
+    /id="mdbQuelleWikibooks"/.test(ebSrc) &&
+    /id="mdbQuelleMealdb"/.test(ebSrc) &&
+    /setzeQuelle\("wikibooks"\)/.test(ebSrc) &&
+    /\.mdb-quelle\.aktiv\s*{\s*background:\s*var\(--gruen-hell\)/.test(ebSrc));
+
+  /* Neue Texte müssen in ALLEN Sprachdateien vorhanden sein */
+  const wbKeys = [
+    "🌐 Aus dem Wikibooks-Kochbuch importieren",
+    "Online deutsche Rezepte suchen & ins eigene Format umwandeln",
+    "Rezepte online aus dem Wikibooks-Kochbuch suchen und in die Sammlung übernehmen (Internet nötig)",
+    "Online-Kochbuch de.wikibooks.org: Deutsche, frei lizenzierte Rezepte (CC BY-SA). Nährwerte nur teilweise vorhanden, Portionen aus der Vorlage."
+  ];
+  const alleDa = ["en", "ru", "es", "fr", "ja", "ko", "zh_CN"].every(lang => {
+    const ctx = baueContext("?lang=" + lang);
+    lade(ctx);
+    return wbKeys.every(k => ctx.tr(k) !== k);
+  });
+  prufe("Sprachen: Wikibooks-Import in allen 7 Sprachen übersetzt", alleDa);
+
+  /* Konverter-Funktionen (MealDB-Helfer + Wikibooks-Block) in Sandbox laden */
+  const anfang = ebSrc.indexOf("var MEALDB_API");
+  const ende = ebSrc.indexOf('document.getElementById("btnImportMealDb").onclick');
+  const ktx = baueContext("?lang=de");
+  ktx.neuerId = s => String(s);
+  ktx.slugify = s => String(s).toLowerCase().replace(/\s+/g, "-");
+  vm.createContext(ktx);
+  vm.runInContext(ebSrc.slice(anfang, ende), ktx);
+
+  const p1 = ktx.wbParseMenge("ca. 100 ml Olivenöl");
+  prufe("Wikibooks: 'ca. 100 ml Olivenöl' zerlegt",
+    p1.menge === "100" && p1.einheit === "ml" && p1.rest === "Olivenöl");
+  const p2 = ktx.wbParseMenge("2–3 St. Eier");
+  prufe("Wikibooks: '2–3 St.' -> Mengenbereich + Stück (Mehrzahl)",
+    p2.menge === "2-3" && p2.einheit === "Stück");
+  const p3 = ktx.wbParseMenge("etwas Salz");
+  prufe("Wikibooks: mengenloses 'etwas Salz' bleibt beim Namen",
+    p3.menge === "" && p3.einheit === "" && p3.rest === "etwas Salz");
+
+  const params = ktx.wbTemplateParams(
+    "{{:Kochbuch/_Vorlage/_RezeptBox\n|Kategorie = Kochbuch/ Saucen <!-- Hinweis -->\n|Portionen           =für 4 Personen\n}}");
+  prufe("Wikibooks: Vorlagenwerte gelesen, HTML-Kommentare entfernt",
+    params.Kategorie === "Kochbuch/ Saucen" && params.Portionen === "für 4 Personen");
+
+  const wikitext = [
+    "{{:Kochbuch/_Vorlage/_RezeptBox",
+    "|Kategorie           = Kochbuch/ Suppen und Eintöpfe",
+    "|Portionen           = ",
+    "|Brennwert           = ca. 250 kcal",
+    "|Eiweiß              = 12g",
+    "|Fett                = ",
+    "}}",
+    "== Zutaten für 6 Portionen ==",
+    "* 500 g [[Kochbuch/ Kartoffel|Kartoffeln]]",
+    "* 1 Bund Petersilie",
+    "",
+    "== Zubereitung ==",
+    "Alles klein schneiden und kochen.",
+    "'''''Erfasst von:'''''",
+    "Hans, am 01.02.2003",
+    "",
+    "== Tipps ==",
+    "* Schmeckt am nächsten Tag besser.",
+    "{{:Kochbuch/ Navigationsleiste/ Ebenen}}"
+  ].join("\n");
+  const r = ktx.wbKonvertiere("Kochbuch/ Testsuppe", wikitext, []);
+  prufe("Wikibooks: Titel ohne Präfix, Kategorie bereinigt, Portionen aus Überschrift",
+    r.name === "Testsuppe" && r.kategorie === "Suppen und Eintöpfe" && r.portionen === "6");
+  prufe("Wikibooks: WikiLinks in Zutaten aufgelöst ('500 g Kartoffeln', '1 Bund Petersilie')",
+    r.zutaten.length === 2 &&
+    r.zutaten[0].menge === "500" && r.zutaten[0].einheit === "g" && r.zutaten[0].name === "Kartoffeln" &&
+    r.zutaten[1].menge === "1" && r.zutaten[1].einheit === "Bund" && r.zutaten[1].name === "Petersilie");
+  prufe("Wikibooks: Nährwerte nur übernommen, wenn Zahlen drinstehen",
+    r.nahrwerte.kcal === "250" && r.nahrwerte.eiweiss === "12" && !("fette" in r.nahrwerte));
+  prufe("Wikibooks: 'Erfasst von' abgeschnitten, Tipps als 💡-Schritt angehängt",
+    r.zubereitung.length === 2 &&
+    r.zubereitung[0] === "Alles klein schneiden und kochen." &&
+    r.zubereitung[1].indexOf("💡") === 0 &&
+    r.zubereitung[1].includes("Schmeckt am nächsten Tag besser."));
+  prufe("Wikibooks: Notiz nennt Quelle und Lizenz (CC BY-SA-Pflichtangabe)",
+    r.notiz.indexOf("Quelle: Wikibooks-Kochbuch (CC BY-SA)") === 0 &&
+    r.notiz.includes("https://de.wikibooks.org/wiki/Kochbuch%2F_Testsuppe"));
+
+  /* Direktlinks beider Quellen + gemerkter Suchbegriff mit Auto-Re-Suche */
+  prufe("Editor: beide Quellen-Hinweise verlinken ihre Seite (neuer Tab)",
+    /link: \{ wort: "themealdb\.com", href: "https:\/\/www\.themealdb\.com\/"/.test(ebSrc) &&
+    /link: \{ wort: "de\.wikibooks\.org", href: "https:\/\/de\.wikibooks\.org\/wiki\/Kochbuch"/.test(ebSrc) &&
+    ebSrc.includes('target="_blank" rel="noopener"') &&
+    /\.mdb-hinweis a\s*\{\s*color:\s*var\(--gruen-hover\)/.test(ebSrc));
+  prufe("Editor: '↩ Zurück zur Suche' merkt den Suchbegriff je Quelle (auch über Modal-Neustart)",
+    /var IMPORT_LETZTE_SUCHE = \{ mealdb: "", wikibooks: "" \};/.test(ebSrc) &&
+    /\.value = IMPORT_LETZTE_SUCHE\[quelle\];/.test(ebSrc) &&
+    /IMPORT_LETZTE_SUCHE\[quelle\] = suche;/.test(ebSrc));
+  prufe("Editor: '↩ Zurück zur Suche' führt die Suche automatisch erneut aus",
+    /function zurueckZurSuche\(\)/.test(ebSrc) &&
+    (ebSrc.match(/zurueckZurSuche\(\);/g) || []).length === 2 &&
+    !ebSrc.includes("onclick = function () { phaseSuche(); };") &&
+    /var suchwort = IMPORT_LETZTE_SUCHE\[quelle\];/.test(ebSrc));
+  /* Drag & Drop: .json/.js direkt ins Fenster ziehen */
+  prufe("Editor: Drop-Overlay vorhanden (fix, klickdurchlässig)",
+    ebSrc.includes('id="dropZone"') &&
+    /\.drop-zone\s*\{[^}]*position:\s*fixed/.test(ebSrc) &&
+    ebSrc.includes("pointer-events: none"));
+  prufe("Editor: Drop-Overlay startet unsichtbar (hidden schlägt display:flex)",
+    /\.drop-zone\[hidden\]\s*\{\s*display:\s*none/.test(ebSrc));
+  prufe("Editor: Drop-Listener nehmen Dateien an, weisen andere Typen ab",
+    ebSrc.includes('window.addEventListener("dragenter"') &&
+    ebSrc.includes('window.addEventListener("dragover"') &&
+    ebSrc.includes('window.addEventListener("dragleave"') &&
+    ebSrc.includes('window.addEventListener("drop"') &&
+    /function dropHatDateien\(e\)/.test(ebSrc) &&
+    /\/\\\.\(json\|js\)\$\/i\.test\(datei\.name\)/.test(ebSrc));
+  prufe("Editor: Drop öffnet Wahl-Modal (Öffnen ersetzt, Hinzufügen ergänzt)",
+    /async function zeigeDropWahl\(file\)/.test(ebSrc) &&
+    ebSrc.includes("zeigeDropWahl(datei);") &&
+    ebSrc.includes('id="dropOeffnen"') &&
+    ebSrc.includes('id="dropHinzufuegen"') &&
+    /function importiereDatenbankDatei\(file, ohneRueckfrage\)/.test(ebSrc) &&
+    ebSrc.includes("importiereDatenbankDatei(file, true);"));
+  prufe("Sprachen: Drop-Wahl-Texte in allen 7 Sprachen vorhanden",
+    ['"Gedroppte Datei: \\{name\\}"',
+     '"Was möchtest du mit den \\{anzahl\\} Rezepten machen\\?"',
+     '"📂 Als Datenbank öffnen \\(ersetzt die aktuelle\\)"',
+     '"➕ Der aktuellen Datenbank hinzufügen"'].every(function (k) {
+      return (fs.readFileSync(FILE, "utf8").match(new RegExp(k + ': "', "g")) || []).length === 7;
+    }));
+  prufe("Sprachen: Drop-Texte in allen 7 Sprachen vorhanden",
+    (fs.readFileSync(FILE, "utf8").match(/"Loslassen zum Importieren": "/g) || []).length === 7 &&
+    (fs.readFileSync(FILE, "utf8").match(/"Nur \.json- und \.js-Dateien können gedroppt werden\.": "/g) || []).length === 7);
+})();
 
 console.log("\nErgebnis: " + ok + " PASS, " + fail + " FAIL");
 process.exit(fail ? 1 : 0);

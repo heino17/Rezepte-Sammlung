@@ -315,9 +315,15 @@
     transition: transform .18s ease, box-shadow .18s ease;
   }
   .rezept-bild:hover { border-color: var(--gruen); }
-  /* Klick-Zoom: Bild wächst über seine Nachbarn hinaus und kommt nach vorne. */
+  /* Klick-Zoom: Bild wächst über seine Nachbarn hinaus und kommt nach vorne.
+     height:auto zeigt das GANZE Bild statt des 150px-Ausschnitts (die Box
+     nimmt das Seitenverhältnis des Bildes an); min/max kappen Extreme
+     (Hochkant-Riesen, Panoramen), object-fit:contain hält sie ganz sichtbar. */
   .rezept-bild.gross {
+    height: auto; min-height: 150px; max-height: 85vh;
+    object-fit: contain;
     transform: scale(1.8);
+    image-rendering: auto;
     z-index: 30;
     box-shadow: 0 10px 28px rgba(0,0,0,.6);
     cursor: zoom-out;
@@ -511,7 +517,16 @@
   .kueche-timer-chip .name { color: #000000; font-weight: 700; max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0px 0px 2px #d3d3d3; }
   html[data-theme="dunkel"] .kueche-timer-chip .zeit { font-weight: 700; color: #FFFFFF; min-width: 3.6em; text-shadow: 0px 0px 2px #000000;}
   html[data-theme="dunkel"] .kueche-timer-chip .name { color: #FFFFFF; font-weight: 700; max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0px 0px 2px #000000; }
-  .kueche-timer-chip button {
+  /* Klickbarer Chip-Name (Sprung zum Herkunftsrezept) */
+  .kueche-timer-chip .name.kueche-timer-sprung {
+    background: none; border: 0; padding: 0; font: inherit;
+    cursor: pointer; text-decoration: underline dotted;
+    border-radius: 6px;
+  }
+  .kueche-timer-chip .name.kueche-timer-sprung:hover { text-decoration-style: solid; }
+  /* :not(...) - sonst wuerde diese Quadrat-Regel fuer das runde ✕ auch den
+     klickbaren Namen auf 22x22px stauchen (nur noch Buchstabenschnipsel). */
+  .kueche-timer-chip button:not(.kueche-timer-sprung) {
     width: calc(22px * var(--kueche-schrift)); height: calc(22px * var(--kueche-schrift));
     border-radius: 50%; border: none;
     background: transparent; color: var(--grau); cursor: pointer;
@@ -702,7 +717,7 @@
 </div>
 
 <footer>
-  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.0.0</small></div>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.1.0</small></div>
   <div>❤️</div>
   <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
 </footer>
@@ -810,6 +825,10 @@ var EK_REFS = "ek_refs_v1";
 var EK_EXTRAS = "ek_extras_v1";
 var EK_SKALEN = "ek_skalen_v1";
 var REZ_NOTIZEN = "rezept_notizen_v1";
+/* Reichweiten-Hinweis unter dem Notizfeld: Eigene Notizen leben nur im
+ * Speicher dieses Browsers (kein Teil der Rezeptdaten, kann z. B. durch
+ * Addons oder den Firefox-Datei-Modus leer/isoliert sein). */
+var NOTIZ_HINWEIS = "Wird nur in diesem Browser gespeichert – dauerhafte Notizen gehören in die Rezeptdaten (Editor).";
 var EK_ANSICHT = "ek_ansicht_v1";
 var THEME_KEY = "rezept_theme_v1";
 
@@ -1049,7 +1068,7 @@ function bindeNotizFeld(feld, rezeptId) {
       var s = document.getElementById("notizStatus");
       if (s) {
         s.textContent = tr("Gespeichert ✓");
-        setTimeout(function () { if (s) s.textContent = ""; }, 1500);
+        setTimeout(function () { if (s) s.textContent = tr(NOTIZ_HINWEIS); }, 1500);
       }
     }, 600);
   });
@@ -1273,6 +1292,14 @@ function rendereKuecheTimer() {
     var orangeAb = Math.min(t.dauerSek * 0.5, 300);
     var stufe = t.abgelaufen || restSek < rotAb ? "rot" : (restSek < orangeAb ? "orange" : "gruen");
     var nameHtml = t.name ? '<span class="name">' + escapeHtml(t.name) + '</span>' : "";
+    /* Sprungmarke: Schritt-Timer kennen ihre Herkunft (schluessel =
+     * "rezeptId:SchrittIndex"). Existiert das Rezept noch, wird der Chip-
+     * Name klickbar und fuehrt zurueck zum Rezept; Frei-Timer bleiben Text. */
+    var rezeptId = t.schluessel ? String(t.schluessel).split(":")[0] : "";
+    if (rezeptId && DB.some(function (x) { return x.id === rezeptId; })) {
+      nameHtml = '<button type="button" class="name kueche-timer-sprung" data-rezept="' + escapeHtml(rezeptId) +
+        '" title="' + tr("Rezept öffnen") + '">' + escapeHtml(t.name) + '</button>';
+    }
     return '<span class="kueche-timer-chip stufe-' + stufe + (t.abgelaufen ? " abgelaufen" : "") + '" data-id="' + t.id + '">' +
       '<span class="kueche-timer-progress" style="width:' + Math.round(anteil * 100) + '%"></span>' +
       nameHtml +
@@ -1602,15 +1629,18 @@ function rendereRezept(r) {
   }
   html += "</section>";
 
-  var notizText = notizen[r.id] || "";
+  /* Eigene Notiz (localStorage) hat Vorrang; ohne eigene zeigt der Viewer
+     die Rezept-Notiz aus den Daten (z. B. Quelle bei TheMealDB-Importen). */
+  var notizText = notizen[r.id] || r.notiz || "";
   html += '<section class="bereich notizen-bereich">';
   if (notizText) {
     html += '<h3>' + tr("📝 Notizen") + '</h3>' +
       '<textarea id="notizFeld" class="notiz-feld" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '">' +
       escapeHtml(notizText) + "</textarea>" +
-      '<p class="notiz-status" id="notizStatus">&nbsp;</p>';
+      '<p class="notiz-status" id="notizStatus">' + tr(NOTIZ_HINWEIS) + '</p>';
   } else {
-    html += '<button id="btnNotizOeffnen" class="btn-link notiz-oeffnen">' + tr("📝 Notiz hinzufügen") + '</button>';
+    html += '<button id="btnNotizOeffnen" class="btn-link notiz-oeffnen">' + tr("📝 Notiz hinzufügen") + '</button>' +
+      '<p class="notiz-status">' + tr(NOTIZ_HINWEIS) + '</p>';
   }
   html += "</section>";
 
@@ -1700,7 +1730,7 @@ function rendereRezept(r) {
       var bereich = btnNotizOeffnen.closest(".notizen-bereich");
       bereich.innerHTML = '<h3>' + tr("📝 Notizen") + '</h3>' +
         '<textarea id="notizFeld" class="notiz-feld" placeholder="' + tr("Eigene Notiz zu diesem Rezept …") + '"></textarea>' +
-        '<p class="notiz-status" id="notizStatus">&nbsp;</p>';
+        '<p class="notiz-status" id="notizStatus">' + tr(NOTIZ_HINWEIS) + '</p>';
       var feld = bereich.querySelector("#notizFeld");
       feld.focus();
       bindeNotizFeld(feld, r.id);
@@ -1733,6 +1763,8 @@ function rendereRezept(r) {
       oeffneKueche(r);
       if (!starteKuecheTimer(Number(b.dataset.min), r.name, b.dataset.key)) {
         zeigeKuecheTimerHinweis();
+      } else {
+        zeigeKuecheTimerHinweis("Neuer Wecker wurde gestartet!");
       }
     });
   });
@@ -2491,7 +2523,7 @@ function exportiereRezeptHtml() {
     hinten += "<p>" + tr("Keine Zubereitung angegeben.") + "</p>\n";
   }
 
-  var notizText = notizen[r.id] || "";
+  var notizText = notizen[r.id] || r.notiz || "";
   if (notizText.trim()) {
     hinten += "<h2>" + tr("📝 Notizen") + "</h2>\n<p class=\"notiz\">" + escapeHtml(notizText) + "</p>\n";
   }
@@ -2565,7 +2597,7 @@ document.getElementById("kuecheTimerMin").addEventListener("input", function () 
 document.getElementById("kuecheTimerForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var val = Number(document.getElementById("kuecheTimerMin").value);
-  if (val > 0) starteKuecheTimer(val);
+  if (val > 0 && starteKuecheTimer(val)) zeigeKuecheTimerHinweis("Neuer Wecker wurde gestartet!");
 });
 document.getElementById("kuecheTimerPopover").addEventListener("click", function (e) { e.stopPropagation(); });
 document.addEventListener("click", function () { kuecheTimerPopoverUmschalten(true); });
@@ -2579,16 +2611,20 @@ document.getElementById("kuecheInhalt").addEventListener("click", function (e) {
   if (!ziel) return;
   if (!starteKuecheTimer(Number(ziel.dataset.min), kuecheAktuell ? kuecheAktuell.name : "", ziel.dataset.key)) {
     zeigeKuecheTimerHinweis();
+  } else {
+    zeigeKuecheTimerHinweis("Neuer Wecker wurde gestartet!");
   }
 });
 
 /* Kurzer Hinweis "läuft bereits": blendet über der Timer-Liste ein und
  * nach ~2,5 s von selbst wieder aus; erneute Klicks starten die Frist neu. */
 var kuecheTimerHinweisTimeout = null;
-function zeigeKuecheTimerHinweis() {
+/* text fehlt: Standard "Dieser Wecker läuft bereits!" (Doppel-Start);
+ * mit Text: Bestaetigung fuer frisch gestartete Wecker. */
+function zeigeKuecheTimerHinweis(text) {
   var el = document.getElementById("kuecheTimerHinweis");
   if (!el) return;
-  el.textContent = "⏰ " + tr("Dieser Wecker läuft bereits!");
+  el.textContent = "⏰ " + tr(text || "Dieser Wecker läuft bereits!");
   el.hidden = false;
   el.classList.add("offen");
   if (kuecheTimerHinweisTimeout) clearTimeout(kuecheTimerHinweisTimeout);
@@ -2599,6 +2635,13 @@ function zeigeKuecheTimerHinweis() {
   }, 2500);
 }
 document.getElementById("kuecheTimerListe").addEventListener("click", function (e) {
+  /* Klick auf den Chip-Namen: Küchenmodus schließen und zum Herkunftsrezept. */
+  var sprung = e.target.closest(".kueche-timer-sprung");
+  if (sprung) {
+    schliesseKueche();
+    waehle(sprung.dataset.rezept);
+    return;
+  }
   var btn = e.target.closest("button[data-id]");
   if (btn) entferneKuecheTimer(Number(btn.dataset.id));
 });
