@@ -856,7 +856,7 @@
 </div>
 
 <footer>
-  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.1.0</small></div>
+  <div class="fuss-links">(c) 2026 <a target="_blank" href="https://github.com/heino17/Rezepte-Sammlung">heino17</a> <small>v1.1.1</small></div>
   <div>❤️</div>
   <div class="fuss-rechts credits-link" id="creditsAnzeige" data-i18n="Credits" data-tooltip="Diese Anwendung wurde im Auftrag zu 100% von OpenCode.ai &amp; Claude.ai, in kostenlosen Konten erstellt. Ganz erstaunlich! 🧚🏻‍♀️" role="button" tabindex="0">Credits</div>
 </footer>
@@ -2013,6 +2013,11 @@ function tcmSelectHtml(klasse, gruppe, aktiv) {
  * DOM-Reihen deshalb zur alten Ordnung gehoeren. */
 var zuletztGerenderteZutaten = [];
 
+/* Array-Stand des letzten rendereSchritte-Durchlaufs - noetig, weil das
+ * Modell-Array beim ▲▼ schon VOR dem Neu-Rendern verschoben wird und die
+ * DOM-Reihen deshalb zur alten Ordnung gehoeren. */
+var zuletztGerenderteSchritte = [];
+
 function rendereZutaten(r) {
   var tb = document.getElementById("zutatenKoerper");
   /* Geöffnete ⚙️-Aktionen überleben das Neu-Aufbauen: Jede offene Reihe
@@ -2181,8 +2186,26 @@ function schrittAutoHoehe(t) {
 
 function rendereSchritte(r) {
   var liste = document.getElementById("schritteListe");
+  /* Offen-Zustand (⚙️-Panel) der Zeilen merken, damit er nach dem
+   * Neu-Rendern (z. B. nach ▲▼✕) erhalten bleibt – analog zu
+   * rendereZutaten. Schritte sind Strings, daher Abgleich über den Text;
+   * zuletztGerenderteSchritte ist der PRE-Render-Snapshot (vor dem
+   * Verschieben), weil das Modell-Array beim ▲▼ schon vor dem
+   * Neu-Rendern umsortiert wird. */
+  var offenS = [];
+  Array.prototype.forEach.call(liste.children, function (row) {
+    if (row.classList.contains("offen")) {
+      var idx = Number(row.dataset.idx);
+      if (!isNaN(idx) && zuletztGerenderteSchritte[idx] != null) offenS.push(zuletztGerenderteSchritte[idx]);
+    }
+  });
   liste.innerHTML = "";
   (r.zubereitung || []).forEach(function (s) { fuegeSchrittZeile(r, s); });
+  zuletztGerenderteSchritte = (r.zubereitung || []).slice();
+  Array.prototype.forEach.call(liste.children, function (row, i) {
+    var s = (r.zubereitung || [])[i];
+    if (offenS.indexOf(s) !== -1) row.classList.add("offen");
+  });
 }
 
 function fuegeSchrittZeile(r, s) {
